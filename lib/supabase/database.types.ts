@@ -131,6 +131,9 @@ isOneToOne: false
           Functions: {
             "is_workspace_member":
 { Args: { "ws": string }; Returns: boolean
+                           },
+"workspace_from_path":
+{ Args: { "name": string }; Returns: string
                            }
           }
           Enums: {

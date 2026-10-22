@@ -33,7 +33,7 @@ Next.js 16 renamed the middleware file convention to `proxy.ts` (exported functi
 ## D-007 Export runs in the browser — Proposed (M3)
 `renderPage` runs on both server and browser. Portable mode inlines image variants that were already resized to WebP at upload (D-008), so export needs no server-side re-encoding. The browser assembles the file, downloads it as a Blob, uploads the same bytes to `page-versions`, and inserts the `page_versions` row under RLS. This avoids Vercel's 4.5 MB function response limit and server compute, and the download is immediate. Images on third-party hosts that block CORS stay as URLs, with a checklist warning.
 
-## D-008 Upload pipeline — Proposed (M2)
+## D-008 Upload pipeline — Accepted (M2b; details in D-045)
 The browser uploads the original file straight to Storage, which bypasses Vercel's 4.5 MB request limit. A server route then uses `sharp` to produce WebP variants at 1600 px and 800 px wide (quality 80), writes the `assets` row, and deletes the original.
 
 ## D-009 Rich text is a tiny inline markup, not HTML — Accepted
@@ -244,4 +244,12 @@ Consequences:
 - **Keys:** Escape ends editing. Enter ends it in a text field and inserts a line break in a rich one. Mod+Z and Mod+Y end editing, then undo or redo. Mod+D and Mod+U do nothing. Every other key, Backspace and Delete included, stays in the field. In a `<summary>` the runtime inserts Space itself, because the browser would toggle the answer instead.
 - **Ending:** focus leaving the field, the window losing focus, or the keys above end editing. The editor then re-renders the block from the document, which also restores a field whose last edit could not be stored (an emptied required field, text over its limit); a notice names the field and the reason.
 - **Budget:** the canvas runtime may grow to 10 KB minified (from 8 KB, D-039).
+
+## D-045 Uploads — Accepted (refines D-008)
+- **Buckets:**
+  - `uploads` (private) holds originals at `<workspaceId>/<uuid>.<ext>`: JPEG, PNG, WebP, GIF or AVIF, at most 10 MiB.
+  - `assets` (public) holds the WebP variants at `<workspaceId>/<assetId>-1600.webp` and `-800.webp`.
+- **Policies:** on `storage.objects`, members of the workspace named by the first folder (`public.workspace_from_path(name)` with `is_workspace_member`) may insert, read and delete in both buckets. Anyone may download from `assets` through its public URLs. Server code uses the signed-in user's session, never the service role.
+- **Processing** (`POST /api/assets`): `sharp` reads at most 40 megapixels, applies EXIF orientation, keeps the first frame of an animation and drops metadata, then writes WebP at 1600 and 800 px wide (never enlarged, quality 80). The `assets` row records `<workspaceId>/<assetId>` with the 1600 variant's size and dimensions. The original is deleted whatever the outcome.
+- **Unsupported:** HEIC (iOS converts photos to JPEG when a page asks only for these types), SVG, and anything sharp can't decode.
 
