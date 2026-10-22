@@ -5,7 +5,7 @@ import { singleBlockDoc, testContext } from '@/lib/blocks/test-utils';
 import { renderPage } from '@/lib/renderer/page';
 import { parseDocument } from '@/lib/schema/document';
 import { sequentialIds } from '@/lib/schema/ids';
-import { poisonProps } from '@/tests/helpers/poison';
+import { HOSTILE_URL, poisonProps } from '@/tests/helpers/poison';
 import { validateHtml } from '@/tests/helpers/validate-html';
 
 describe.each(listBlockDefinitions().map((d) => [d.type, d] as const))(
@@ -28,6 +28,20 @@ describe.each(listBlockDefinitions().map((d) => [d.type, d] as const))(
           }
         }
         expect(fragment).toContain('&lt;script&gt;');
+      }
+    });
+
+    it('resolves default links safely when the page default CTA is hostile', () => {
+      const settings = { defaultCta: { kind: 'url' as const, url: HOSTILE_URL } };
+      const fragment = String(
+        def.render(def.defaultProps(sequentialIds()) as never, testContext({ settings })),
+      );
+      const doc = new DOMParser().parseFromString(
+        `<!doctype html><body>${fragment}</body>`,
+        'text/html',
+      );
+      for (const link of Array.from(doc.querySelectorAll('[href]'))) {
+        expect(link.getAttribute('href')!.toLowerCase()).not.toContain('javascript:');
       }
     });
 
