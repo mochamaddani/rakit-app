@@ -224,6 +224,8 @@ Consequences:
   - A block alone in its section moves with the section (its id, style and anchor kept), or joins the target section; its emptied section disappears with its anchor.
   - A block in a shared section leaves into a new section that copies its band's style (not the anchor), reorders within its own section, or joins another section.
   - Dropping a block where it already is changes nothing (`noop`). Footer blocks are not draggable, and nothing joins a footer section.
+- **Zones** (`lib/editor/dnd/geometry.ts`, from the cached rects): the top and bottom quarter of a section's height drop `between` sections; the middle half drops `into` it, before the first visible block whose midpoint lies below the pointer. Above the first section or below the last, the drop goes to the first or last position; a pointer between two section rects goes to the nearer boundary.
+- **Marker:** `between` is a full-width line at the section boundary; `into` is inset 16 px and sits at the gap between blocks.
 - **Limits:** 30 blocks per section, 60 sections, 200 blocks (`LIMITS`).
 - **No-op edits:** a command that produces no patches fails with `noop` "Nothing changed", so it never records an undo step (M2a review M1).
 
