@@ -20,6 +20,8 @@ const appProjects: PlaywrightTestConfig['projects'] = withApp
 
 export default defineConfig({
   testDir: 'tests/e2e',
+  // app tests share one owner account and reset its pages
+  workers: withApp ? 1 : undefined,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? 'github' : 'list',

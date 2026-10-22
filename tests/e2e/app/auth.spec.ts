@@ -1,25 +1,11 @@
 import { createHmac, randomUUID } from 'node:crypto';
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
+import { ensureOwner, OWNER, resetOwnerPages, signIn } from './helpers';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const email = process.env.E2E_OWNER_EMAIL ?? 'owner@launchpad.test';
-const password = process.env.E2E_OWNER_PASSWORD ?? 'correct-horse-battery-1';
 
-test.beforeAll(async () => {
-  const admin = createClient(supabaseUrl, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
-    auth: { persistSession: false },
-  });
-  const { error } = await admin.auth.admin.createUser({ email, password, email_confirm: true });
-  if (error && !/already/i.test(error.message)) throw error;
-});
-
-async function signIn(page: Page, next?: string) {
-  await page.goto(next ? `/login?next=${encodeURIComponent(next)}` : '/login');
-  await page.getByLabel('Email').fill(email);
-  await page.getByLabel('Password').fill(password);
-  await page.getByRole('button', { name: 'Sign in' }).click();
-}
+test.beforeAll(ensureOwner);
 
 test('anonymous visitors are sent to /login with a return path', async ({ page }) => {
   await page.goto('/dashboard');
@@ -27,6 +13,7 @@ test('anonymous visitors are sent to /login with a return path', async ({ page }
 });
 
 test('the owner signs in and lands on the dashboard', async ({ page }) => {
+  await resetOwnerPages();
   await signIn(page);
   await expect(page).toHaveURL('/dashboard');
   await expect(page.getByRole('heading', { name: 'Your pages' })).toBeVisible();
@@ -35,7 +22,7 @@ test('the owner signs in and lands on the dashboard', async ({ page }) => {
 
 test('a wrong password shows an error and stays on /login', async ({ page }) => {
   await page.goto('/login');
-  await page.getByLabel('Email').fill(email);
+  await page.getByLabel('Email').fill(OWNER.email);
   await page.getByLabel('Password').fill('definitely-wrong-password');
   await page.getByRole('button', { name: 'Sign in' }).click();
   // Scoped to the form: Next.js also renders a route announcer with role="alert".
