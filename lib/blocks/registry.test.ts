@@ -1,3 +1,4 @@
+import dynamicIconImports from 'lucide-react/dynamicIconImports';
 import { describe, expect, it } from 'vitest';
 import { BLOCKS, getBlockDefinition, listBlockDefinitions } from '@/lib/blocks/registry';
 import { sequentialIds } from '@/lib/schema/ids';
@@ -17,4 +18,9 @@ describe('block registry', () => {
     expect(getBlockDefinition('hero')?.type).toBe('hero');
     expect(getBlockDefinition('marquee')).toBeUndefined();
   });
+});
+
+it('every block icon is a lucide icon name', () => {
+  for (const d of listBlockDefinitions())
+    expect(Object.keys(dynamicIconImports), d.type).toContain(d.icon);
 });

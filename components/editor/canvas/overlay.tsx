@@ -4,6 +4,7 @@ import type { CanvasRect } from '@/lib/editor/canvas/constants';
 import { blockTypeLabel, findBlock } from '@/lib/editor/structure';
 import { cn } from '@/lib/utils';
 import { useEditor } from '../editor-context';
+import { BlockToolbar } from './block-toolbar';
 
 export interface CanvasGeometry {
   scrollY: number;
@@ -23,10 +24,13 @@ export function Overlay({
   geometry,
   hover,
   scale,
+  width,
 }: {
   geometry: CanvasGeometry | null;
   hover: string | null;
   scale: number;
+  /** The overlay's width in editor pixels, to keep the toolbar inside it. */
+  width: number;
 }) {
   const selection = useEditor((s) => s.selection);
   const selectedType = useEditor((s) => {
@@ -82,6 +86,9 @@ export function Overlay({
             {label}
           </span>
         </div>
+      ) : null}
+      {visible(selected) && selection && selection.kind !== 'page' ? (
+        <BlockToolbar selection={selection} rect={selected} scale={scale} width={width} />
       ) : null}
     </div>
   );

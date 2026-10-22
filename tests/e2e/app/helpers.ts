@@ -106,3 +106,15 @@ export async function openEditor(page: Page, pageId: string): Promise<FrameLocat
   });
   return canvas(page);
 }
+
+/** Clicks a block in the editor palette. */
+export async function addBlock(page: Page, label: string): Promise<void> {
+  await page
+    .getByRole('navigation', { name: 'Blocks' })
+    .getByRole('button', { name: label })
+    .click();
+}
+
+export function saveStatus(page: Page) {
+  return page.getByTestId('save-status');
+}

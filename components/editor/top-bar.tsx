@@ -1,11 +1,15 @@
 'use client';
 
-import { ChevronLeft } from 'lucide-react';
+import { ChevronLeft, Redo2, Settings2, Undo2 } from 'lucide-react';
 import Link from 'next/link';
-import { useRef, type KeyboardEvent } from 'react';
+import { useRouter } from 'next/navigation';
+import { useRef, type KeyboardEvent, type MouseEvent } from 'react';
+import { Button } from '@/components/ui/button';
 import type { Viewport } from '@/lib/editor/store';
 import { cn } from '@/lib/utils';
 import { useEditor } from './editor-context';
+import { SaveStatus } from './save-status';
+import { useAutosaveApi } from './use-autosave';
 
 const VIEWPORTS: ReadonlyArray<{ value: Viewport; label: string }> = [
   { value: 'mobile', label: 'Mobile' },
@@ -13,21 +17,75 @@ const VIEWPORTS: ReadonlyArray<{ value: Viewport; label: string }> = [
   { value: 'desktop', label: 'Desktop' },
 ];
 
+const LEAVE_WAIT_MS = 3000;
+
 export function TopBar({ name }: { name: string }) {
+  const notice = useEditor((s) => s.notice);
+  const select = useEditor((s) => s.select);
+  const { autosave } = useAutosaveApi();
+  const router = useRouter();
+
+  // Save what is pending before leaving (at most 3 s), so the dashboard shows the latest edit.
+  const leave = async (event: MouseEvent<HTMLAnchorElement>) => {
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) return;
+    event.preventDefault();
+    await Promise.race([autosave.flush(), new Promise((r) => setTimeout(r, LEAVE_WAIT_MS))]);
+    router.push('/dashboard');
+  };
+
   return (
     <header className="flex h-12 shrink-0 items-center gap-3 border-b bg-background px-3">
       <Link
         href="/dashboard"
+        onClick={leave}
         className="flex items-center gap-1 rounded-md px-2 py-1 text-sm text-muted-foreground hover:bg-muted hover:text-foreground"
       >
         <ChevronLeft className="size-4" aria-hidden="true" />
         Pages
       </Link>
       <h1 className="min-w-0 truncate text-sm font-semibold">{name}</h1>
+      <SaveStatus />
+      {notice ? <span className="truncate text-xs text-amber-700">{notice}</span> : null}
       <div className="ml-auto flex items-center gap-2">
+        <HistoryButtons />
         <ViewportToggle />
+        <Button variant="outline" size="sm" onClick={() => select({ kind: 'page' })}>
+          <Settings2 aria-hidden="true" />
+          Page settings
+        </Button>
       </div>
     </header>
+  );
+}
+
+function HistoryButtons() {
+  const undoLabel = useEditor((s) => s.history.past.at(-1)?.label ?? null);
+  const redoLabel = useEditor((s) => s.history.future.at(-1)?.label ?? null);
+  const undo = useEditor((s) => s.undo);
+  const redo = useEditor((s) => s.redo);
+  return (
+    <div className="flex items-center">
+      <Button
+        variant="ghost"
+        size="icon-sm"
+        aria-label="Undo"
+        title={undoLabel ? `Undo ${undoLabel}` : 'Undo'}
+        disabled={undoLabel === null}
+        onClick={() => undo()}
+      >
+        <Undo2 aria-hidden="true" />
+      </Button>
+      <Button
+        variant="ghost"
+        size="icon-sm"
+        aria-label="Redo"
+        title={redoLabel ? `Redo ${redoLabel}` : 'Redo'}
+        disabled={redoLabel === null}
+        onClick={() => redo()}
+      >
+        <Redo2 aria-hidden="true" />
+      </Button>
+    </div>
   );
 }
 

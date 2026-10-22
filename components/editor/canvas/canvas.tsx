@@ -292,7 +292,7 @@ export function Canvas({ onKey }: { onKey?: (input: KeyInput) => void }) {
             className="block origin-top-left border-0 bg-white shadow-sm"
             style={{ width: deviceWidth, height: frameHeight, transform: `scale(${scale})` }}
           />
-          <Overlay geometry={geometry} hover={hover} scale={scale} />
+          <Overlay geometry={geometry} hover={hover} scale={scale} width={deviceWidth * scale} />
         </div>
       ) : null}
       {isEmpty ? (
