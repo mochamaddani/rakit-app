@@ -1,0 +1,50 @@
+.lp-benefits .lp-sub {
+  margin: 0;
+}
+.lp-benefits__list {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  margin: 24px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.lp-benefit {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.lp-benefit .lp-h3,
+.lp-benefit p {
+  margin: 0;
+}
+.lp-benefit p {
+  color: var(--lp-fg-muted);
+}
+.lp-benefit__icon {
+  display: inline-flex;
+  color: var(--lp-btn-bg);
+}
+/* Cards sit on --lp-card-bg (light in every tone), so they use the page text colors. */
+.lp-benefits--cards .lp-benefit {
+  padding: 20px;
+  border-radius: var(--lp-radius);
+  background: var(--lp-card-bg);
+  color: var(--lp-text);
+}
+.lp-benefits--cards .lp-benefit p {
+  color: var(--lp-muted);
+}
+.lp-benefits--cards .lp-benefit__icon {
+  color: var(--lp-primary);
+}
+@media (min-width: 640px) {
+  .lp-benefits__list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (min-width: 1024px) {
+  .lp-benefits__list {
+    grid-template-columns: repeat(var(--lp-cols), minmax(0, 1fr));
+  }
+}

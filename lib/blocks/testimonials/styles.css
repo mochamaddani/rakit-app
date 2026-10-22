@@ -1,0 +1,57 @@
+.lp-testimonials__list {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  margin-top: 24px;
+}
+.lp-testimonials--stack .lp-testimonials__list {
+  max-width: 720px;
+  margin-inline: auto;
+}
+/* Quotes sit on --lp-card-bg (light in every tone), so they use the page text colors. */
+.lp-quote {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  padding: 20px;
+  border-radius: var(--lp-radius);
+  background: var(--lp-card-bg);
+  color: var(--lp-text);
+}
+.lp-quote__text,
+.lp-quote__text p {
+  margin: 0;
+}
+.lp-quote__by {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+  font-size: 0.9375rem;
+}
+.lp-quote__avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.lp-quote__avatar.lp-img-ph {
+  min-height: 0;
+}
+.lp-quote__name {
+  font-weight: 700;
+}
+.lp-quote__detail {
+  color: var(--lp-muted);
+}
+@media (min-width: 640px) {
+  .lp-testimonials--grid .lp-testimonials__list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (min-width: 1024px) {
+  .lp-testimonials--grid .lp-testimonials__list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
