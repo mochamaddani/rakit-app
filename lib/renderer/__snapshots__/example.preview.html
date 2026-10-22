@@ -579,7 +579,7 @@ a {
   color: var(--lp-text);
   cursor: pointer;
 }
-.lp-carousel__arrow:disabled {
+.lp-carousel__arrow[aria-disabled='true'] {
   opacity: 0.4;
   cursor: default;
 }
@@ -729,8 +729,8 @@ a {
       const current = atEnd() ? last : first;
       dots.forEach((dot, i) => dot.setAttribute("aria-current", i === current ? "true" : "false"));
       if (!loop) {
-        if (prev) prev.disabled = atStart();
-        if (next) next.disabled = atEnd();
+        if (prev) prev.setAttribute("aria-disabled", atStart());
+        if (next) next.setAttribute("aria-disabled", atEnd());
       }
     };
     const go = (i) => track.scrollTo({

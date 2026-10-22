@@ -135,7 +135,7 @@
   color: var(--lp-text);
   cursor: pointer;
 }
-.lp-carousel__arrow:disabled {
+.lp-carousel__arrow[aria-disabled='true'] {
   opacity: 0.4;
   cursor: default;
 }

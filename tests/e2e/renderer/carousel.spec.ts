@@ -42,6 +42,23 @@ test.describe('carousel with JavaScript (desktop)', () => {
     );
   });
 
+  test('keyboard focus stays on the next arrow at the end of the row', async ({ page }, info) => {
+    await page.goto(renderToFile(info.outputPath('example.html'), exampleDocument));
+    const c = carouselIn(page, 'bProducts');
+    const next = c.getByRole('button', { name: 'Slide berikutnya' });
+    await next.focus();
+    // 8 cards, 4 visible on desktop: three steps reach slides 2-4, the fourth reaches the end.
+    for (const slide of [2, 3, 4, 8]) {
+      await page.keyboard.press('Enter');
+      await expect(c.getByRole('button', { name: `Ke slide ${slide}` })).toHaveAttribute(
+        'aria-current',
+        'true',
+      );
+    }
+    await expect(next).toHaveAttribute('aria-disabled', 'true');
+    await expect(next).toBeFocused();
+  });
+
   test('two carousels are independent', async ({ page }, info) => {
     await page.goto(renderToFile(info.outputPath('two.html'), twoCarouselsDocument));
     await carouselIn(page, 'cA').getByRole('button', { name: 'Slide berikutnya' }).click();
