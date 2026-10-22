@@ -250,3 +250,143 @@ export const twoCarouselsDocument = {
     },
   ],
 };
+
+/** One unbroken word exactly `max` characters long. */
+const word = (max: number) => 'Panjangsekali'.repeat(Math.ceil(max / 13)).slice(0, max);
+const longUrl = `https://botolku.example/${'promo'.repeat(30)}`;
+
+/**
+ * Layout stress test: every text field at its maximum length as a single unbroken word, a visible
+ * long URL in rich text, and 1e12 prices. A 360px phone must still show no horizontal scroll.
+ */
+export const stressDocument = {
+  schemaVersion: 1,
+  settings: { lang: 'id', seo: { title: word(120) } },
+  sections: [
+    {
+      id: 'sHero',
+      blocks: [
+        {
+          id: 'bHero',
+          type: 'hero',
+          props: {
+            eyebrow: word(80),
+            headline: word(200),
+            subheadline: `Kunjungi ${longUrl}`,
+            primaryCta: { label: word(80), link: { kind: 'default' } },
+            secondaryCta: { label: word(80), link: { kind: 'default' }, variant: 'secondary' },
+            trustLine: word(160),
+            image: {
+              src: svgPlaceholder('Stress', '#2563EB'),
+              alt: word(300),
+              width: 800,
+              height: 800,
+            },
+            layout: 'split',
+          },
+        },
+      ],
+    },
+    {
+      id: 'sBenefits',
+      style: { tone: 'muted' },
+      blocks: [
+        {
+          id: 'bBenefits',
+          type: 'benefits',
+          props: {
+            heading: word(160),
+            subheading: word(300),
+            items: [1, 2].map((n) => ({
+              id: `i${n}`,
+              icon: 'check',
+              title: word(80),
+              text: word(300),
+            })),
+          },
+        },
+      ],
+    },
+    {
+      id: 'sProducts',
+      blocks: [
+        {
+          id: 'bProducts',
+          type: 'product-carousel',
+          props: {
+            heading: word(160),
+            subheading: longUrl,
+            items: [1, 2, 3].map((n) => ({
+              id: `p${n}`,
+              title: word(120),
+              description: word(300),
+              price: 999_999_999_999,
+              compareAtPrice: 1_000_000_000_000,
+              showDiscount: true,
+              badge: word(30),
+              rating: 4.5,
+              reviewCount: 999_999_999,
+              cta: { label: word(40), link: { kind: 'default' } },
+            })),
+          },
+        },
+      ],
+    },
+    {
+      id: 'sTestimonials',
+      blocks: [
+        {
+          id: 'bTestimonials',
+          type: 'testimonials',
+          props: {
+            heading: word(160),
+            items: [{ id: 't1', quote: word(600), name: word(80), detail: word(80), rating: 5 }],
+          },
+        },
+      ],
+    },
+    {
+      id: 'sFaq',
+      blocks: [
+        {
+          id: 'bFaq',
+          type: 'faq',
+          props: {
+            heading: word(160),
+            openFirst: true,
+            items: [{ id: 'q1', question: word(200), answer: `${word(600)} ${longUrl}` }],
+          },
+        },
+      ],
+    },
+    {
+      id: 'sOrder',
+      style: { tone: 'primary' },
+      blocks: [
+        {
+          id: 'bOrder',
+          type: 'hero',
+          props: {
+            headline: word(200),
+            primaryCta: { label: word(80), link: { kind: 'url', url: longUrl } },
+          },
+        },
+      ],
+    },
+    {
+      id: 'sFooter',
+      blocks: [
+        {
+          id: 'bFooter',
+          type: 'footer',
+          props: {
+            brand: word(80),
+            links: [{ id: 'l1', label: word(60), link: { kind: 'url', url: longUrl } }],
+            disclaimer: `${word(600)} ${longUrl}`,
+            copyright: word(120),
+          },
+        },
+      ],
+    },
+  ],
+};

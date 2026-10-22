@@ -1,5 +1,9 @@
 import { devices, expect, test } from '@playwright/test';
-import { exampleDocument, twoCarouselsDocument } from '@/tests/fixtures/example-document';
+import {
+  exampleDocument,
+  stressDocument,
+  twoCarouselsDocument,
+} from '@/tests/fixtures/example-document';
 import { renderToFile } from './render-to-file';
 
 const carouselIn = (page: import('@playwright/test').Page, blockId: string) =>
@@ -56,6 +60,17 @@ test.describe('carousel with JavaScript (desktop)', () => {
   test('no horizontal overflow at 360px width', async ({ page }, info) => {
     await page.setViewportSize({ width: 360, height: 740 });
     await page.goto(renderToFile(info.outputPath('example.html'), exampleDocument));
+    const overflow = await page.evaluate(
+      () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    );
+    expect(overflow).toBe(0);
+  });
+});
+
+test.describe('layout stress (long unbroken words, URLs, huge prices)', () => {
+  test('no horizontal overflow at 360px width', async ({ page }, info) => {
+    await page.setViewportSize({ width: 360, height: 740 });
+    await page.goto(renderToFile(info.outputPath('stress.html'), stressDocument));
     const overflow = await page.evaluate(
       () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
     );
