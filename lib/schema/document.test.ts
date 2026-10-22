@@ -58,6 +58,30 @@ describe('PageDocument', () => {
     ];
     expect(pathsOf(dup)).toContain('sections.1.anchor');
   });
+  it('rejects ids whose DOM ids could collide (block "carousel" item "2" vs block "carousel-2")', () => {
+    const raw = {
+      schemaVersion: 1,
+      sections: [
+        {
+          id: 's1',
+          blocks: [
+            {
+              id: 'carousel',
+              type: 'product-carousel',
+              props: {
+                items: [
+                  { id: '1', title: 'A' },
+                  { id: '2', title: 'B' },
+                ],
+              },
+            },
+            { id: 'carousel-2', type: 'hero', props: { headline: 'X' } },
+          ],
+        },
+      ],
+    };
+    expect(pathsOf(raw)).toContain('sections.0.blocks.1.id');
+  });
   it('collectIdIssues finds duplicate ids inside item lists', () => {
     const doc = {
       sections: [

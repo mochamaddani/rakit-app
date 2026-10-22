@@ -12,7 +12,7 @@ describe('ids', () => {
     expect([next(), next()]).toEqual(['it1', 'it2']);
   });
   it('IdSchema rejects values that are unsafe in HTML ids or CSS selectors', () => {
-    for (const bad of ['', 'a b', 'a"b', '<x>', 'x'.repeat(33)])
+    for (const bad of ['', 'a b', 'a"b', '<x>', 'x'.repeat(33), 'a-b', 'a_b'])
       expect(IdSchema.safeParse(bad).success).toBe(false);
   });
 });

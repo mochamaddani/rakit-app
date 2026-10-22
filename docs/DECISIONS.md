@@ -117,7 +117,7 @@ The product is "LaunchPad" in the UI, as in the PRD. The repo and package are na
 
 ## D-028 IDs and anchors — Accepted
 - IDs are 10 random characters from `[a-z0-9]`, generated with `crypto.getRandomValues`.
-- `IdSchema` accepts `[A-Za-z0-9_-]{1,32}`.
+- `IdSchema` accepts `[A-Za-z0-9]{1,32}` only. DOM ids join ids with `-` (`b-<block>-<item>`), so allowing `-` would let block `carousel` + item `2` collide with block `carousel-2` (found in the M0/M1 final review).
 - Section and block IDs must be unique in a document. Item IDs must be unique within their list.
 - A section anchor is a user-settable slug that cannot start with `b-` or `s-`; those prefixes are reserved for generated DOM IDs.
 

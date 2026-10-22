@@ -1,7 +1,10 @@
 import { z } from 'zod';
 
-/** Safe inside HTML id attributes and CSS selectors (docs/DECISIONS.md D-028). */
-export const IdSchema = z.string().regex(/^[A-Za-z0-9_-]{1,32}$/);
+/**
+ * Letters and digits only: DOM ids join ids with '-' ('b-<block>-<item>'), so a '-' inside an id
+ * could make two different ids produce the same DOM id (docs/DECISIONS.md D-028).
+ */
+export const IdSchema = z.string().regex(/^[A-Za-z0-9]{1,32}$/);
 
 export type IdFactory = () => string;
 
