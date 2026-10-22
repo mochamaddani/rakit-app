@@ -8,3 +8,4 @@ supabase/.temp
 lib/supabase/database.types.ts
 docs
 .superpowers
+**/__snapshots__/**
