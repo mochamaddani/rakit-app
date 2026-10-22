@@ -194,7 +194,6 @@ Consequences:
 - **Snippets:** after a patch the runtime runs the page's snippets again. Snippets are idempotent per root (`data-lp-ready`), so only new roots initialize; the block recipe now says so.
 - **Untrusted messages:** every message from the iframe is untrusted. The parent checks `event.source`, the source tag, the channel and a Zod schema, and acts only on ids that exist in the document. Links never navigate the canvas.
 
-
 ## D-040 Inspector generated from the Zod schemas — Accepted
 - **Generation:** `describeFields` builds each block's inspector from its Zod schema with Zod 4 introspection (`type`, `def`, `meta()`). Controls come from metadata or shape:
   - `control: 'text' | 'rich' | 'image' | 'color'` picks the control;

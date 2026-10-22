@@ -94,7 +94,7 @@ tests/          e2e (renderer, app), fixtures, helpers, repo-level unit tests
 
 ### M2 — Editor engine MVP (custom) · [M2a plan](superpowers/plans/2026-10-22-m2a-editor-core.md) · [M2b plan](superpowers/plans/2026-10-22-m2b-direct-manipulation.md)
 Split into two plans: **M2a** (state, canvas, inspector; [detailed plan](superpowers/plans/2026-10-22-m2a-editor-core.md)) and **M2b** (DnD, inline editing, uploads; [detailed plan](superpowers/plans/2026-10-22-m2b-direct-manipulation.md)).
-- Dashboard: list, create blank, open, delete, rename; page CRUD server actions with `requireUser()` and optimistic concurrency on `updated_at`.
+- Dashboard: list, create blank, open, delete, rename; page CRUD server actions with `requireUser()`. Draft saves use a revision counter (D-035).
 - Editor state: Zustand store, Immer `produceWithPatches`, a command bus, undo/redo stacks, coalesced typing, selection; autosave (debounced ~800 ms, flushed on blur/unload, conflict warning).
 - Canvas: sandboxed iframe (`sandbox="allow-scripts"`, opaque origin) rendered with `renderPage(mode:'preview')`; a preview runtime reports geometry and applies per-block patches; Zod-validated message protocol; per-block render cache.
 - Overlay (hover, selection, block toolbar: move, duplicate, delete) and the custom pointer DnD engine (palette → canvas, reorder, cross-section, auto-scroll, drag shield, touch, keyboard, aria-live announcements). Starts with the spike from §2.3.
@@ -188,5 +188,6 @@ Base UI primitives (dialogs, popovers) are UI building blocks, not builders or D
 | M0 Foundation | [`superpowers/plans/2026-10-21-m0-foundation.md`](superpowers/plans/2026-10-21-m0-foundation.md) | Ready for review |
 | M1 Renderer | [`superpowers/plans/2026-10-21-m1-renderer.md`](superpowers/plans/2026-10-21-m1-renderer.md) | Ready for review |
 | M2a Editor core | [`superpowers/plans/2026-10-22-m2a-editor-core.md`](superpowers/plans/2026-10-22-m2a-editor-core.md) | Done |
-| M2b Direct manipulation | [`superpowers/plans/2026-10-22-m2b-direct-manipulation.md`](superpowers/plans/2026-10-22-m2b-direct-manipulation.md) | In progress |
-| M3–M7 | Written at the start of each milestone | — |
+| M2b Direct manipulation | [`superpowers/plans/2026-10-22-m2b-direct-manipulation.md`](superpowers/plans/2026-10-22-m2b-direct-manipulation.md) | Done |
+| M3 Export + tracking | Written at the start of the milestone | Next |
+| M4–M7 | Written at the start of each milestone | — |
