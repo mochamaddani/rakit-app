@@ -3,7 +3,17 @@
 import { ChevronLeft, Redo2, Settings2, Undo2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useRef, type KeyboardEvent, type MouseEvent } from 'react';
+import { useRef, useState, type KeyboardEvent, type MouseEvent } from 'react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import type { Viewport } from '@/lib/editor/store';
 import { cn } from '@/lib/utils';
@@ -24,13 +34,16 @@ export function TopBar({ name }: { name: string }) {
   const select = useEditor((s) => s.select);
   const { autosave } = useAutosaveApi();
   const router = useRouter();
+  const [confirmLeave, setConfirmLeave] = useState(false);
 
-  // Save what is pending before leaving (at most 3 s), so the dashboard shows the latest edit.
+  // Save what is pending before leaving (at most 3 s), so the dashboard shows the latest edit,
+  // and ask first when it could not be saved (offline, failed or conflicting).
   const leave = async (event: MouseEvent<HTMLAnchorElement>) => {
     if (event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) return;
     event.preventDefault();
     await Promise.race([autosave.flush(), new Promise((r) => setTimeout(r, LEAVE_WAIT_MS))]);
-    router.push('/dashboard');
+    if (autosave.store.getState().status === 'saved') router.push('/dashboard');
+    else setConfirmLeave(true);
   };
 
   return (
@@ -54,7 +67,43 @@ export function TopBar({ name }: { name: string }) {
           Page settings
         </Button>
       </div>
+      <LeaveDialog
+        open={confirmLeave}
+        onOpenChange={setConfirmLeave}
+        onLeave={() => {
+          setConfirmLeave(false);
+          router.push('/dashboard');
+        }}
+      />
     </header>
+  );
+}
+
+function LeaveDialog({
+  open,
+  onOpenChange,
+  onLeave,
+}: {
+  open: boolean;
+  onOpenChange(open: boolean): void;
+  onLeave(): void;
+}) {
+  return (
+    <AlertDialog open={open} onOpenChange={onOpenChange}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Leave without saving?</AlertDialogTitle>
+          <AlertDialogDescription>
+            Your latest changes aren&apos;t saved yet. They stay in this tab if you leave, but
+            closing the tab loses them.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Stay</AlertDialogCancel>
+          <AlertDialogAction onClick={onLeave}>Leave anyway</AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }
 

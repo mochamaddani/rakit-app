@@ -2,7 +2,7 @@
 
 import type { PageDocument } from '@/lib/schema/document';
 import { Canvas } from './canvas/canvas';
-import { EditorProvider, useEditor, useEditorStore } from './editor-context';
+import { EditorProvider, useEditor, useEditorSession } from './editor-context';
 import { Inspector } from './inspector/inspector';
 import { Palette } from './palette';
 import { SaveBanner } from './save-banner';
@@ -19,22 +19,16 @@ export interface EditorProps {
 /** Three panes: block palette, live canvas, inspector. */
 export function Editor({ page, initialDoc, initialRevision }: EditorProps) {
   return (
-    <EditorProvider pageId={page.id} initialDoc={initialDoc}>
-      <EditorShell page={page} initialRevision={initialRevision} />
+    <EditorProvider pageId={page.id} initialDoc={initialDoc} initialRevision={initialRevision}>
+      <EditorShell page={page} />
     </EditorProvider>
   );
 }
 
-function EditorShell({
-  page,
-  initialRevision,
-}: {
-  page: EditorProps['page'];
-  initialRevision: number;
-}) {
-  const store = useEditorStore();
-  const autosave = useAutosave(store, page.id, initialRevision);
-  const onCanvasKey = useShortcuts(store);
+function EditorShell({ page }: { page: EditorProps['page'] }) {
+  const session = useEditorSession();
+  const autosave = useAutosave(session);
+  const onCanvasKey = useShortcuts(session.store);
   const announcement = useEditor((s) => s.announcement);
 
   return (

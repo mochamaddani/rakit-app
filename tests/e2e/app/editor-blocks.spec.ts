@@ -109,3 +109,47 @@ test('a save from another tab raises a conflict; keeping mine overwrites it', as
   await page.reload();
   await expect.poll(() => blockTypes(canvas(page))).toEqual(['faq']);
 });
+
+test('Pages, then browser Back, shows the latest draft and keeps saving without a conflict', async ({
+  page,
+}) => {
+  const frame = await fresh(page);
+  await addBlock(page, 'Hero');
+  await expect(saveStatus(page)).toHaveText('Saved');
+  await page.getByRole('link', { name: 'Pages' }).click();
+  await expect(page).toHaveURL(/\/dashboard$/);
+  // Next.js replays the editor's first-load payload (no blocks, revision 0) on back/forward.
+  await page.goBack();
+  await expect(page.locator('iframe[title="Page preview"][data-ready="true"]')).toBeAttached({
+    timeout: 20_000,
+  });
+  await expect.poll(() => blockTypes(frame)).toEqual(['hero']);
+  await addBlock(page, 'FAQ');
+  await expect(saveStatus(page)).toHaveText('Saved');
+  await page.reload();
+  await expect.poll(() => blockTypes(canvas(page)), { timeout: 20_000 }).toEqual(['hero', 'faq']);
+});
+
+test('leaving with unsaved changes asks first, and closing the tab afterwards still warns', async ({
+  page,
+}) => {
+  await fresh(page);
+  // Saves fail as if the network were down, while the app's own pages still load.
+  await page.route('**/api/pages/*/draft', (route) => route.abort('internetdisconnected'));
+  await addBlock(page, 'Hero');
+  await expect(saveStatus(page)).toHaveText('Offline — retrying');
+  const pagesLink = page.getByRole('link', { name: 'Pages' });
+  const confirm = page.getByRole('alertdialog', { name: 'Leave without saving?' });
+  await pagesLink.click();
+  await confirm.getByRole('button', { name: 'Stay' }).click();
+  await expect(confirm).toBeHidden();
+  await expect(page).toHaveURL(/\/editor\//);
+  await pagesLink.click();
+  await confirm.getByRole('button', { name: 'Leave anyway' }).click();
+  await expect(page).toHaveURL(/\/dashboard$/);
+  const dialog = page.waitForEvent('dialog');
+  await page.close({ runBeforeUnload: true });
+  const d = await dialog;
+  expect(d.type()).toBe('beforeunload');
+  await d.accept();
+});

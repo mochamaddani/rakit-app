@@ -208,3 +208,10 @@ Consequences:
 
 ## D-041 AGENTS.md stays committed — Accepted
 `next dev` writes AGENTS.md (Next.js's agent rules: read `node_modules/next/dist/docs/` before using an API). Removing it only brings the file back as an uncommitted change, so it stays committed; CLAUDE.md remains the project's own guide (M0/M1 review m-12).
+
+## D-042 Editor sessions outlive the editor — Accepted
+- **Why:** Next.js reuses a page's server payload on browser back/forward, so a remounted editor started from the first load's document and revision. The next save then conflicted, and "Keep my version" would have overwritten newer work (M2a final review, C1). Unsaved changes also lost their retries and their leave warning when the editor unmounted (I2).
+- **Rule:** `lib/editor/session.ts` keeps one session (store and autosave) per page for the life of the tab. Opening the editor reuses the tab's session when it holds unsaved changes or a revision at least as new as the server payload; otherwise a new session starts from the payload. Server rendering uses a throwaway session.
+- **Listening:** the session itself handles `pagehide`, `visibilitychange`, `blur`, `online` and `beforeunload`, so it keeps saving and warning after the editor unmounts.
+- **Leaving:** the Pages link waits up to 3 s for the save. When the draft still isn't saved (offline, failed or conflicting), it asks "Leave without saving?"; the changes stay in the tab either way.
+- **Cost:** sessions, with their undo history, stay in memory until the tab closes or reloads, one per page opened in the tab.

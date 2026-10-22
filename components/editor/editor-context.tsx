@@ -2,34 +2,48 @@
 
 import { createContext, useContext, useState, type ReactNode } from 'react';
 import { useStore } from 'zustand';
+import { createDraftSender } from '@/lib/editor/draft-sender';
 import {
-  createEditorStore,
-  type EditorActions,
-  type EditorState,
-  type EditorStore,
-} from '@/lib/editor/store';
-import type { PageDocument } from '@/lib/schema/document';
+  createEditorSession,
+  createSessionRegistry,
+  type EditorSession,
+  type SessionInput,
+  type SessionRegistry,
+} from '@/lib/editor/session';
+import type { EditorActions, EditorState, EditorStore } from '@/lib/editor/store';
 
-const EditorStoreContext = createContext<EditorStore | null>(null);
+const EditorSessionContext = createContext<EditorSession | null>(null);
 
-/** Creates the editor store once for the page being edited. */
+let registry: SessionRegistry | undefined;
+
+function openSession(input: SessionInput): EditorSession {
+  // Server rendering gets a throwaway session: the registry is per tab, so browser-only.
+  if (typeof window === 'undefined') {
+    return createEditorSession(input, { send: createDraftSender(input.pageId) });
+  }
+  registry ??= createSessionRegistry({ createSend: createDraftSender, target: window });
+  return registry.open(input);
+}
+
+/** Opens the page's editor session (docs/DECISIONS.md D-042) for the editor below. */
 export function EditorProvider({
   pageId,
   initialDoc,
+  initialRevision,
   children,
-}: {
-  pageId: string;
-  initialDoc: PageDocument;
-  children: ReactNode;
-}) {
-  const [store] = useState(() => createEditorStore({ pageId, doc: initialDoc }));
-  return <EditorStoreContext.Provider value={store}>{children}</EditorStoreContext.Provider>;
+}: SessionInput & { children: ReactNode }) {
+  const [session] = useState(() => openSession({ pageId, initialDoc, initialRevision }));
+  return <EditorSessionContext.Provider value={session}>{children}</EditorSessionContext.Provider>;
+}
+
+export function useEditorSession(): EditorSession {
+  const session = useContext(EditorSessionContext);
+  if (!session) throw new Error('useEditorSession must be used inside <EditorProvider>');
+  return session;
 }
 
 export function useEditorStore(): EditorStore {
-  const store = useContext(EditorStoreContext);
-  if (!store) throw new Error('useEditorStore must be used inside <EditorProvider>');
-  return store;
+  return useEditorSession().store;
 }
 
 /** Subscribes to a slice of the editor state; wrap object-returning selectors in useShallow. */
