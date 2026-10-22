@@ -1,0 +1,9 @@
+/* Base styles for every exported page. Filled in by M1 Task 6. */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+}

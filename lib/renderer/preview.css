@@ -1,0 +1,7 @@
+/* Editor preview only: highlights [REPLACE: …] placeholders that still need real content. */
+.lp-replace {
+  background: #fde047;
+  color: #111827;
+  outline: 2px dashed #ca8a04;
+  border-radius: 0.2em;
+}

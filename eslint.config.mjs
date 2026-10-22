@@ -13,6 +13,8 @@ const eslintConfig = defineConfig([
     'out/**',
     'build/**',
     'next-env.d.ts',
+    // Compiled by scripts/build-assets.ts.
+    '**/*.generated.ts',
   ]),
   prettier,
 ]);
