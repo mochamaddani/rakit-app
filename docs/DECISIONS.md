@@ -205,3 +205,6 @@ Consequences:
 - **Validation:** fields validate on every keystroke against their own schema. An invalid value (an emptied required headline) shows an error and is not committed; blur restores the last valid value.
 - **New values:** new list items and newly enabled optional groups copy the block's own sample from `defaultProps` when there is one. Otherwise they are seeded from the schema, with `[REPLACE: …]` for required text, so nothing invents content.
 - **Contrast:** the theme panel shows WCAG contrast for each color pair (`lib/schema/contrast.ts`). It only hints; M5 adds validation and auto-adjust.
+
+## D-041 AGENTS.md stays committed — Accepted
+`next dev` writes AGENTS.md (Next.js's agent rules: read `node_modules/next/dist/docs/` before using an API). Removing it only brings the file back as an uncommitted change, so it stays committed; CLAUDE.md remains the project's own guide (M0/M1 review m-12).

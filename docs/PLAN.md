@@ -147,8 +147,8 @@ Full Playwright journeys (template → export; wizard → export; import → edi
 ## 7. Dependencies
 
 **Expected direct dependencies** (anything else needs a note in DECISIONS):
-- **Runtime:** `next`, `react`, `react-dom`, `@supabase/supabase-js`, `@supabase/ssr`, `zod`, `server-only`; the shadcn/ui output (`@base-ui/react`, `class-variance-authority`, `cn`, `shadcn` (CSS), `lucide-react`, `tw-animate-css`; D-031); `zustand`, `immer`, `sharp` (M2); `@anthropic-ai/sdk` (M5); `parse5`, `postcss`, `postcss-selector-parser` (M6).
-- **Dev:** `typescript`, `eslint`, `eslint-config-next`, `eslint-config-prettier`, `prettier`, `tailwindcss`, `@tailwindcss/postcss`, `vitest`, `happy-dom`, `@playwright/test`, `tsx`, `esbuild`, `html-validate`, `supabase` (CLI), `@types/*`; `@axe-core/playwright`, `lighthouse` (M7).
+- **Runtime:** `next`, `react`, `react-dom`, `@supabase/supabase-js`, `@supabase/ssr`, `zod`, `server-only`; the shadcn/ui output (`@base-ui/react`, `class-variance-authority`, `cn`, `shadcn` (CSS), `lucide-react`, `tw-animate-css`; D-031); `zustand@5.0.15`, `immer@11.1.21` (exact pins, M2a), `sharp` (M2b); `@anthropic-ai/sdk` (M5); `parse5`, `postcss`, `postcss-selector-parser` (M6).
+- **Dev:** `typescript`, `eslint`, `eslint-config-next`, `eslint-config-prettier`, `prettier`, `tailwindcss`, `@tailwindcss/turbopack`, `vitest`, `happy-dom`, `@playwright/test`, `tsx`, `esbuild`, `html-validate`, `supabase` (CLI), `@types/*`; `@axe-core/playwright`, `lighthouse` (M7).
 
 **Banned** (enforced by test):
 - **Page builders:** `grapesjs*`, `@grapesjs/*`, `@craftjs/*`, `@measured/puck`, `@puckeditor/*`, `@builder.io/*`, `@webstudio-is/*`.
@@ -187,6 +187,6 @@ Base UI primitives (dialogs, popovers) are UI building blocks, not builders or D
 |---|---|---|
 | M0 Foundation | [`superpowers/plans/2026-10-21-m0-foundation.md`](superpowers/plans/2026-10-21-m0-foundation.md) | Ready for review |
 | M1 Renderer | [`superpowers/plans/2026-10-21-m1-renderer.md`](superpowers/plans/2026-10-21-m1-renderer.md) | Ready for review |
-| M2a Editor core | [`superpowers/plans/2026-10-22-m2a-editor-core.md`](superpowers/plans/2026-10-22-m2a-editor-core.md) | In progress |
-| M2b Direct manipulation | Written after M2a | — |
+| M2a Editor core | [`superpowers/plans/2026-10-22-m2a-editor-core.md`](superpowers/plans/2026-10-22-m2a-editor-core.md) | Done |
+| M2b Direct manipulation | Written after M2a | Next |
 | M3–M7 | Written at the start of each milestone | — |

@@ -12,6 +12,7 @@ Spec: `docs/PRD.md` · Plan: `docs/PLAN.md` · Decisions: `docs/DECISIONS.md` ·
 - `pnpm test:e2e` (Playwright: exported pages opened via `file://`; carousel with JS on/off, touch, keyboard)
 - `pnpm test:e2e:app` (Playwright against the running app; needs `pnpm db:start` and `.env.local`)
 - `pnpm owner:create --email <email> --password <password>`
+- `pnpm env:local [--force]` (writes `.env.local` from `.env.example` and the running local Supabase stack)
 - `pnpm assets` / `pnpm assets:check` (compile block `styles.css` / `snippet.js`, and bundle `lib/**/*.bundle.ts` such as the canvas runtime, into committed `*.generated.ts`; run `pnpm format` first)
 - `pnpm render [doc.json] [--out f] [--mode export|preview] [--no-minify]` (no argument: renders the example to `out/example.html`)
 
@@ -19,17 +20,21 @@ Spec: `docs/PRD.md` · Plan: `docs/PLAN.md` · Decisions: `docs/DECISIONS.md` ·
 
 1. Node 24 (`.nvmrc`) and pnpm 12. Run `pnpm install`.
 2. Start Docker Desktop, then `pnpm db:start`.
-3. Copy `.env.example` to `.env.local`; fill the Supabase values from `pnpm supabase status -o env`.
+3. `pnpm env:local` (copies `.env.example` to `.env.local` and fills the Supabase values from `pnpm supabase status`).
 4. `pnpm owner:create --email … --password …`, then `pnpm dev`.
 
 ## Rules
 
 - No page-builder, drag-and-drop or carousel frameworks (enforced by `tests/unit/dependency-policy.test.ts`; list in `docs/PLAN.md` §7).
-- Next.js 16: session refresh lives in `proxy.ts`. Every server action / route handler still calls `requireUser()`.
+- Next.js 16: session refresh lives in `proxy.ts`. Every server action still calls `requireUser()`.
+- Route handlers call `getApiUser()` and return `unauthorizedResponse()` when it is null.
 - New routes are protected by default; public prefixes live in `lib/auth/routing.ts`.
 - Every new table: enable RLS, write policies with `public.is_workspace_member(workspace_id)`, add pgTAP tests under `supabase/tests/`.
 - Secrets only in env. Never import the service-role key in code that can reach the browser.
 - Unit tests sit next to the code as `*.test.ts`; e2e tests live in `tests/e2e/{renderer,app}`.
+- Editor logic lives in `lib/editor` (pure, unit-tested); `components/editor` only binds it to React.
+- The canvas iframe is `sandbox="allow-scripts"` only, and every message from it is untrusted (D-039).
+- App e2e tests run serially against the one owner account and reset its pages.
 - Small conventional commits (`feat:`, `fix:`, `test:`, `docs:`, `chore:`, `ci:`).
 
 ## How to add a block
