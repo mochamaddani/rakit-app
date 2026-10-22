@@ -1,6 +1,6 @@
 // Shared helpers for the app e2e tests. They use the service-role key, which only ever lives in
 // tests and scripts. Every spec shares one owner account and resets its pages (workers: 1).
-import type { Page } from '@playwright/test';
+import { expect, type FrameLocator, type Page } from '@playwright/test';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import type { Database, Json } from '@/lib/supabase/database.types';
 
@@ -84,4 +84,25 @@ export async function signIn(page: Page, next?: string): Promise<void> {
   await page.getByLabel('Password').fill(OWNER.password);
   await page.getByRole('button', { name: 'Sign in' }).click();
   await page.waitForURL((url) => !url.pathname.startsWith('/login'));
+}
+
+/** The editor's canvas iframe. */
+export function canvas(page: Page): FrameLocator {
+  return page.frameLocator('iframe[title="Page preview"]');
+}
+
+/** The `data-lp-type` of every block in the canvas, in page order. */
+export function blockTypes(frame: FrameLocator): Promise<string[]> {
+  return frame
+    .locator('[data-lp-block]')
+    .evaluateAll((elements) => elements.map((el) => el.getAttribute('data-lp-type') ?? ''));
+}
+
+/** Opens the editor and waits until the canvas runtime has reported ready. */
+export async function openEditor(page: Page, pageId: string): Promise<FrameLocator> {
+  await page.goto(`/editor/${pageId}`);
+  await expect(page.locator('iframe[title="Page preview"][data-ready="true"]')).toBeAttached({
+    timeout: 20_000,
+  });
+  return canvas(page);
 }

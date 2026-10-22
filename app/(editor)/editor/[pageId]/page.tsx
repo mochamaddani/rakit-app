@@ -1,10 +1,12 @@
 import { notFound } from 'next/navigation';
 import { z } from 'zod';
+import { DraftError } from '@/components/editor/draft-error';
+import { Editor } from '@/components/editor/editor';
 import { requireUser } from '@/lib/auth/require-user';
 import { getPageForEditor } from '@/lib/pages/queries';
+import { safeParseDocument } from '@/lib/schema/document';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 
-// Placeholder until the editor shell lands (M2a Task 13).
 export default async function EditorPage({ params }: PageProps<'/editor/[pageId]'>) {
   await requireUser();
   const { pageId } = await params;
@@ -12,9 +14,13 @@ export default async function EditorPage({ params }: PageProps<'/editor/[pageId]
   const page = await getPageForEditor(await createSupabaseServerClient(), pageId);
   if (!page) notFound();
 
+  const parsed = safeParseDocument(page.currentDraft);
+  if (!parsed.ok) return <DraftError name={page.name} message={parsed.error.message} />;
   return (
-    <main className="p-4">
-      <h1 className="text-2xl font-semibold">{page.name}</h1>
-    </main>
+    <Editor
+      page={{ id: page.id, name: page.name }}
+      initialDoc={parsed.doc}
+      initialRevision={page.draftRevision}
+    />
   );
 }
