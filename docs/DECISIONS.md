@@ -150,3 +150,13 @@ Consequences:
 - The iframe answers every scroll request with rects, even at the scroll edge, because the parent keys its state on them.
 - When the shield is removed under a stationary cursor, Chrome sends the iframe a `pointerover`. The drag engine (M2b) therefore commits drops from the parent's `pointerup` only, and treats that hover as ordinary.
 - Drag handles need `touch-action: none` and a suppressed `contextmenu`. With both, a long-press drag works on touch screens.
+
+## D-035 Draft saves: a route handler and a revision counter — Proposed (deviates from Plan §5 M2)
+- The editor saves with `PUT /api/pages/[pageId]/draft` and a JSON body `{ document, baseRevision }`.
+- This is a route handler, not a server action, for two reasons:
+  - Next.js runs server actions one at a time per client, so a slow save would block dashboard actions.
+  - An unload flush needs `fetch(…, { keepalive: true })`, which only a plain HTTP endpoint can receive.
+- The server validates the document with `safeParseDocument`, rejects bodies over 4 MiB (Vercel caps requests at 4.5 MB) and stores the parsed document.
+- Optimistic concurrency uses an integer, `pages.draft_revision`, instead of `updated_at`. Renames and status changes also bump `updated_at`, and they must not make the next draft save conflict. An integer also avoids carrying microsecond timestamps through JavaScript.
+- The update matches `id` and `draft_revision = baseRevision`, and sets `baseRevision + 1`. When no row matches, the answer is 409 with the current revision, or 404 when the page is gone.
+- Dashboard mutations (create, rename, delete) stay server actions.
