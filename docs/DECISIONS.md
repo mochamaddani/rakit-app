@@ -132,3 +132,6 @@ It is disabled at scaffold time to keep builds simple. Revisit in M2 if profilin
 
 ## D-032 Type-checking setup — Accepted
 `tsconfig` targets ES2022 (type-checking only; Next compiles with SWC), so ES2018+ regex features (the `s` flag, lookbehind) type-check. `pnpm typecheck` runs `next typegen` before `tsc`, because the global `PageProps`/`LayoutProps` route types are generated into `.next/` and are missing from fresh clones and CI.
+
+## D-033 Focus ring color — Accepted
+The focus ring is a 3px solid outline, offset 2px, in `--lp-fg`: the text color of the surface it is drawn on. Tone pairs are what M5 validates (D-015), so the ring inherits their contrast (at least 4.5:1 once validated, against the 3:1 that WCAG 1.4.11 needs). The accent color is not used, because no check pairs it with a background (it measured 1.95–2.41:1 on the default theme). A surface that paints its own background (product cards, testimonial quotes, benefit cards) resets `--lp-fg` to its own text color. `tests/e2e/renderer/focus.spec.ts` tabs through the example page in every tone and checks each ring against the background behind it.

@@ -27,6 +27,7 @@
 }
 /* Cards sit on --lp-card-bg (light in every tone), so they use the page text colors. */
 .lp-benefits--cards .lp-benefit {
+  --lp-fg: var(--lp-text);
   padding: 20px;
   border-radius: var(--lp-radius);
   background: var(--lp-card-bg);

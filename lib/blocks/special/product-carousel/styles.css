@@ -26,6 +26,7 @@
 
 /* Cards sit on --lp-card-bg (light in every tone): reset the tone variables they use. */
 .lp-card {
+  --lp-fg: var(--lp-text);
   --lp-line: var(--lp-border);
   --lp-btn-bg: var(--lp-primary);
   --lp-btn-fg: var(--lp-on-primary);

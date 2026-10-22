@@ -207,8 +207,9 @@ a {
   min-height: 120px;
   background: repeating-linear-gradient(45deg, var(--lp-line) 0 10px, transparent 10px 20px);
 }
+/* The ring takes the surface's text color, so it inherits the tone pair's checked contrast (D-033). */
 :focus-visible {
-  outline: 3px solid var(--lp-accent);
+  outline: 3px solid var(--lp-fg);
   outline-offset: 2px;
 }
 
@@ -283,6 +284,7 @@ a {
 }
 /* Cards sit on --lp-card-bg (light in every tone), so they use the page text colors. */
 .lp-benefits--cards .lp-benefit {
+  --lp-fg: var(--lp-text);
   padding: 20px;
   border-radius: var(--lp-radius);
   background: var(--lp-card-bg);
@@ -470,6 +472,7 @@ a {
 
 /* Cards sit on --lp-card-bg (light in every tone): reset the tone variables they use. */
 .lp-card {
+  --lp-fg: var(--lp-text);
   --lp-line: var(--lp-border);
   --lp-btn-bg: var(--lp-primary);
   --lp-btn-fg: var(--lp-on-primary);
@@ -651,6 +654,7 @@ a {
 }
 /* Quotes sit on --lp-card-bg (light in every tone), so they use the page text colors. */
 .lp-quote {
+  --lp-fg: var(--lp-text);
   --lp-line: var(--lp-border);
   display: flex;
   flex-direction: column;

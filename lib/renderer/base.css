@@ -206,8 +206,9 @@ a {
   min-height: 120px;
   background: repeating-linear-gradient(45deg, var(--lp-line) 0 10px, transparent 10px 20px);
 }
+/* The ring takes the surface's text color, so it inherits the tone pair's checked contrast (D-033). */
 :focus-visible {
-  outline: 3px solid var(--lp-accent);
+  outline: 3px solid var(--lp-fg);
   outline-offset: 2px;
 }
 
