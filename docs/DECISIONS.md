@@ -162,7 +162,7 @@ Consequences:
 - Dashboard mutations (create, rename, delete) stay server actions.
 
 ## D-036 Editor dependencies — Accepted
-`immer@11.1.21` (patches for undo/redo), pinned exactly. Immer published 11.1.22–11.2.7 in a burst on 2026-10-20/21; we stay on the last release that is at least two weeks old and move up deliberately.
+`immer@11.1.21` (patches for undo/redo) and `zustand@5.0.15` (editor store), both pinned exactly. Immer published 11.1.22–11.2.7 in a burst on 2026-10-20/21; we stay on the last release that is at least two weeks old and move up deliberately.
 
 ## D-037 Editor commands — Accepted
 - Every change is a typed command (`lib/editor/commands.ts`) applied with Immer's `produceWithPatches`.
@@ -177,3 +177,8 @@ Consequences:
 - Removing a section's last block removes the section. Duplicating a block that is alone in its section duplicates the section.
 - Copied sections never carry the original's anchor, because anchors must stay unique.
 - The palette inserts a block in a new default section after the selected section, never after trailing footer sections (D-017). A Footer always goes last.
+
+## D-038 Undo history — Accepted
+- **Entries:** one per command, holding Immer patches, inverse patches and the selection before and after. Undo and redo apply patches and never re-run commands, so ids a command generated survive redo.
+- **Coalescing:** consecutive edits with the same key (block + field path, or settings path) within 1000 ms of each other join one entry. Blurring the field, undo and redo end the run. Up to 200 entries are kept.
+- **Not in history:** selection, hover and viewport. Undo restores the selection recorded with the entry if it still exists.
