@@ -38,11 +38,11 @@ type InstanceOf<D> =
 export type BlockInstance = InstanceOf<(typeof BLOCKS)[number]>;
 
 /** Anchors are user slugs; `b-` and `s-` are reserved for generated DOM ids (D-028). */
-const ANCHOR = /^(?![bs]-)[a-z][a-z0-9-]{0,40}$/;
+export const SECTION_ANCHOR_PATTERN = /^(?![bs]-)[a-z][a-z0-9-]{0,40}$/;
 
 export const SectionSchema = z.object({
   id: IdSchema,
-  anchor: z.string().regex(ANCHOR).optional(),
+  anchor: z.string().regex(SECTION_ANCHOR_PATTERN).optional(),
   style: SectionStyleSchema.prefault({}),
   blocks: z.array(BlockInstanceSchema).max(LIMITS.blocksPerSection),
 });

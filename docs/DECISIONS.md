@@ -160,3 +160,20 @@ Consequences:
 - Optimistic concurrency uses an integer, `pages.draft_revision`, instead of `updated_at`. Renames and status changes also bump `updated_at`, and they must not make the next draft save conflict. An integer also avoids carrying microsecond timestamps through JavaScript.
 - The update matches `id` and `draft_revision = baseRevision`, and sets `baseRevision + 1`. When no row matches, the answer is 409 with the current revision, or 404 when the page is gone.
 - Dashboard mutations (create, rename, delete) stay server actions.
+
+## D-036 Editor dependencies — Accepted
+`immer@11.1.21` (patches for undo/redo), pinned exactly. Immer published 11.1.22–11.2.7 in a burst on 2026-10-20/21; we stay on the last release that is at least two weeks old and move up deliberately.
+
+## D-037 Editor commands — Accepted
+- Every change is a typed command (`lib/editor/commands.ts`) applied with Immer's `produceWithPatches`.
+- The store's document always validates and is normalized:
+  - values are parsed with the schema of the field they replace;
+  - the block, style or settings object is then validated whole;
+  - a failing command changes nothing and returns a reason (`invalid`, `limit`, `noop` or `not_found`).
+- Moves never merge a block into another band:
+  - a block alone in its section moves the whole section;
+  - a block in a shared section moves within it, and at the edge it leaves into a new section that copies the band's style;
+  - joining another section is a drag-and-drop gesture (M2b).
+- Removing a section's last block removes the section. Duplicating a block that is alone in its section duplicates the section.
+- Copied sections never carry the original's anchor, because anchors must stay unique.
+- The palette inserts a block in a new default section after the selected section, never after trailing footer sections (D-017). A Footer always goes last.
