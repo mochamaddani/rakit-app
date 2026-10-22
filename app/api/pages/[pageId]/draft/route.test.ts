@@ -45,3 +45,21 @@ it('answers 413 from content-length before reading the body', async () => {
   });
   expect(res.status).toBe(413);
 });
+it('answers 400 when the client stops sending the body, and 413 for a chunked body over the cap (M8)', async () => {
+  const body = (fail: boolean, chunk = '{') =>
+    new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(new TextEncoder().encode(chunk));
+        if (fail) controller.error(new Error('aborted'));
+        else controller.close();
+      },
+    });
+  const headers = { 'content-type': 'application/json' };
+  expect((await put({ headers, body: body(true), duplex: 'half' } as RequestInit)).status).toBe(
+    400,
+  );
+  const huge = 'x'.repeat(4 * 1024 * 1024 + 1);
+  expect(
+    (await put({ headers, body: body(false, huge), duplex: 'half' } as RequestInit)).status,
+  ).toBe(413);
+});
