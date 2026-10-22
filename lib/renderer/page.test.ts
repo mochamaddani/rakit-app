@@ -98,3 +98,24 @@ describe('renderPage', () => {
     );
   });
 });
+
+describe('footer landmark placement', () => {
+  const sections = [
+    { id: 'sHero', blocks: [{ id: 'bHero', type: 'hero', props: { headline: 'Halo' } }] },
+    { id: 'sFoot', blocks: [{ id: 'bFoot', type: 'footer', props: {} }] },
+  ];
+  it('renders trailing footer sections after </main>', () => {
+    const { html } = renderPage(parseDocument({ schemaVersion: 1, sections }), { mode: 'export' });
+    expect(html).toContain(
+      '</main><div id="s-sFoot" class="lp-s lp-tone-base lp-pad-md"><div class="lp-c lp-w-normal"><div class="lp-b" id="b-bFoot"><footer class="lp-footer">',
+    );
+  });
+  it('keeps a footer section that is followed by other content inside <main>', () => {
+    const { html } = renderPage(
+      parseDocument({ schemaVersion: 1, sections: [sections[1], sections[0]] }),
+      { mode: 'export' },
+    );
+    expect(html).toContain('<main><section id="s-sFoot"');
+    expect(html).not.toContain('</main><div');
+  });
+});

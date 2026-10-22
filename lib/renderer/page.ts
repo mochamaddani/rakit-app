@@ -62,7 +62,11 @@ export function renderPage(doc: PageDocument, options: RenderOptions): RenderRes
   const stats: BlockStat[] = [];
   const warnings: string[] = [];
 
-  const renderSection = (section: Section, sectionIndex: number): SafeHtml => {
+  const renderSection = (
+    section: Section,
+    sectionIndex: number,
+    element: 'section' | 'div',
+  ): SafeHtml => {
     const blocks = section.blocks.map((block, indexInSection) => {
       const definition = getBlockDefinition(block.type);
       if (!definition) {
@@ -86,12 +90,27 @@ export function renderPage(doc: PageDocument, options: RenderOptions): RenderRes
       });
       return markup;
     });
-    return html`<section id="${sectionAnchor(section)}" class="lp-s lp-tone-${section.style.tone} lp-pad-${section.style.padY}"${
+    const attributes = html` id="${sectionAnchor(section)}" class="lp-s lp-tone-${section.style.tone} lp-pad-${section.style.padY}"${
       preview ? html` data-lp-section="${section.id}"` : ''
-    }><div class="lp-c lp-w-${section.style.width}">${blocks}</div></section>`;
+    }`;
+    const inner = html`<div class="lp-c lp-w-${section.style.width}">${blocks}</div>`;
+    return element === 'section'
+      ? html`<section${attributes}>${inner}</section>`
+      : html`<div${attributes}>${inner}</div>`;
   };
 
-  const sections = doc.sections.map(renderSection);
+  // Trailing sections made only of footer-landmark blocks go after </main>, so their <footer> is
+  // the page's contentinfo landmark (docs/DECISIONS.md D-017).
+  const isFooterOnly = (section: Section) =>
+    section.blocks.length > 0 &&
+    section.blocks.every((block) => getBlockDefinition(block.type)?.landmark === 'footer');
+  let mainEnd = doc.sections.length;
+  while (mainEnd > 0 && isFooterOnly(doc.sections[mainEnd - 1]!)) mainEnd -= 1;
+  const sections = doc.sections.map((section, i) =>
+    renderSection(section, i, i < mainEnd ? 'section' : 'div'),
+  );
+  const mainSections = sections.slice(0, mainEnd);
+  const afterMain = sections.slice(mainEnd);
   const css = collectCss(doc, { mode, minify });
   const js = collectJs(doc, { minify });
   const { lang, seo } = doc.settings;
@@ -102,7 +121,7 @@ export function renderPage(doc: PageDocument, options: RenderOptions): RenderRes
     seo.noindex ? html`<meta name="robots" content="noindex,nofollow">` : ''
   }<style>${unsafeRaw(escapeInlineStyle(css))}</style>`;
   const script = js ? html`<script>${unsafeRaw(escapeInlineScript(js))}</script>` : '';
-  const page = html`<!doctype html><html lang="${lang}"><head>${head}</head><body><main>${sections}</main>${script}</body></html>`;
+  const page = html`<!doctype html><html lang="${lang}"><head>${head}</head><body><main>${mainSections}</main>${afterMain}${script}</body></html>`;
 
   return {
     html: page.value,

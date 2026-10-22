@@ -1,0 +1,37 @@
+.lp-faq__item {
+  border-bottom: 1px solid var(--lp-line);
+}
+.lp-faq__item:first-of-type {
+  border-top: 1px solid var(--lp-line);
+}
+.lp-faq__q {
+  position: relative;
+  display: block;
+  padding: 16px 32px 16px 0;
+  font-weight: 700;
+  list-style: none;
+  cursor: pointer;
+}
+.lp-faq__q::-webkit-details-marker {
+  display: none;
+}
+/* Chevron drawn with borders; turns 180° when the item is open. */
+.lp-faq__q::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: translateY(-75%) rotate(45deg);
+  transition: transform 0.2s;
+}
+.lp-faq__item[open] > .lp-faq__q::after {
+  transform: translateY(-25%) rotate(225deg);
+}
+.lp-faq__a {
+  padding: 0 0 16px;
+  color: var(--lp-fg-muted);
+}
