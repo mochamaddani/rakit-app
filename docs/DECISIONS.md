@@ -1,0 +1,128 @@
+# Decisions Log
+
+Assumptions and decisions made while planning and building LaunchPad. "PRD" means `docs/PRD.md`; "Plan" means `docs/PLAN.md`.
+
+Status values: **Accepted**: in effect. **Proposed**: in effect unless the owner objects at plan review. **Superseded**: replaced by a later entry. Newest entries go at the bottom.
+
+---
+
+## D-001 Keep Supabase (not Firebase) — Accepted
+Pages, versions, templates and assets are relational. Documents fit JSONB, tags fit `text[]` with a GIN index, workspace scoping fits RLS, and Storage gives RLS-protected buckets plus public CDN URLs. AI daily caps (M5) become one atomic SQL function. With Firebase, joins, quotas and authorization would move into app code and security rules.
+
+## D-002 Toolchain versions — Accepted
+- **Node 24 LTS.** The machine currently runs Node 20.20 (via nvm). Node 20 reached end of life in April 2026, and it is below the minimum of `@supabase/supabase-js` (≥ 22), Vitest 5 (≥ 22.12) and html-validate 11 (≥ 22.22).
+- **pnpm 12.14** (`packageManager` field). pnpm ≥ 11 blocks dependency build scripts unless they are listed under `allowBuilds` in `pnpm-workspace.yaml`. With `strictDepBuilds` (the default), an unlisted package with a build script fails the install.
+- **Next.js 16.4** (App Router, Turbopack), React 19.3, Tailwind 4.3, Zod 4.6, Vitest 5, Playwright 1.64, esbuild 0.28, shadcn CLI 4.
+- **TypeScript 5.x**, as installed by `create-next-app`. TypeScript 7 (native) is released, but `typescript-eslint` only supports `<6.1`. Revisit when it supports 7.
+
+## D-003 `proxy.ts` instead of `middleware.ts` — Accepted
+Next.js 16 renamed the middleware file convention to `proxy.ts` (exported function `proxy`, Node.js runtime). The PRD (§9) lists `/middleware.ts`. The proxy only refreshes the Supabase session and redirects. Every server action and route handler checks auth again, as Next.js recommends.
+
+## D-004 Env var names stay as in the PRD — Accepted
+`NEXT_PUBLIC_SUPABASE_ANON_KEY` holds Supabase's publishable key (`sb_publishable_…`) or the legacy anon key. `SUPABASE_SERVICE_ROLE_KEY` holds the secret key (`sb_secret_…`) or the legacy service_role key. Supabase's own docs now call the first one `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`; we keep the PRD's names.
+
+## D-005 Single-tenant auth — Accepted
+- Login is email and password through Supabase Auth.
+- **Public sign-ups are disabled**: `enable_signup = false` locally, and the same switch in the hosted project's dashboard. The owner account is created with `pnpm owner:create`. Without this, anyone holding the public key could create an account and spend AI quota and storage.
+- A trigger creates one workspace for each new user.
+- Every RLS policy calls `public.is_workspace_member(workspace_id)`. Today that function checks `workspaces.owner_id`. To add multi-user later, add a `workspace_members` table and change only that function.
+
+## D-006 Version HTML lives in Storage, not in `page_versions.html` — Proposed (deviates from PRD §7)
+`page_versions` keeps `html_path` (private bucket `page-versions`), `byte_size` and `html_sha256`. A Portable export is 0.3–3 MB, and base64 compresses poorly, so a few hundred exports would fill the free plan's 500 MB database and bloat backups. Storage is cheaper, and downloads come straight from it. Revisit if you prefer the HTML in Postgres; that is a single-column migration.
+
+## D-007 Export runs in the browser — Proposed (M3)
+`renderPage` runs on both server and browser. Portable mode inlines image variants that were already resized to WebP at upload (D-008), so export needs no server-side re-encoding. The browser assembles the file, downloads it as a Blob, uploads the same bytes to `page-versions`, and inserts the `page_versions` row under RLS. This avoids Vercel's 4.5 MB function response limit and server compute, and the download is immediate. Images on third-party hosts that block CORS stay as URLs, with a checklist warning.
+
+## D-008 Upload pipeline — Proposed (M2)
+The browser uploads the original file straight to Storage, which bypasses Vercel's 4.5 MB request limit. A server route then uses `sharp` to produce WebP variants at 1600 px and 800 px wide (quality 80), writes the `assets` row, and deletes the original.
+
+## D-009 Rich text is a tiny inline markup, not HTML — Accepted
+Supported syntax: `**bold**`, `*italic*`, `==highlight==`, `[label](url)`, newline → `<br>`, and a backslash to escape a marker. The renderer tokenizes, escapes every character, and sanitizes link URLs. This is safe by construction and deterministic, needs no HTML parser in the browser, and is easy for the AI to produce. In M2, inline canvas editing serializes the edited DOM (limited to b/i/mark/a/br) back to this markup.
+
+## D-010 Renderer output safety — Accepted
+All markup is built with the `html` tagged template, which escapes every interpolated value. `unsafeRaw()` is used only for our own generated CSS and JS, and (M4) for the Custom HTML block. Every `href` and `src` goes through `sanitizeUrl`, which allows only listed schemes: links accept http, https, mailto, tel, sms, `#anchor` and relative paths; images accept http, https, relative paths and `data:image/*`. A registry-wide test injects hostile strings into every field of every block.
+
+## D-011 Determinism — Accepted
+The renderer never uses `Date`, `Math.random`, `Intl` or I/O. Prices go through our own formatter with per-currency presets (IDR → `Rp149.000`, USD → `$1,234.50`, MYR, SGD, PHP), because `Intl` output varies between ICU builds (Node vs. browsers), and that would break "same document → same bytes".
+
+## D-012 CSS strategy — Accepted
+- Theme tokens are CSS custom properties on `:root`.
+- Base CSS is always included, with a budget of ≤ 4 KB minified.
+- Each block type ships one static stylesheet. It is included once, and only if that type is on the page, ordered by type name so reordering blocks never changes the cascade.
+- Per-instance options (for example, carousel slides per view) are custom properties in a `style` attribute, so there are no per-instance rules.
+- Every class is prefixed `lp-`.
+
+## D-013 CSS/JS assets are compiled into committed modules — Accepted (deviates from PRD §9 naming)
+Block CSS and JS are written as real files (`styles.css`, `snippet.js`) in the block folder. `pnpm assets` runs esbuild and writes `styles.generated.ts` / `snippet.generated.ts`, each exporting `{ min, src }`, and these generated files are committed. A unit test fails when they are stale. `renderPage` must also run in the browser, where esbuild cannot run, so compiling ahead of time keeps the renderer pure and its output byte-stable. The PRD names this file `snippet.ts`; here it is `snippet.js` plus `snippet.generated.ts`.
+
+## D-014 Block registry split — Accepted
+Pure block definitions (type, category, label, description, icon, schema, defaults, CSS, optional snippet, render; no React) live in `lib/blocks/*`. The renderer, the AI catalog (M5) and the importer (M6) all use them. In M2 the editor's inspector is generated from the Zod schema, and any custom inspector components are registered separately on the client. A block whose inspector is generated needs its own folder plus one registry line.
+
+## D-015 Section model — Accepted
+A section is a full-width band with a `tone` (`base | muted | primary | dark`, each mapped to a theme color pair), vertical padding (`none | sm | md | lg`) and a content width (`narrow | normal | wide | full`). Blocks stack inside a section. Tones replace free colors, so contrast stays checkable (M5 validates theme pairs).
+
+## D-016 Above-the-fold heuristic — Accepted
+Blocks in the first section count as above the fold: their images load eagerly, and the first image gets `fetchpriority="high"`. Everything else is lazy.
+
+## D-017 Footer landmark — Accepted
+Trailing sections whose blocks all declare `landmark: 'footer'` render after `</main>`, so the footer becomes the page's `contentinfo` landmark.
+
+## D-018 Product Carousel scope split — Accepted
+**M1** covers the scroll-snap layout, cards (image, title, description, price, compare-at price, discount badge, badge, rating and review count, CTA), arrows, dots, loop, keyboard, accessibility, eager/lazy images and per-instance layout. **M4** adds autoplay, bulk paste, tracking events and the JSON-LD toggle (PRD §10). M4 fields arrive with Zod defaults, so M1 documents still parse.
+
+## D-019 Tracking event mapping (PRD Q3) — Proposed (M3/M4)
+| Trigger | Meta Pixel | GA4 | Google Ads |
+|---|---|---|---|
+| Page load | `PageView` | `page_view` (sent by `gtag('config')`) | — |
+| Carousel card CTA | `ViewContent` `{content_ids:[itemId], content_name, content_type:'product', value: price, currency}` | `select_item` `{item_list_id: blockId, item_list_name: heading, items:[{item_id, item_name, price, index}]}` | — |
+| Other CTA (hero, pricing, sticky) | none by default; configurable (`Contact`, `InitiateCheckout`, `Lead`, custom) | none by default; configurable | — |
+| Form submit (when detectable) | `Lead` | `generate_lead` | `conversion` `{send_to: 'AW-…/label'}` |
+
+The carousel default is `ViewContent`, not `AddToCart`: a card click shows interest in a product, and there is no cart, so `AddToCart` would feed the ad algorithm a misleading signal. The event is configurable per carousel.
+
+## D-020 Form providers (PRD Q1) — Proposed (M3)
+Every form can be added as a generic iframe URL or as a pasted snippet. Presets: Tally, Typeform, Jotform, Google Forms. A preset tracks submits through postMessage only where its provider emits a submit message; Google Forms emits none, and the UI says so. **Owner input wanted:** which providers you actually use (including local COD order-form services). M3 adds those first.
+
+## D-021 Keep room for server-side conversions (PRD Q5) — Accepted
+Every browser event carries an `event_id` (Meta `eventID`). Meta Conversions API or Google offline conversions can then be added later with deduplication and without changing exported pages.
+
+## D-022 Hosted pages on a separate domain (PRD Q4, M7) — Proposed
+The default is path-based: `https://<APP_BASE_DOMAIN>/<slug>`, on a registrable domain different from the editor's, with optional custom domains per page. Pages are **never** served from the editor's origin: they run third-party scripts (pixels, form embeds) and optional Custom HTML, and the Supabase session cookies on the editor origin are readable by JavaScript.
+
+## D-023 Other PRD open questions — Accepted
+- Q2: carousel data is manual in v1 (repeater + bulk paste, in M4).
+- Q6: the wizard supports Indonesian and English.
+- Q7: import limit 5 MB. Unknown scripts are removed unless explicitly kept as sandboxed Custom HTML, which is opt-in and flagged by the checklist. High-risk scripts can never be kept.
+- Q8: the product-URL reader comes later.
+
+## D-024 AI defaults (M5) — Proposed
+- `AI_MODEL=claude-opus-5-5` in `.env.example`.
+- Structured outputs use `client.messages.parse` with `zodOutputFormat(schema)`. The result is then validated against our full Zod and business rules, with up to 2 retries that feed the validation errors back.
+- `cache_control` on the stable prefix (system prompt + block catalog).
+- `output_config.effort` is set explicitly for each step (Opus 5.5 defaults to `medium`).
+- Server-side refusal fallbacks are on (`fallbacks: "default"`).
+- `ai_runs` logs `input_tokens`, `output_tokens`, `cache_read_input_tokens`, `cache_creation_input_tokens`, latency and status.
+
+## D-025 Naming — Accepted
+The product is "LaunchPad" in the UI, as in the PRD. The repo and package are named `rakit-app`, after the folder.
+
+## D-026 Test layout — Accepted
+- Unit tests sit next to the code as `*.test.ts`.
+- Repo-level unit tests (dependency policy) live in `tests/unit`.
+- Playwright tests live in `tests/e2e/{renderer,app}`; pgTAP RLS tests in `supabase/tests`.
+- `pnpm test` is the single unit-test gate. It includes the generated-asset staleness check and the dependency policy.
+
+## D-027 Dependency policy (PRD AC3) — Accepted
+`tests/unit/dependency-policy.test.ts` fails if `package.json` lists any page-builder, DnD or carousel framework. The list is in Plan §7.
+
+## D-028 IDs and anchors — Accepted
+- IDs are 10 random characters from `[a-z0-9]`, generated with `crypto.getRandomValues`.
+- `IdSchema` accepts `[A-Za-z0-9_-]{1,32}`.
+- Section and block IDs must be unique in a document. Item IDs must be unique within their list.
+- A section anchor is a user-settable slug that cannot start with `b-` or `s-`; those prefixes are reserved for generated DOM IDs.
+
+## D-029 Document version field — Accepted
+The PRD's `PageDocument.version` and `schemaVersion` are one field, `schemaVersion` (currently `1`). Additive changes rely on Zod defaults; breaking changes bump the version and add a migration.
+
+## D-030 React Compiler off — Accepted
+It is disabled at scaffold time to keep builds simple. Revisit in M2 if profiling the editor shows render cost from props that should be memoized.
