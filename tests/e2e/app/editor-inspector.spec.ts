@@ -110,6 +110,34 @@ test('the hero button can target a section, and UTM parameters are appended to w
   );
 });
 
+test('a button whose section was deleted says so instead of showing another section', async ({
+  page,
+}) => {
+  const link = { kind: 'section', sectionId: 'deleted' };
+  const document = {
+    schemaVersion: 1,
+    sections: [
+      {
+        id: 'sHero',
+        blocks: [
+          {
+            id: 'bHero',
+            type: 'hero',
+            props: { headline: 'Botol', primaryCta: { label: 'Pesan', link } },
+          },
+        ],
+      },
+    ],
+  };
+  await openEditor(page, await seedPage({ name: 'Dangling link', document }));
+  await selectBlock(page, 'hero');
+  const section = page.getByRole('group', { name: 'Primary button' }).getByLabel('Section');
+  await expect(section.locator('option:checked')).toHaveText('Missing section');
+  await expect(section).toHaveAccessibleDescription(
+    'This section no longer exists. Choose another.',
+  );
+});
+
 test('block style hides a block on mobile only', async ({ page }) => {
   const frame = await heroAndCarousel(page);
   await selectBlock(page, 'hero');

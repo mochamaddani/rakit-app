@@ -33,6 +33,9 @@ export function LinkControl({ spec, value, path, actions, context }: ControlProp
   const id = fieldId(context, path);
   const link = (value ?? undefined) as LinkValue | undefined;
   const { sections } = context.doc;
+  // A deleted section leaves its links dangling; the page renders them as href="#".
+  const missingSection =
+    link?.kind === 'section' && !sections.some((section) => section.id === link.sectionId);
 
   const setKind = (kind: string) => {
     if (kind === '') actions.set(path, undefined);
@@ -63,13 +66,25 @@ export function LinkControl({ spec, value, path, actions, context }: ControlProp
         <UrlFields id={id} url={link.url} newTab={link.newTab} path={path} actions={actions} />
       ) : null}
       {link?.kind === 'section' ? (
-        <FieldShell id={`${id}-section`} label="Section">
+        <FieldShell
+          id={`${id}-section`}
+          label="Section"
+          error={missingSection ? 'This section no longer exists. Choose another.' : null}
+        >
           <select
             id={`${id}-section`}
             className={selectClass}
             value={link.sectionId}
+            aria-invalid={missingSection ? true : undefined}
+            aria-describedby={missingSection ? `${id}-section-error` : undefined}
             onChange={(event) => actions.set([...path, 'sectionId'], event.target.value)}
           >
+            {/* Without this option the select would show the first section, not the dead link. */}
+            {missingSection ? (
+              <option value={link.sectionId} disabled>
+                Missing section
+              </option>
+            ) : null}
             {sections.map((section, index) => {
               const first = section.blocks[0];
               return (
