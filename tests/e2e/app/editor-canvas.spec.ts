@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type FrameLocator, type Page } from '@playwright/test';
 import { exampleDocument } from '@/tests/fixtures/example-document';
 import {
   blockTypes,
@@ -89,19 +89,44 @@ test('an invalid stored draft shows an error instead of the editor', async ({ pa
   await expect(page.getByRole('heading', { name: "This draft can't be opened" })).toBeVisible();
 });
 
-test('forged canvas messages are ignored', async ({ page }) => {
+/** A select message for the hero, shaped as the canvas runtime sends it. */
+const selectHero = (channel: string) => ({
+  source: 'launchpad-canvas',
+  channel,
+  type: 'select',
+  target: { kind: 'block', blockId: heroId },
+});
+
+/** The channel this canvas load is tagged with (D-039). */
+async function canvasChannel(page: Page): Promise<string> {
+  const srcdoc = await page.locator('iframe[title="Page preview"]').getAttribute('srcdoc');
+  return /data-lp-channel="([^"]+)"/.exec(srcdoc ?? '')![1]!;
+}
+
+const postFromCanvas = (frame: FrameLocator, message: unknown) =>
+  frame.locator('body').evaluate((_, m) => window.parent.postMessage(m, '*'), message);
+
+test('canvas messages on the right channel are ignored unless the iframe sent them', async ({
+  page,
+}) => {
   await openEditor(page, await seedPage({ name: 'Example', document: exampleDocument }));
-  await page.evaluate((blockId) => {
-    window.postMessage(
-      {
-        source: 'launchpad-canvas',
-        channel: 'aaaaaaaaaa',
-        type: 'select',
-        target: { kind: 'block', blockId },
-      },
-      '*',
-    );
-  }, heroId);
+  const channel = await canvasChannel(page);
+  await page.evaluate((message) => window.postMessage(message, '*'), selectHero(channel));
   await page.waitForTimeout(300);
   await expect(page.getByTestId('canvas-selection')).toHaveCount(0);
+});
+
+test('canvas messages from the iframe are ignored unless they carry its channel', async ({
+  page,
+}) => {
+  const frame = await openEditor(
+    page,
+    await seedPage({ name: 'Example', document: exampleDocument }),
+  );
+  await postFromCanvas(frame, selectHero('aaaaaaaaaa'));
+  await page.waitForTimeout(300);
+  await expect(page.getByTestId('canvas-selection')).toHaveCount(0);
+  // The same message on the right channel is accepted, so the check above is the channel's.
+  await postFromCanvas(frame, selectHero(await canvasChannel(page)));
+  await expect(page.getByTestId('canvas-selection')).toContainText('Hero');
 });
