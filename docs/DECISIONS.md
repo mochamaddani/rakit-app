@@ -193,3 +193,15 @@ Consequences:
 - **Snippets:** after a patch the runtime runs the page's snippets again. Snippets are idempotent per root (`data-lp-ready`), so only new roots initialize; the block recipe now says so.
 - **Untrusted messages:** every message from the iframe is untrusted. The parent checks `event.source`, the source tag, the channel and a Zod schema, and acts only on ids that exist in the document. Links never navigate the canvas.
 
+
+## D-040 Inspector generated from the Zod schemas — Accepted
+- **Generation:** `describeFields` builds each block's inspector from its Zod schema with Zod 4 introspection (`type`, `def`, `meta()`). Controls come from metadata or shape:
+  - `control: 'text' | 'rich' | 'image' | 'color'` picks the control;
+  - a union discriminated by `kind` over url/section/default is a link;
+  - enums and literal unions are choices;
+  - arrays of objects are repeaters, whose maximum comes from `maxItems`.
+- **Coverage:** an unknown construct throws, and a registry-wide test runs the walker on every block. A new block therefore gets a full inspector or fails `pnpm test`.
+- **Labels:** humanized keys plus an override table (`lib/editor/inspector/labels.ts`), so schemas stay free of UI copy.
+- **Validation:** fields validate on every keystroke against their own schema. An invalid value (an emptied required headline) shows an error and is not committed; blur restores the last valid value.
+- **New values:** new list items and newly enabled optional groups copy the block's own sample from `defaultProps` when there is one. Otherwise they are seeded from the schema, with `[REPLACE: …]` for required text, so nothing invents content.
+- **Contrast:** the theme panel shows WCAG contrast for each color pair (`lib/schema/contrast.ts`). It only hints; M5 adds validation and auto-adjust.

@@ -14,7 +14,10 @@ export function rich(max: number, min = 0) {
   return z.string().min(min).max(max).meta({ control: 'rich' });
 }
 
-export const HexColorSchema = z.string().regex(/^#[0-9A-Fa-f]{6}$/);
+export const HexColorSchema = z
+  .string()
+  .regex(/^#[0-9A-Fa-f]{6}$/)
+  .meta({ control: 'color' });
 
 export const UrlLinkSchema = z.object({
   kind: z.literal('url'),
@@ -32,13 +35,15 @@ export const LinkSchema = z.discriminatedUnion('kind', [
 export type Link = z.output<typeof LinkSchema>;
 
 /** An empty src renders a placeholder. */
-export const ImageSchema = z.object({
-  src: z.string().max(8_000_000).default(''),
-  alt: text(300).default(''),
-  width: z.number().int().positive().optional(),
-  height: z.number().int().positive().optional(),
-  assetId: z.string().optional(),
-});
+export const ImageSchema = z
+  .object({
+    src: z.string().max(8_000_000).default(''),
+    alt: text(300).default(''),
+    width: z.number().int().positive().optional(),
+    height: z.number().int().positive().optional(),
+    assetId: z.string().optional(),
+  })
+  .meta({ control: 'image' });
 export type Image = z.output<typeof ImageSchema>;
 
 export const CtaSchema = z.object({
