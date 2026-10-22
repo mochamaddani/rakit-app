@@ -182,3 +182,14 @@ Consequences:
 - **Entries:** one per command, holding Immer patches, inverse patches and the selection before and after. Undo and redo apply patches and never re-run commands, so ids a command generated survive redo.
 - **Coalescing:** consecutive edits with the same key (block + field path, or settings path) within 1000 ms of each other join one entry. Blurring the field, undo and redo end the run. Up to 200 entries are kept.
 - **Not in history:** selection, hover and viewport. Undo restores the selection recorded with the entry if it still exists.
+
+## D-039 Canvas protocol and patching — Accepted
+- **Isolation:** the canvas is `<iframe sandbox="allow-scripts" srcdoc>`. Its origin is opaque, so page scripts can never reach the editor's cookies or DOM. Its document is `renderPage(doc, { mode: 'preview' })` plus a bundled runtime (`lib/editor/canvas/runtime.ts`, ≤ 8 KB) that carries a per-load channel id.
+- **Patching:**
+  - The parent keeps the HTML it last sent for each block. The cache is keyed on the block object, the settings object, the section anchors, the block's section and its first-section and first-block position.
+  - Once per animation frame it sends only what changed: CSS, JS, `lang`, the body skeleton (sections with one slot per block) and changed blocks.
+  - The runtime moves unchanged block elements into the new skeleton, so FAQ items stay open across reorders. Moving an element resets its scroll, so the runtime saves and restores scroll offsets for moved and replaced blocks alike.
+  - A `<details>` counts as user-toggled only when its open state differs from its markup, so changing "Open the first question" in the inspector still shows.
+- **Snippets:** after a patch the runtime runs the page's snippets again. Snippets are idempotent per root (`data-lp-ready`), so only new roots initialize; the block recipe now says so.
+- **Untrusted messages:** every message from the iframe is untrusted. The parent checks `event.source`, the source tag, the channel and a Zod schema, and acts only on ids that exist in the document. Links never navigate the canvas.
+

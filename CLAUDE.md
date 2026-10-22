@@ -12,7 +12,7 @@ Spec: `docs/PRD.md` · Plan: `docs/PLAN.md` · Decisions: `docs/DECISIONS.md` ·
 - `pnpm test:e2e` (Playwright: exported pages opened via `file://`; carousel with JS on/off, touch, keyboard)
 - `pnpm test:e2e:app` (Playwright against the running app; needs `pnpm db:start` and `.env.local`)
 - `pnpm owner:create --email <email> --password <password>`
-- `pnpm assets` / `pnpm assets:check` (compile block `styles.css` / `snippet.js` into committed `*.generated.ts`; run `pnpm format` first)
+- `pnpm assets` / `pnpm assets:check` (compile block `styles.css` / `snippet.js`, and bundle `lib/**/*.bundle.ts` such as the canvas runtime, into committed `*.generated.ts`; run `pnpm format` first)
 - `pnpm render [doc.json] [--out f] [--mode export|preview] [--no-minify]` (no argument: renders the example to `out/example.html`)
 
 ## Local setup
@@ -38,7 +38,7 @@ Spec: `docs/PRD.md` · Plan: `docs/PLAN.md` · Decisions: `docs/DECISIONS.md` ·
    - `schema.ts`: Zod props. Use `text()` / `rich()` for every user-visible string; every list item has an `id`; nested objects with defaulted fields use `.prefault({})`.
    - `render.ts`: build markup only with the `html` tag. Text via `ctx.text` / `ctx.rich`, links via `ctx.resolveLink` or `renderCta`, images via `renderImage`, inner ids via `ctx.domId`. No Date/Math.random/Intl.
    - `styles.css`: classes prefixed `lp-<type>`; mobile-first; breakpoints 640px / 1024px; per-instance options arrive as CSS custom properties. An element that paints its own background (a card) resets the tone variables it uses, including `--lp-fg`, which the focus ring uses (D-033).
-   - Optional `snippet.js`: vanilla ES2017, no globals, query only inside each `[data-lp-<type>]` root, idempotent (`data-lp-ready`), honor `prefers-reduced-motion`. Gate it with `isNeeded(props)`.
+   - Optional `snippet.js`: vanilla ES2017, no globals, query only inside each `[data-lp-<type>]` root, idempotent (`data-lp-ready`), honor `prefers-reduced-motion`. Gate it with `isNeeded(props)`. In the editor canvas a snippet may run again after DOM patches, so top-level code must only initialize roots that lack `data-lp-ready`.
    - `index.ts`: `defineBlock({ type, category, label, description, icon, schema, defaultProps, css, snippet?, render })`. Defaults must never invent social proof; use `[REPLACE: …]`.
    - `<type>.test.ts`: schema edge cases, "renders valid HTML with only required fields", behavior assertions, and an `.html` file snapshot.
 2. Run `pnpm assets` and commit the generated `*.generated.ts` files.

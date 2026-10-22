@@ -18,6 +18,26 @@ describe('buildAssets', () => {
     expect(js.contents).toMatch(/min: "\(\(\)=>\{/);
   });
 
+  it('bundles *.bundle.ts entries with their imports into one IIFE', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'assets-'));
+    mkdirSync(join(dir, 'lib/z'), { recursive: true });
+    writeFileSync(
+      join(dir, 'lib/z/helper.ts'),
+      'export const greet = (n: string): string => `hi ${n}`;\n',
+    );
+    writeFileSync(
+      join(dir, 'lib/z/thing.bundle.ts'),
+      "import { greet } from './helper';\n(window as any).x = greet('a');\n",
+    );
+    const out = (await buildAssets(dir)).find((o) =>
+      o.outputPath.endsWith(join('lib', 'z', 'thing.generated.ts')),
+    )!;
+    expect(out.contents).toContain('hi ');
+    // The module's own `import type` header stays; the helper import must be inlined.
+    expect(out.contents).not.toContain('./helper');
+    expect(out.contents).toMatch(/min: "\(\(\)=>\{/);
+  });
+
   it('every committed generated asset is up to date (run `pnpm assets` if this fails)', async () => {
     const outputs = await buildAssets(process.cwd());
     expect(outputs.length).toBeGreaterThan(0);
