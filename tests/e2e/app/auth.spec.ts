@@ -1,3 +1,4 @@
+import { createHmac, randomUUID } from 'node:crypto';
 import { expect, test, type Page } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
 
@@ -61,6 +62,58 @@ test('a tampered session cookie is rejected', async ({ page, context }) => {
   const authCookies = (await context.cookies()).filter((c) => /^sb-.+-auth-token/.test(c.name));
   expect(authCookies.length).toBeGreaterThan(0);
   await context.addCookies(authCookies.map((c) => ({ ...c, value: 'tampered' })));
+  await page.goto('/dashboard');
+  await expect(page).toHaveURL(/\/login\?next=/);
+});
+
+/** A well-formed Supabase session cookie whose access token is signed with the wrong key. */
+function forgedSessionCookie(): string {
+  const now = Math.floor(Date.now() / 1000);
+  const b64url = (value: string) => Buffer.from(value).toString('base64url');
+  const user = {
+    id: randomUUID(),
+    aud: 'authenticated',
+    role: 'authenticated',
+    email: 'forged@evil.example',
+  };
+  const header = b64url(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
+  const payload = b64url(
+    JSON.stringify({
+      sub: user.id,
+      aud: user.aud,
+      role: user.role,
+      email: user.email,
+      iat: now,
+      exp: now + 3600,
+    }),
+  );
+  const signature = createHmac('sha256', 'not-the-project-jwt-secret-not-the-project-jwt-secret')
+    .update(`${header}.${payload}`)
+    .digest('base64url');
+  const session = {
+    access_token: `${header}.${payload}.${signature}`,
+    token_type: 'bearer',
+    expires_in: 3600,
+    expires_at: now + 3600,
+    refresh_token: 'forged',
+    user,
+  };
+  return `base64-${b64url(JSON.stringify(session))}`;
+}
+
+// getSession() would accept this cookie (it only decodes it); getClaims() verifies the signature.
+test('a well-formed session cookie with a forged signature is rejected', async ({
+  page,
+  context,
+}) => {
+  await signIn(page);
+  await expect(page).toHaveURL('/dashboard');
+  const real = (await context.cookies()).find((c) => /^sb-.+-auth-token/.test(c.name));
+  if (!real) throw new Error('no Supabase auth cookie after sign-in');
+  await context.clearCookies({ name: /^sb-.+-auth-token/ });
+  await context.addCookies([
+    { ...real, name: real.name.replace(/\.\d+$/, ''), value: forgedSessionCookie() },
+  ]);
   await page.goto('/dashboard');
   await expect(page).toHaveURL(/\/login\?next=/);
 });
