@@ -3,9 +3,11 @@ import { svgPlaceholder } from '@/tests/fixtures/example-document';
 import {
   addBlock,
   canvas,
+  dragWithMouse,
   EMPTY_DOC,
   ensureOwner,
   openEditor,
+  pointIn,
   resetOwnerPages,
   saveStatus,
   seedPage,
@@ -75,6 +77,35 @@ test('adds, reorders, duplicates and removes carousel items; undo restores each 
   await expect.poll(titles).toHaveLength(4);
   for (let i = 0; i < 4; i++) await page.keyboard.press('ControlOrMeta+z');
   await expect.poll(titles).toEqual(start);
+});
+
+test('drags a carousel item to a new position; undo restores the order', async ({ page }) => {
+  const frame = await heroAndCarousel(page);
+  await selectBlock(page, 'product-carousel');
+  const items = page.getByRole('list', { name: 'Items' }).getByRole('listitem');
+  await dragWithMouse(
+    page,
+    await pointIn(items.nth(2).getByRole('button', { name: 'Drag to reorder' }), 0.5, 0.5),
+    await pointIn(items.nth(0), 0.5, 0.2),
+  );
+  const titles = () => frame.locator('.lp-card__title').allTextContents();
+  await expect.poll(titles).toEqual(['Product 3', 'Product 1', 'Product 2']);
+  await page.getByRole('button', { name: 'Undo' }).click();
+  await expect.poll(titles).toEqual(['Product 1', 'Product 2', 'Product 3']);
+});
+
+test('typing a UTM campaign with a space keeps it', async ({ page }) => {
+  const frame = await heroAndCarousel(page);
+  await selectBlock(page, 'hero');
+  const cta = page.getByRole('group', { name: 'Primary button' });
+  await cta.getByLabel('Link type').selectOption('url');
+  await cta.getByLabel('Address').fill('https://botolku.example/beli');
+  await cta.getByText('UTM parameters').click();
+  await cta.getByLabel('Campaign').pressSequentially('promo oktober');
+  await expect(frame.locator('.lp-hero .lp-btn--primary')).toHaveAttribute(
+    'href',
+    'https://botolku.example/beli?utm_campaign=promo%20oktober',
+  );
 });
 
 test('a theme color change restyles the canvas and shows a contrast warning', async ({ page }) => {

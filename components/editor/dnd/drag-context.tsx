@@ -23,6 +23,7 @@ import {
 } from '@/lib/editor/dnd/geometry';
 import type { CanvasHandle } from '../canvas/canvas-handle';
 import { useEditorStore } from '../editor-context';
+import { followPress } from './follow-press';
 
 // Drags from the palette and the block toolbar onto the canvas (docs/DECISIONS.md D-043). The
 // pointer logic and the drop geometry are pure (lib/editor/dnd); this binds them to the window,
@@ -180,38 +181,9 @@ export function DragProvider({
       try {
         event.currentTarget.setPointerCapture(event.pointerId);
       } catch {
-        // The window listeners below still see every event.
+        // The window listeners still see every event.
       }
-      const onMove = (e: globalThis.PointerEvent) => controller.move(e);
-      const onUp = (e: globalThis.PointerEvent) => {
-        controller.up(e);
-        if (controller.state === 'idle') detach();
-      };
-      const onCancel = () => {
-        controller.cancel();
-        detach();
-      };
-      // While dragging, no key reaches the editor's shortcuts; Escape cancels.
-      const onKey = (e: KeyboardEvent) => {
-        if (controller.state !== 'dragging') return;
-        e.preventDefault();
-        e.stopImmediatePropagation();
-        if (e.key === 'Escape') onCancel();
-      };
-      const detach = () => {
-        window.removeEventListener('pointermove', onMove);
-        window.removeEventListener('pointerup', onUp);
-        window.removeEventListener('pointercancel', onCancel);
-        window.removeEventListener('blur', onCancel);
-        window.removeEventListener('keydown', onKey, true);
-        live.current.detach = () => {};
-      };
-      window.addEventListener('pointermove', onMove);
-      window.addEventListener('pointerup', onUp);
-      window.addEventListener('pointercancel', onCancel);
-      window.addEventListener('blur', onCancel);
-      window.addEventListener('keydown', onKey, true);
-      live.current.detach = detach;
+      live.current.detach = followPress(controller);
     },
     [controller, handlersFor],
   );

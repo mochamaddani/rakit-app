@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import type { LinkSpec } from '@/lib/editor/inspector/fields';
 import { blockTypeLabel } from '@/lib/editor/structure';
@@ -165,18 +166,56 @@ function UrlFields({
             <p className="text-xs text-muted-foreground">Available for http(s) addresses.</p>
           ) : null}
           {UTM_KEYS.map((key) => (
-            <FieldShell key={key} id={`${id}-${key}`} label={UTM_LABELS[key]}>
-              <Input
-                id={`${id}-${key}`}
-                disabled={!utm}
-                value={utm?.[key] ?? ''}
-                onChange={(event) => commitUrl(writeUtm(url, { [key]: event.target.value }))}
-                onBlur={() => actions.endEdit()}
-              />
-            </FieldShell>
+            <UtmField
+              key={key}
+              id={`${id}-${key}`}
+              label={UTM_LABELS[key]}
+              disabled={!utm}
+              value={utm?.[key] ?? ''}
+              onChange={(value) => commitUrl(writeUtm(url, { [key]: value }))}
+              onBlur={() => actions.endEdit()}
+            />
           ))}
         </div>
       </details>
     </>
+  );
+}
+
+/** One UTM value: typed as is (spaces included), trimmed when the field loses focus (M2a review M2). */
+function UtmField({
+  id,
+  label,
+  value,
+  disabled,
+  onChange,
+  onBlur,
+}: {
+  id: string;
+  label: string;
+  value: string;
+  disabled: boolean;
+  onChange(value: string): void;
+  onBlur(): void;
+}) {
+  const [draft, setDraft] = useState<string | null>(null);
+  return (
+    <FieldShell id={id} label={label}>
+      <Input
+        id={id}
+        disabled={disabled}
+        value={draft ?? value}
+        onChange={(event) => {
+          setDraft(event.target.value);
+          onChange(event.target.value);
+        }}
+        onBlur={() => {
+          const trimmed = (draft ?? value).trim();
+          setDraft(null);
+          if (trimmed !== value) onChange(trimmed);
+          onBlur();
+        }}
+      />
+    </FieldShell>
   );
 }

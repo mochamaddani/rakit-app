@@ -31,17 +31,53 @@ export function readUtm(url: string): Partial<Record<UtmKey, string>> | null {
   return values;
 }
 
-/** Sets non-empty values and removes empty ones, keeping other parameters and the hash. */
-export function writeUtm(url: string, values: Partial<Record<UtmKey, string>>): string {
-  const parsed = httpUrl(url);
-  if (!parsed) return url;
-  const before = parsed.search;
-  for (const key of UTM_KEYS) {
-    if (!(key in values)) continue;
-    const value = values[key]?.trim();
-    if (value) parsed.searchParams.set(key, value);
-    else parsed.searchParams.delete(key);
+const pairName = (pair: string): string => {
+  const name = pair.split('=', 1)[0] ?? '';
+  try {
+    return decodeURIComponent(name.replace(/\+/g, ' '));
+  } catch {
+    return name;
   }
-  // Untouched parameters: keep the address exactly as typed (no normalization).
-  return parsed.search === before ? url : parsed.toString();
+};
+
+/**
+ * Sets non-empty values and removes empty ones. Every other parameter and the hash stay exactly
+ * as typed (no re-encoding: `%20` stays `%20`), and values are written with encodeURIComponent.
+ */
+export function writeUtm(url: string, values: Partial<Record<UtmKey, string>>): string {
+  if (!httpUrl(url)) return url;
+  const hashAt = url.indexOf('#');
+  const hash = hashAt === -1 ? '' : url.slice(hashAt);
+  const base = hashAt === -1 ? url : url.slice(0, hashAt);
+  const queryAt = base.indexOf('?');
+  const path = queryAt === -1 ? base : base.slice(0, queryAt);
+  const pairs =
+    queryAt === -1
+      ? []
+      : base
+          .slice(queryAt + 1)
+          .split('&')
+          .filter(Boolean);
+  let changed = false;
+  for (const key of UTM_KEYS) {
+    const value = values[key];
+    if (value === undefined) continue;
+    const next = value === '' ? null : `${key}=${encodeURIComponent(value)}`;
+    const at = pairs.findIndex((pair) => pairName(pair) === key);
+    if (at === -1) {
+      if (next !== null) {
+        pairs.push(next);
+        changed = true;
+      }
+    } else if (next === null) {
+      pairs.splice(at, 1);
+      changed = true;
+    } else if (pairs[at] !== next) {
+      pairs[at] = next;
+      changed = true;
+    }
+  }
+  // Untouched parameters: keep the address exactly as typed.
+  if (!changed) return url;
+  return `${path}${pairs.length ? `?${pairs.join('&')}` : ''}${hash}`;
 }
