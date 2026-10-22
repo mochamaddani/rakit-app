@@ -1,0 +1,20 @@
+import { describe, expect, it } from 'vitest';
+import { BLOCKS, getBlockDefinition, listBlockDefinitions } from '@/lib/blocks/registry';
+import { sequentialIds } from '@/lib/schema/ids';
+
+describe('block registry', () => {
+  it('registers each type once', () => {
+    const types = BLOCKS.map((b) => b.type);
+    expect(new Set(types).size).toBe(types.length);
+  });
+  it('every block has a description and defaults that validate', () => {
+    for (const def of listBlockDefinitions()) {
+      expect(def.description.length, def.type).toBeGreaterThan(20);
+      expect(def.schema.safeParse(def.defaultProps(sequentialIds())).success, def.type).toBe(true);
+    }
+  });
+  it('getBlockDefinition returns undefined for unknown types', () => {
+    expect(getBlockDefinition('hero')?.type).toBe('hero');
+    expect(getBlockDefinition('marquee')).toBeUndefined();
+  });
+});
