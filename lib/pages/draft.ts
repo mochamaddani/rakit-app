@@ -15,20 +15,29 @@ export interface DraftStore {
     pageId: string,
     doc: PageDocument,
     baseRevision: number,
+    saveId: string | null,
   ): Promise<{ revision: number; updatedAt: string } | null>;
-  /** The current revision, or null when the page does not exist or is not visible to the caller. */
-  currentRevision(pageId: string): Promise<number | null>;
+  /**
+   * The current revision and the id of the save that wrote it, or null when the page does not
+   * exist or is not visible to the caller.
+   */
+  current(pageId: string): Promise<{ revision: number; saveId: string | null } | null>;
 }
 
 export type SaveDraftResult =
   | { status: 200; body: { revision: number; updatedAt: string } }
   | { status: 404; body: { error: 'not_found' } }
-  | { status: 409; body: { error: 'conflict'; revision: number } }
+  | { status: 409; body: { error: 'conflict'; revision: number; saveId: string | null } }
   | { status: 413; body: { error: 'too_large'; maxBytes: number } }
   | { status: 422; body: { error: 'invalid'; issues: DocumentIssue[] } };
 
 const PageIdSchema = z.uuid();
-const SaveBodySchema = z.object({ document: z.unknown(), baseRevision: z.number().int().min(0) });
+const SaveBodySchema = z.object({
+  document: z.unknown(),
+  baseRevision: z.number().int().min(0),
+  /** Per attempt, so a client can recognize its own save in a 409 after losing the answer. */
+  saveId: z.uuid().optional(),
+});
 const utf8 = new TextEncoder();
 const NOT_FOUND = { status: 404, body: { error: 'not_found' } } as const;
 
@@ -63,10 +72,9 @@ export async function saveDraft(
   const parsed = safeParseDocument(body.data.document);
   if (!parsed.ok) return invalid(parsed.error.issues);
 
-  const saved = await store.update(input.pageId, parsed.doc, body.data.baseRevision);
+  const { baseRevision, saveId = null } = body.data;
+  const saved = await store.update(input.pageId, parsed.doc, baseRevision, saveId);
   if (saved) return { status: 200, body: saved };
-  const current = await store.currentRevision(input.pageId);
-  return current === null
-    ? NOT_FOUND
-    : { status: 409, body: { error: 'conflict', revision: current } };
+  const current = await store.current(input.pageId);
+  return current === null ? NOT_FOUND : { status: 409, body: { error: 'conflict', ...current } };
 }

@@ -66,7 +66,7 @@ describe('autosave', () => {
     expect(sends[1]!.baseRevision).toBe(5);
   });
   it('stops on a conflict until overwrite() saves on top of the server revision', async () => {
-    respond = async () => ({ kind: 'conflict', revision: 9 });
+    respond = async () => ({ kind: 'conflict', revision: 9, saveId: null });
     const a = make();
     edit(a);
     await vi.advanceTimersByTimeAsync(800);
@@ -78,6 +78,39 @@ describe('autosave', () => {
     await a.overwrite();
     expect(sends[1]!.baseRevision).toBe(9);
     expect(a.store.getState()).toMatchObject({ status: 'saved', revision: 10 });
+  });
+  it('a save that landed but lost its response is recognized by its id: the retry rebases', async () => {
+    // The server commits the first save, then the response is lost on the way back.
+    let revision = 4;
+    let saveId: string | null = null;
+    let drop = true;
+    respond = async (req) => {
+      if (req.baseRevision !== revision) return { kind: 'conflict', revision, saveId };
+      revision += 1;
+      saveId = req.saveId;
+      if (!drop) return { kind: 'ok', revision };
+      drop = false;
+      return { kind: 'network' };
+    };
+    const a = make();
+    edit(a);
+    await vi.advanceTimersByTimeAsync(800);
+    expect(status(a)).toBe('offline');
+    edit(a);
+    await vi.advanceTimersByTimeAsync(2000); // the retry gets a 409 that names the first save
+    await vi.runOnlyPendingTimersAsync(); // and the rebased save goes out right away
+    expect(sends.map((s) => s.baseRevision)).toEqual([4, 4, 5]);
+    expect(new Set(sends.map((s) => s.saveId)).size).toBe(3);
+    expect(a.store.getState()).toMatchObject({ status: 'saved', revision: 6 });
+  });
+  it('a conflict naming a save this tab never sent stays a conflict', async () => {
+    respond = async () => ({ kind: 'network' });
+    const a = make();
+    edit(a);
+    await vi.advanceTimersByTimeAsync(800);
+    respond = async () => ({ kind: 'conflict', revision: 7, saveId: 'from-another-tab' });
+    await vi.advanceTimersByTimeAsync(2000);
+    expect(a.store.getState()).toMatchObject({ status: 'conflict', conflictRevision: 7 });
   });
   it('network errors retry with backoff and recover', async () => {
     respond = async () => ({ kind: 'network' });

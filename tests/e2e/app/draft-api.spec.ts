@@ -7,15 +7,20 @@ test.beforeEach(async ({ page }) => {
   await signIn(page);
 });
 
-test('saves with the current revision and rejects a stale one', async ({ page }) => {
+test('saves with the current revision and rejects a stale one, naming the save that won', async ({
+  page,
+}) => {
   const id = await seedPage({ name: 'Api', document: EMPTY_DOC });
   const url = `/api/pages/${id}/draft`;
-  const first = await page.request.put(url, { data: { document: EMPTY_DOC, baseRevision: 0 } });
+  const saveId = crypto.randomUUID();
+  const first = await page.request.put(url, {
+    data: { document: EMPTY_DOC, baseRevision: 0, saveId },
+  });
   expect(first.status()).toBe(200);
   expect(await first.json()).toMatchObject({ revision: 1 });
   const stale = await page.request.put(url, { data: { document: EMPTY_DOC, baseRevision: 0 } });
   expect(stale.status()).toBe(409);
-  expect(await stale.json()).toEqual({ error: 'conflict', revision: 1 });
+  expect(await stale.json()).toEqual({ error: 'conflict', revision: 1, saveId });
 });
 
 test('stores the normalized document', async ({ page }) => {

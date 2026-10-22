@@ -7,7 +7,7 @@ import type { Database, Json } from '@/lib/supabase/database.types';
 /** DraftStore on the pages table, queried as the signed-in user (RLS scopes the rows). */
 export function createSupabaseDraftStore(supabase: SupabaseClient<Database>): DraftStore {
   return {
-    async update(pageId, doc, baseRevision) {
+    async update(pageId, doc, baseRevision, saveId) {
       // Matching on the base revision makes the write conditional: a stale save updates nothing.
       const { data, error } = await supabase
         .from('pages')
@@ -15,6 +15,7 @@ export function createSupabaseDraftStore(supabase: SupabaseClient<Database>): Dr
           current_draft: doc as unknown as NonNullable<Json>,
           schema_version: CURRENT_SCHEMA_VERSION,
           draft_revision: baseRevision + 1,
+          draft_save_id: saveId,
         })
         .eq('id', pageId)
         .eq('draft_revision', baseRevision)
@@ -23,14 +24,14 @@ export function createSupabaseDraftStore(supabase: SupabaseClient<Database>): Dr
       if (error) throw error;
       return data && { revision: data.draft_revision, updatedAt: data.updated_at };
     },
-    async currentRevision(pageId) {
+    async current(pageId) {
       const { data, error } = await supabase
         .from('pages')
-        .select('draft_revision')
+        .select('draft_revision, draft_save_id')
         .eq('id', pageId)
         .maybeSingle();
       if (error) throw error;
-      return data ? data.draft_revision : null;
+      return data && { revision: data.draft_revision, saveId: data.draft_save_id };
     },
   };
 }

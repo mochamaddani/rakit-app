@@ -153,3 +153,20 @@ test('leaving with unsaved changes asks first, and closing the tab afterwards st
   expect(d.type()).toBe('beforeunload');
   await d.accept();
 });
+
+test('a save whose response is lost does not turn into a conflict', async ({ page }) => {
+  await fresh(page);
+  let drop = true;
+  await page.route('**/api/pages/*/draft', async (route) => {
+    const response = await route.fetch(); // the server receives and commits the save
+    if (!drop) return route.fulfill({ response });
+    drop = false;
+    return route.abort('internetdisconnected');
+  });
+  await addBlock(page, 'Hero');
+  await expect(saveStatus(page)).toHaveText('Offline — retrying');
+  await addBlock(page, 'FAQ');
+  await expect(saveStatus(page)).toHaveText('Saved', { timeout: 10_000 });
+  await page.reload();
+  await expect.poll(() => blockTypes(canvas(page)), { timeout: 20_000 }).toEqual(['hero', 'faq']);
+});

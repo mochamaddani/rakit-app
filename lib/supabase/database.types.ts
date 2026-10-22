@@ -65,14 +65,14 @@ isOneToOne: false
                   ]
                 },"pages": {
                   Row: {
-                    "created_at": string,"current_draft": NonNullable<Json>,"draft_revision": number,"id": string,"latest_version_id": string | null,"name": string,"schema_version": number,"slug": string,"status": string,"tags": (string)[],"updated_at": string,"workspace_id": string
+                    "created_at": string,"current_draft": NonNullable<Json>,"draft_revision": number,"draft_save_id": string | null,"id": string,"latest_version_id": string | null,"name": string,"schema_version": number,"slug": string,"status": string,"tags": (string)[],"updated_at": string,"workspace_id": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"current_draft": NonNullable<Json>,"draft_revision"?: number,"id"?: string,"latest_version_id"?: string | null,"name": string,"schema_version": number,"slug": string,"status"?: string,"tags"?: (string)[],"updated_at"?: string,"workspace_id": string
+                    "created_at"?: string,"current_draft": NonNullable<Json>,"draft_revision"?: number,"draft_save_id"?: string | null,"id"?: string,"latest_version_id"?: string | null,"name": string,"schema_version": number,"slug": string,"status"?: string,"tags"?: (string)[],"updated_at"?: string,"workspace_id": string
                   }
                   Update: {
-                    "created_at"?: string,"current_draft"?: NonNullable<Json>,"draft_revision"?: number,"id"?: string,"latest_version_id"?: string | null,"name"?: string,"schema_version"?: number,"slug"?: string,"status"?: string,"tags"?: (string)[],"updated_at"?: string,"workspace_id"?: string
+                    "created_at"?: string,"current_draft"?: NonNullable<Json>,"draft_revision"?: number,"draft_save_id"?: string | null,"id"?: string,"latest_version_id"?: string | null,"name"?: string,"schema_version"?: number,"slug"?: string,"status"?: string,"tags"?: (string)[],"updated_at"?: string,"workspace_id"?: string
                   }
                   Relationships: [
                     {

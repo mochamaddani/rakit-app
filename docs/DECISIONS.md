@@ -152,13 +152,14 @@ Consequences:
 - Drag handles need `touch-action: none` and a suppressed `contextmenu`. With both, a long-press drag works on touch screens.
 
 ## D-035 Draft saves: a route handler and a revision counter — Proposed (deviates from Plan §5 M2)
-- The editor saves with `PUT /api/pages/[pageId]/draft` and a JSON body `{ document, baseRevision }`.
+- The editor saves with `PUT /api/pages/[pageId]/draft` and a JSON body `{ document, baseRevision, saveId }`.
 - This is a route handler, not a server action, for two reasons:
   - Next.js runs server actions one at a time per client, so a slow save would block dashboard actions.
   - An unload flush needs `fetch(…, { keepalive: true })`, which only a plain HTTP endpoint can receive.
 - The server validates the document with `safeParseDocument`, rejects bodies over 4 MiB (Vercel caps requests at 4.5 MB) and stores the parsed document.
 - Optimistic concurrency uses an integer, `pages.draft_revision`, instead of `updated_at`. Renames and status changes also bump `updated_at`, and they must not make the next draft save conflict. An integer also avoids carrying microsecond timestamps through JavaScript.
 - The update matches `id` and `draft_revision = baseRevision`, and sets `baseRevision + 1`. When no row matches, the answer is 409 with the current revision, or 404 when the page is gone.
+- Each attempt carries a fresh `saveId` (a UUID), stored as `pages.draft_save_id`, and a 409 also names the id that wrote the current draft. A save can land while its answer is lost (a Wi-Fi switch mid-request, a gateway error after the write). The client then finds its own id in the 409 and builds on that revision, instead of reporting a conflict that would offer to discard its newer edits (M2a final review, I1).
 - Dashboard mutations (create, rename, delete) stay server actions.
 
 ## D-036 Editor dependencies — Accepted

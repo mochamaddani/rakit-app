@@ -3,27 +3,30 @@ import type { PageDocument } from '@/lib/schema/document';
 import { MAX_DRAFT_BYTES, saveDraft, type DraftStore } from './draft';
 
 const PAGE = '7b0c7a52-3c1e-4c8e-9a43-2f1d2b6f0e11';
-const body = (document: unknown, baseRevision: unknown = 0) =>
-  JSON.stringify({ document, baseRevision });
+const SAVE = '0f6a1c2e-9b7d-4e3a-8c5f-1a2b3c4d5e6f';
+const body = (document: unknown, baseRevision: unknown = 0, saveId?: unknown) =>
+  JSON.stringify({ document, baseRevision, saveId });
 const EMPTY = { schemaVersion: 1, sections: [] };
 
 function memoryStore(revisions: Record<string, number>) {
   const rows = new Map(
     Object.entries(revisions).map(([id, revision]) => [
       id,
-      { revision, doc: null as PageDocument | null },
+      { revision, doc: null as PageDocument | null, saveId: null as string | null },
     ]),
   );
   const store: DraftStore = {
-    async update(id, doc, base) {
+    async update(id, doc, base, saveId) {
       const row = rows.get(id);
       if (!row || row.revision !== base) return null;
       row.revision = base + 1;
       row.doc = doc;
+      row.saveId = saveId;
       return { revision: row.revision, updatedAt: '2026-10-22T10:00:00.123456+00:00' };
     },
-    async currentRevision(id) {
-      return rows.get(id)?.revision ?? null;
+    async current(id) {
+      const row = rows.get(id);
+      return row ? { revision: row.revision, saveId: row.saveId } : null;
     },
   };
   return { store, rows };
@@ -51,8 +54,23 @@ describe('saveDraft', () => {
     const { store } = memoryStore({ [PAGE]: 3 });
     expect(await saveDraft(store, { pageId: PAGE, rawBody: body(EMPTY, 2) })).toEqual({
       status: 409,
-      body: { error: 'conflict', revision: 3 },
+      body: { error: 'conflict', revision: 3, saveId: null },
     });
+  });
+  it('stores the save id, and a 409 names the save that wrote the current draft', async () => {
+    const { store, rows } = memoryStore({ [PAGE]: 0 });
+    await saveDraft(store, { pageId: PAGE, rawBody: body(EMPTY, 0, SAVE) });
+    expect(rows.get(PAGE)!.saveId).toBe(SAVE);
+    expect(await saveDraft(store, { pageId: PAGE, rawBody: body(EMPTY, 0) })).toEqual({
+      status: 409,
+      body: { error: 'conflict', revision: 1, saveId: SAVE },
+    });
+  });
+  it('answers 422 for a save id that is not a UUID', async () => {
+    const { store } = memoryStore({ [PAGE]: 0 });
+    expect((await saveDraft(store, { pageId: PAGE, rawBody: body(EMPTY, 0, 'nope') })).status).toBe(
+      422,
+    );
   });
   it('answers 404 for an unknown or malformed page id', async () => {
     const { store } = memoryStore({});

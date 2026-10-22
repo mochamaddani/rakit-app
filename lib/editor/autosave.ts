@@ -3,7 +3,9 @@ import type { PageDocument } from '@/lib/schema/document';
 
 // Saves the draft in the background (docs/DECISIONS.md D-035): debounced, never more than one
 // request in flight, retried with backoff when offline, and stopped on a conflict until the user
-// decides. Time comes from the global timers, so tests drive it with fake timers.
+// decides. Each attempt carries its own save id, so a 409 that names an attempt whose answer was
+// lost means that save landed, not that someone else saved. Time comes from the global timers, so
+// tests drive it with fake timers.
 
 export type SaveStatus = 'saved' | 'dirty' | 'saving' | 'offline' | 'error' | 'conflict';
 
@@ -20,11 +22,13 @@ export interface SaveRequest {
   doc: PageDocument;
   baseRevision: number;
   keepalive: boolean;
+  saveId: string;
 }
 
 export type SaveResponse =
   | { kind: 'ok'; revision: number }
-  | { kind: 'conflict'; revision: number }
+  /** `saveId`: the save that wrote the server's current draft. */
+  | { kind: 'conflict'; revision: number; saveId: string | null }
   /** 4xx other than 409. */
   | { kind: 'rejected'; status: number; message: string }
   /** fetch threw, or 5xx. */
@@ -39,6 +43,7 @@ export interface AutosaveOptions {
   /** The last delay repeats. */
   retryDelaysMs?: readonly number[];
   now?(): number;
+  newSaveId?(): string;
 }
 
 export interface Autosave {
@@ -57,6 +62,7 @@ export function createAutosave(options: AutosaveOptions): Autosave {
   const maxWaitMs = options.maxWaitMs ?? 5000;
   const retryDelays = options.retryDelaysMs ?? [2000, 4000, 8000, 16000, 30000];
   const now = options.now ?? (() => Date.now());
+  const newSaveId = options.newSaveId ?? (() => crypto.randomUUID());
 
   const store = createStore<AutosaveState>()(() => ({
     status: 'saved',
@@ -73,6 +79,8 @@ export function createAutosave(options: AutosaveOptions): Autosave {
   let firstUnsentAt: number | null = null;
   let retries = 0;
   let disposed = false;
+  /** Save id → document version, for attempts whose answer never arrived. */
+  const unanswered = new Map<string, number>();
 
   const clearTimer = () => {
     if (timer !== undefined) clearTimeout(timer);
@@ -96,10 +104,11 @@ export function createAutosave(options: AutosaveOptions): Autosave {
     timer = setTimeout(() => void save(false), delay);
   };
 
-  function settle(response: SaveResponse, sentVersion: number) {
+  function settle(response: SaveResponse, sentVersion: number, saveId: string) {
     switch (response.kind) {
       case 'ok':
         retries = 0;
+        unanswered.clear();
         store.setState({ revision: response.revision, savedVersion: sentVersion, error: null });
         if (unsaved()) {
           store.setState({ status: 'dirty' });
@@ -108,11 +117,31 @@ export function createAutosave(options: AutosaveOptions): Autosave {
           store.setState({ status: 'saved' });
         }
         return;
-      case 'conflict':
+      case 'conflict': {
         clearTimer();
-        store.setState({ status: 'conflict', conflictRevision: response.revision });
+        const landed = response.saveId === null ? undefined : unanswered.get(response.saveId);
+        if (landed === undefined) {
+          store.setState({ status: 'conflict', conflictRevision: response.revision });
+          return;
+        }
+        // The server holds this tab's own earlier save: build on it and send the rest now.
+        retries = 0;
+        unanswered.clear();
+        store.setState({
+          revision: response.revision,
+          savedVersion: Math.max(state().savedVersion, landed),
+          error: null,
+        });
+        if (unsaved()) {
+          store.setState({ status: 'dirty' });
+          timer = setTimeout(() => void save(false), 0);
+        } else {
+          store.setState({ status: 'saved' });
+        }
         return;
+      }
       case 'network':
+        unanswered.set(saveId, sentVersion);
         store.setState({ status: 'offline' });
         scheduleRetry();
         return;
@@ -133,10 +162,11 @@ export function createAutosave(options: AutosaveOptions): Autosave {
     if (version <= state().savedVersion || state().status === 'conflict') return;
     firstUnsentAt = null;
     store.setState({ status: 'saving' });
+    const saveId = newSaveId();
     inFlight = options
-      .send({ doc, baseRevision: state().revision, keepalive })
+      .send({ doc, baseRevision: state().revision, keepalive, saveId })
       .then((response) => {
-        if (!disposed) settle(response, version);
+        if (!disposed) settle(response, version, saveId);
       })
       .finally(() => {
         inFlight = null;

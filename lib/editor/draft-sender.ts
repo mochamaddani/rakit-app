@@ -41,8 +41,8 @@ export function createDraftSender(
   pageId: string,
   fetchImpl: typeof fetch = (input, init) => fetch(input, init),
 ): (request: SaveRequest) => Promise<SaveResponse> {
-  return async ({ doc, baseRevision, keepalive }) => {
-    const body = JSON.stringify({ document: doc, baseRevision });
+  return async ({ doc, baseRevision, keepalive, saveId }) => {
+    const body = JSON.stringify({ document: doc, baseRevision, saveId });
     let response: Response;
     try {
       response = await fetchImpl(`/api/pages/${pageId}/draft`, {
@@ -56,7 +56,12 @@ export function createDraftSender(
     }
     if (response.ok) return { kind: 'ok', revision: Number((await readJson(response)).revision) };
     if (response.status === 409) {
-      return { kind: 'conflict', revision: Number((await readJson(response)).revision) };
+      const conflict = await readJson(response);
+      return {
+        kind: 'conflict',
+        revision: Number(conflict.revision),
+        saveId: typeof conflict.saveId === 'string' ? conflict.saveId : null,
+      };
     }
     if (response.status >= 500) return { kind: 'network' };
     return { kind: 'rejected', status: response.status, message: await rejection(response) };
