@@ -1,0 +1,327 @@
+<!doctype html>
+<!-- Throwaway spike (docs/DECISIONS.md D-034): a parent overlay and a drag shield over a sandboxed
+     srcdoc iframe that reports block rects by postMessage. Deleted in M2b. -->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Canvas and drag spike</title>
+    <style>
+      body {
+        margin: 0;
+        display: flex;
+        font-family: system-ui, sans-serif;
+      }
+      #palette {
+        width: 160px;
+        padding: 12px;
+      }
+      .item {
+        touch-action: none;
+        user-select: none;
+        -webkit-user-select: none;
+        padding: 12px;
+        margin-bottom: 8px;
+        border: 1px solid #9ca3af;
+        background: #fff;
+        cursor: grab;
+      }
+      #stage {
+        position: relative;
+        width: 390px;
+        height: 600px;
+        margin: 12px;
+        border: 1px solid #d1d5db;
+      }
+      #frame {
+        display: block;
+        width: 390px;
+        height: 600px;
+        border: 0;
+      }
+      #overlay {
+        position: absolute;
+        inset: 0;
+        overflow: hidden;
+        pointer-events: none;
+      }
+      #selection {
+        position: absolute;
+        left: 0;
+        width: 386px;
+        border: 2px solid #2563eb;
+        display: none;
+      }
+      #line {
+        position: absolute;
+        left: 0;
+        right: 0;
+        border-top: 3px solid #f59e0b;
+        display: none;
+      }
+      #shield {
+        position: absolute;
+        inset: 0;
+        display: none;
+        cursor: grabbing;
+      }
+      #ghost {
+        position: fixed;
+        padding: 8px;
+        background: #fde68a;
+        pointer-events: none;
+        display: none;
+      }
+      #spacer {
+        height: 1200px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="palette">
+      <div class="item" data-type="hero">Hero</div>
+      <div class="item" data-type="card">Card</div>
+    </div>
+    <div>
+      <div id="stage">
+        <iframe id="frame" sandbox="allow-scripts" title="Spike canvas"></iframe>
+        <div id="overlay">
+          <div id="selection"></div>
+          <div id="line"></div>
+        </div>
+        <div id="shield"></div>
+      </div>
+      <div id="spacer"></div>
+    </div>
+    <div id="ghost"></div>
+    <script>
+      // Runs inside the sandboxed iframe (opaque origin); only postMessage crosses the boundary.
+      function canvasRuntime() {
+        let seq = 0;
+        let frameRequest = 0;
+        let pointerEvents = 0;
+        let seen = [];
+        const post = () => {
+          frameRequest = 0;
+          const blocks = [...document.querySelectorAll('[data-id]')].map((el) => {
+            const r = el.getBoundingClientRect();
+            return { id: el.dataset.id, top: r.top, height: r.height };
+          });
+          parent.postMessage({ type: 'rects', seq, scrollY: window.scrollY, blocks }, '*');
+        };
+        const schedule = () => {
+          if (!frameRequest) frameRequest = requestAnimationFrame(post);
+        };
+        addEventListener('scroll', schedule, { passive: true });
+        addEventListener('resize', schedule);
+        for (const type of ['pointerdown', 'pointermove', 'pointerup', 'pointerover']) {
+          addEventListener(
+            type,
+            () => {
+              pointerEvents += 1;
+              if (seen.length < 20) seen.push(type);
+            },
+            true,
+          );
+        }
+        addEventListener('click', (event) => {
+          const el = event.target.closest('[data-id]');
+          if (el) parent.postMessage({ type: 'select', id: el.dataset.id }, '*');
+        });
+        addEventListener('message', (event) => {
+          if (event.source !== parent) return;
+          const m = event.data;
+          if (m.type === 'scrollBy') {
+            seq = m.seq;
+            window.scrollBy(0, m.dy);
+            schedule(); // also when already at an edge, so every request gets an answer
+          } else if (m.type === 'resetStats') {
+            pointerEvents = 0;
+            seen = [];
+          } else if (m.type === 'stats') {
+            parent.postMessage({ type: 'stats', pointerEvents, types: seen }, '*');
+          }
+        });
+        schedule();
+      }
+
+      const frame = document.getElementById('frame');
+      const shield = document.getElementById('shield');
+      const line = document.getElementById('line');
+      const selection = document.getElementById('selection');
+      const ghost = document.getElementById('ghost');
+      const spike = (window.__spike = {
+        rectLatencies: [],
+        drops: [],
+        pointerEventsInFrame: -1,
+        pointerTypesInFrame: [],
+        origins: [],
+        lineY: null,
+        dropIndex: -1,
+        rects: [],
+        scrollY: 0,
+        scrollFrame,
+        requestStats: () => post({ type: 'stats' }),
+      });
+      const sentAt = new Map();
+      let seqSent = 0;
+      let selectedId = null;
+      let drag = null;
+
+      const blocks = Array.from({ length: 40 }, (_, i) => ({
+        id: `b${i + 1}`,
+        height: 120 + ((i * 73) % 301),
+        color: i % 2 ? '#dbeafe' : '#fef3c7',
+      }));
+      frame.srcdoc = `<!doctype html><html><head><style>body{margin:0;font:20px system-ui}.b{display:flex;align-items:center;justify-content:center}</style></head><body>${blocks
+        .map((b) => `<div class="b" data-id="${b.id}" style="height:${b.height}px;background:${b.color}">${b.id}</div>`)
+        .join('')}<script>(${canvasRuntime.toString()})()<\/script></body></html>`;
+
+      function post(message) {
+        frame.contentWindow.postMessage(message, '*');
+      }
+      function scrollFrame(dy) {
+        seqSent += 1;
+        sentAt.set(seqSent, performance.now());
+        post({ type: 'scrollBy', dy, seq: seqSent });
+      }
+
+      addEventListener('message', (event) => {
+        if (event.source !== frame.contentWindow) return;
+        spike.origins.push(event.origin);
+        if (spike.origins.length > 50) spike.origins.shift();
+        const m = event.data;
+        if (m.type === 'rects') {
+          spike.rects = m.blocks;
+          spike.scrollY = m.scrollY;
+          if (sentAt.has(m.seq)) {
+            spike.rectLatencies.push(performance.now() - sentAt.get(m.seq));
+            sentAt.delete(m.seq);
+          }
+          drawSelection();
+          if (drag?.active) updateDrop();
+        } else if (m.type === 'select') {
+          selectedId = m.id;
+          drawSelection();
+        } else if (m.type === 'stats') {
+          spike.pointerEventsInFrame = m.pointerEvents;
+          spike.pointerTypesInFrame = m.types;
+        }
+      });
+
+      function drawSelection() {
+        const r = spike.rects.find((b) => b.id === selectedId);
+        selection.style.display = r ? 'block' : 'none';
+        if (r) Object.assign(selection.style, { top: `${r.top}px`, height: `${r.height - 4}px` });
+      }
+
+      // Drop index: the first block whose vertical midpoint lies below the pointer, from cached rects.
+      function updateDrop() {
+        const box = frame.getBoundingClientRect();
+        const y = drag.y - box.top;
+        const inside = drag.x >= box.left && drag.x <= box.right && y >= 0 && y <= box.height;
+        const rects = spike.rects;
+        if (!inside || rects.length === 0) {
+          line.style.display = 'none';
+          drag.index = -1;
+          spike.lineY = null;
+          return;
+        }
+        let index = rects.findIndex((r) => r.top + r.height / 2 > y);
+        if (index === -1) index = rects.length;
+        const last = rects[rects.length - 1];
+        const lineY = index < rects.length ? rects[index].top : last.top + last.height;
+        drag.index = index;
+        spike.dropIndex = index;
+        spike.lineY = lineY;
+        line.style.display = 'block';
+        line.style.top = `${lineY - 1}px`;
+      }
+
+      // Auto-scroll: within 48 px of the canvas top or bottom, faster the closer the pointer (≤ 20 px/frame).
+      function tick() {
+        if (!drag?.active) return;
+        const box = frame.getBoundingClientRect();
+        const y = drag.y - box.top;
+        const inX = drag.x >= box.left && drag.x <= box.right;
+        let dy = 0;
+        if (inX && y >= 0 && y < 48) dy = -Math.ceil((20 * (48 - y)) / 48);
+        else if (inX && y > box.height - 48 && y <= box.height) dy = Math.ceil((20 * (48 - (box.height - y))) / 48);
+        if (dy) scrollFrame(dy);
+        drag.raf = requestAnimationFrame(tick);
+      }
+
+      function start() {
+        drag.active = true;
+        spike.pointerEventsInFrame = -1;
+        post({ type: 'resetStats' });
+        shield.style.display = 'block';
+        ghost.textContent = drag.type;
+        ghost.style.display = 'block';
+        move();
+        tick();
+      }
+      function move() {
+        ghost.style.left = `${drag.x + 8}px`;
+        ghost.style.top = `${drag.y + 8}px`;
+        updateDrop();
+      }
+      function finish(commit) {
+        if (!drag) return;
+        clearTimeout(drag.timer);
+        cancelAnimationFrame(drag.raf);
+        if (drag.active) {
+          post({ type: 'stats' }); // asked before the shield drops, so later hovers don't count
+          if (commit && drag.index >= 0) spike.drops.push(drag.index);
+        }
+        shield.style.display = 'none';
+        line.style.display = 'none';
+        ghost.style.display = 'none';
+        drag = null;
+      }
+
+      for (const item of document.querySelectorAll('.item')) {
+        item.addEventListener('contextmenu', (event) => event.preventDefault());
+        item.addEventListener('pointerdown', (event) => {
+          item.setPointerCapture(event.pointerId);
+          drag = {
+            type: item.dataset.type,
+            pointerId: event.pointerId,
+            x0: event.clientX,
+            y0: event.clientY,
+            x: event.clientX,
+            y: event.clientY,
+            touch: event.pointerType === 'touch',
+            active: false,
+            index: -1,
+            timer: 0,
+            raf: 0,
+          };
+          if (drag.touch) drag.timer = setTimeout(start, 250);
+        });
+        item.addEventListener('pointermove', (event) => {
+          if (!drag || event.pointerId !== drag.pointerId) return;
+          drag.x = event.clientX;
+          drag.y = event.clientY;
+          if (!drag.active) {
+            const distance = Math.hypot(drag.x - drag.x0, drag.y - drag.y0);
+            if (drag.touch) {
+              if (distance > 10) finish(false); // moved before the long-press: not a drag
+              return;
+            }
+            if (distance < 4) return;
+            start();
+            return;
+          }
+          move();
+        });
+        item.addEventListener('pointerup', (event) => {
+          if (drag && event.pointerId === drag.pointerId) finish(true);
+        });
+        item.addEventListener('pointercancel', () => finish(false));
+      }
+      addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') finish(false);
+      });
+    </script>
+  </body>
+</html>

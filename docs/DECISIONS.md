@@ -135,3 +135,18 @@ It is disabled at scaffold time to keep builds simple. Revisit in M2 if profilin
 
 ## D-033 Focus ring color — Accepted
 The focus ring is a 3px solid outline, offset 2px, in `--lp-fg`: the text color of the surface it is drawn on. Tone pairs are what M5 validates (D-015), so the ring inherits their contrast (at least 4.5:1 once validated, against the 3:1 that WCAG 1.4.11 needs). The accent color is not used, because no check pairs it with a background (it measured 1.95–2.41:1 on the default theme). A surface that paints its own background (product cards, testimonial quotes, benefit cards) resets `--lp-fg` to its own text color. `tests/e2e/renderer/focus.spec.ts` tabs through the example page in every tone and checks each ring against the background behind it.
+
+## D-034 Canvas overlay and drag design, validated by a spike — Accepted
+`spikes/canvas-dnd/` (deleted in M2b) put a parent overlay over an `<iframe sandbox="allow-scripts" srcdoc>` that reports block rects by `postMessage`, with a transparent shield over the iframe during drags.
+
+Measured in headless Chromium over 3 runs:
+- **Rect round-trip:** median 14.6–14.8 ms (p95 15.7–17.5 ms), about one animation frame.
+- **Mouse drag:** 0 pointer events reached the iframe while the button was down.
+- **Auto-scroll:** about 930 px/s. Once it stopped, the insertion line sat 0 px from the block boundary in the iframe's real DOM.
+- **Touch:** a long-press (250 ms) started a drag without scrolling the page.
+
+Consequences:
+- The overlay redraws on every `rects` message. One frame of lag needs no prediction.
+- The iframe answers every scroll request with rects, even at the scroll edge, because the parent keys its state on them.
+- When the shield is removed under a stationary cursor, Chrome sends the iframe a `pointerover`. The drag engine (M2b) therefore commits drops from the parent's `pointerup` only, and treats that hover as ordinary.
+- Drag handles need `touch-action: none` and a suppressed `contextmenu`. With both, a long-press drag works on touch screens.
