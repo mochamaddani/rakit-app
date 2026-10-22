@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { DraftError } from '@/components/editor/draft-error';
 import { Editor } from '@/components/editor/editor';
 import { requireUser } from '@/lib/auth/require-user';
-import { getPageForEditor } from '@/lib/pages/queries';
+import { getPageForEditor, getWorkspaceId } from '@/lib/pages/queries';
 import { safeParseDocument } from '@/lib/schema/document';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 
@@ -11,7 +11,8 @@ export default async function EditorPage({ params }: PageProps<'/editor/[pageId]
   await requireUser();
   const { pageId } = await params;
   if (!z.uuid().safeParse(pageId).success) notFound();
-  const page = await getPageForEditor(await createSupabaseServerClient(), pageId);
+  const supabase = await createSupabaseServerClient();
+  const page = await getPageForEditor(supabase, pageId);
   if (!page) notFound();
 
   const parsed = safeParseDocument(page.currentDraft);
@@ -21,6 +22,7 @@ export default async function EditorPage({ params }: PageProps<'/editor/[pageId]
       page={{ id: page.id, name: page.name }}
       initialDoc={parsed.doc}
       initialRevision={page.draftRevision}
+      workspaceId={await getWorkspaceId(supabase)}
     />
   );
 }

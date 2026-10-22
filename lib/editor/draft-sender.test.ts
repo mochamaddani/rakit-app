@@ -93,4 +93,18 @@ describe('createDraftSender', () => {
       await sender(response).send({ doc, baseRevision: 0, keepalive: false, saveId: 's1' }),
     ).toEqual(expected);
   });
+  it('a 200 or 409 without a valid revision counts as a network failure (M4)', async () => {
+    for (const response of [
+      reply(200, {}),
+      reply(200, { revision: -1 }),
+      reply(200, { revision: 1.5 }),
+      reply(200, { revision: '2' }),
+      reply(409, { error: 'conflict' }),
+      reply(409, { error: 'conflict', revision: null }),
+    ]) {
+      expect(
+        await sender(response).send({ doc, baseRevision: 0, keepalive: false, saveId: 's1' }),
+      ).toEqual({ kind: 'network' });
+    }
+  });
 });

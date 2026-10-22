@@ -22,6 +22,8 @@ test('processes an uploaded original into WebP variants and an assets row', asyn
   expect(upload.error).toBeNull();
 
   const res = await page.request.post('/api/assets', { data: { path } });
+  // The route removes the original; if it never ran, don't leave it for other tests.
+  if (res.status() !== 201) await adminClient().storage.from('uploads').remove([path]);
   expect(res.status()).toBe(201);
   const body = (await res.json()) as {
     assetId: string;

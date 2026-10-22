@@ -17,12 +17,18 @@ export interface EditorProps {
   page: { id: string; name: string };
   initialDoc: PageDocument;
   initialRevision: number;
+  workspaceId: string;
 }
 
 /** Three panes: block palette, live canvas, inspector. */
-export function Editor({ page, initialDoc, initialRevision }: EditorProps) {
+export function Editor({ page, initialDoc, initialRevision, workspaceId }: EditorProps) {
   return (
-    <EditorProvider pageId={page.id} initialDoc={initialDoc} initialRevision={initialRevision}>
+    <EditorProvider
+      pageId={page.id}
+      initialDoc={initialDoc}
+      initialRevision={initialRevision}
+      workspaceId={workspaceId}
+    >
       <EditorShell page={page} />
     </EditorProvider>
   );

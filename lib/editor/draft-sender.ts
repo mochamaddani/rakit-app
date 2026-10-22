@@ -14,6 +14,14 @@ async function readJson(response: Response): Promise<Record<string, unknown>> {
   }
 }
 
+/** A revision the editor can build on; anything else means the answer can't be trusted (M4). */
+function revisionOf(body: Record<string, unknown>): number | null {
+  const { revision } = body;
+  return typeof revision === 'number' && Number.isInteger(revision) && revision >= 0
+    ? revision
+    : null;
+}
+
 async function rejection(response: Response): Promise<string> {
   switch (response.status) {
     case 401:
@@ -54,12 +62,17 @@ export function createDraftSender(
     } catch {
       return { kind: 'network' };
     }
-    if (response.ok) return { kind: 'ok', revision: Number((await readJson(response)).revision) };
+    if (response.ok) {
+      const revision = revisionOf(await readJson(response));
+      return revision === null ? { kind: 'network' } : { kind: 'ok', revision };
+    }
     if (response.status === 409) {
       const conflict = await readJson(response);
+      const revision = revisionOf(conflict);
+      if (revision === null) return { kind: 'network' };
       return {
         kind: 'conflict',
-        revision: Number(conflict.revision),
+        revision,
         saveId: typeof conflict.saveId === 'string' ? conflict.saveId : null,
       };
     }

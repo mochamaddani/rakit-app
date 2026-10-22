@@ -13,6 +13,7 @@ import {
 import type { EditorActions, EditorState, EditorStore } from '@/lib/editor/store';
 
 const EditorSessionContext = createContext<EditorSession | null>(null);
+const WorkspaceContext = createContext<string | null>(null);
 
 let registry: SessionRegistry | undefined;
 
@@ -30,10 +31,22 @@ export function EditorProvider({
   pageId,
   initialDoc,
   initialRevision,
+  workspaceId,
   children,
-}: SessionInput & { children: ReactNode }) {
+}: SessionInput & { workspaceId: string; children: ReactNode }) {
   const [session] = useState(() => openSession({ pageId, initialDoc, initialRevision }));
-  return <EditorSessionContext.Provider value={session}>{children}</EditorSessionContext.Provider>;
+  return (
+    <EditorSessionContext.Provider value={session}>
+      <WorkspaceContext.Provider value={workspaceId}>{children}</WorkspaceContext.Provider>
+    </EditorSessionContext.Provider>
+  );
+}
+
+/** The page's workspace: uploads go under its folder (docs/DECISIONS.md D-045). */
+export function useWorkspaceId(): string {
+  const workspaceId = useContext(WorkspaceContext);
+  if (!workspaceId) throw new Error('useWorkspaceId must be used inside <EditorProvider>');
+  return workspaceId;
 }
 
 export function useEditorSession(): EditorSession {
