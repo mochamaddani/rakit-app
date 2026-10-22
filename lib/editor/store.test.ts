@@ -18,6 +18,15 @@ const headline = (text: string) => ({
 });
 
 describe('editor store', () => {
+  it('notify shows a notice and announces it', () => {
+    const store = setup();
+    store.getState().notify('Headline: Required');
+    expect(store.getState()).toMatchObject({
+      notice: 'Headline: Required',
+      announcement: 'Headline: Required',
+      version: 0,
+    });
+  });
   it('announce sets the announcement without touching history', () => {
     const store = setup();
     store.getState().announce('Dragging Hero. Press Escape to cancel.');

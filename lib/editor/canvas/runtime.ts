@@ -1,8 +1,9 @@
 import { CANVAS_SOURCE, isForwardedShortcut, type CanvasRect } from './constants';
+import { readInlineNodes } from './inline-nodes';
 
 // Runs inside the sandboxed canvas iframe (docs/DECISIONS.md D-039). It reports geometry,
 // pointer and key events to the editor and applies the editor's patches in place. Import only
-// zod-free modules here: everything imported is bundled into the iframe (≤ 8 KB).
+// zod-free modules here: everything imported is bundled into the iframe (≤ 10 KB, D-044).
 
 export interface RuntimeOptions {
   win: Window;
@@ -18,6 +19,7 @@ export interface RuntimeOptions {
 const ID = /^[A-Za-z0-9]{1,32}$/;
 const USER_TOGGLED = 'data-lp-user-toggled';
 const OPEN_DEFAULT = 'data-lp-open-default';
+const EDITING = 'data-lp-editing';
 
 interface SavedNode {
   path: number[];
@@ -89,6 +91,8 @@ export function startPreviewRuntime(options: RuntimeOptions): () => void {
   let rev = 0;
   let frame = 0;
   let hovered: string | null = null;
+  /** The field being edited in place (docs/DECISIONS.md D-044). */
+  let editing: { el: HTMLElement; blockId: string; path: string; frame: number } | null = null;
   const pageScript = Array.from(doc.body.querySelectorAll('script')).find(
     (script) => !script.hasAttribute('data-lp-channel'),
   );
@@ -145,7 +149,8 @@ export function startPreviewRuntime(options: RuntimeOptions): () => void {
       if (!isRecord(entry) || typeof entry.id !== 'string' || !ID.test(entry.id)) {
         throw new Error('Bad block patch');
       }
-      fresh.set(entry.id, String(entry.html));
+      // The block being edited keeps its element until editing ends, so the caret stays put.
+      if (entry.id !== editing?.blockId) fresh.set(entry.id, String(entry.html));
     }
 
     let changed = fresh.size > 0;
@@ -227,6 +232,83 @@ export function startPreviewRuntime(options: RuntimeOptions): () => void {
     return el?.getAttribute(attribute) ?? null;
   };
 
+  const inField = (target: EventTarget | null) =>
+    editing !== null && target !== null && editing.el.contains(target as Node);
+
+  const postEdit = () => {
+    if (!editing) return;
+    editing.frame = 0;
+    post({
+      type: 'edit',
+      blockId: editing.blockId,
+      path: editing.path,
+      nodes: readInlineNodes(editing.el),
+    });
+  };
+
+  const endEditing = () => {
+    const current = editing;
+    if (!current) return;
+    if (current.frame) {
+      win.cancelAnimationFrame(current.frame);
+      postEdit();
+    }
+    editing = null;
+    current.el.removeAttribute('contenteditable');
+    current.el.removeAttribute(EDITING);
+    post({ type: 'editEnd', blockId: current.blockId, path: current.path });
+  };
+
+  const startEditing = (field: Element) => {
+    const blockId = closestId(field, 'data-lp-block');
+    const path = field.getAttribute('data-lp-field');
+    if (!blockId || !path || editing?.el === field) return;
+    endEditing();
+    const el = field as HTMLElement;
+    el.setAttribute('contenteditable', el.hasAttribute('data-lp-rich') ? 'true' : 'plaintext-only');
+    el.setAttribute(EDITING, '');
+    editing = { el, blockId, path, frame: 0 };
+    el.focus();
+  };
+
+  const onDoubleClick = (event: Event) => {
+    const field = asElement(event.target)?.closest('[data-lp-field]');
+    if (field?.closest('[data-lp-block]')) startEditing(field);
+  };
+
+  const onInput = (event: Event) => {
+    if (editing && inField(event.target) && !editing.frame) {
+      editing.frame = win.requestAnimationFrame(postEdit);
+    }
+  };
+
+  /** Paste and drop bring plain text only; text fields keep to one line. */
+  const insertPlain = (event: Event, text: string) => {
+    event.preventDefault();
+    if (!editing) return;
+    if (!editing.el.hasAttribute('data-lp-rich')) {
+      doc.execCommand('insertText', false, text.replace(/\s*\n\s*/g, ' '));
+      return;
+    }
+    text.split(/\r?\n/).forEach((line, i) => {
+      if (i > 0) doc.execCommand('insertLineBreak');
+      if (line) doc.execCommand('insertText', false, line);
+    });
+  };
+  const onPaste = (event: Event) => {
+    if (inField(event.target)) {
+      insertPlain(event, (event as ClipboardEvent).clipboardData?.getData('text/plain') ?? '');
+    }
+  };
+  const onDrop = (event: Event) => {
+    if (inField(event.target)) {
+      insertPlain(event, (event as DragEvent).dataTransfer?.getData('text/plain') ?? '');
+    }
+  };
+  const onFocusOut = (event: Event) => {
+    if (editing && event.target === editing.el) endEditing();
+  };
+
   const onPointerOver = (event: Event) => {
     const id = closestId(event.target, 'data-lp-block');
     if (id !== hovered) {
@@ -241,6 +323,11 @@ export function startPreviewRuntime(options: RuntimeOptions): () => void {
   };
 
   const onClick = (event: Event) => {
+    // Inside the edited field a click only places the caret: no link, no <details> toggle.
+    if (inField(event.target)) {
+      event.preventDefault();
+      return;
+    }
     const target = asElement(event.target);
     // The canvas never navigates: links select their block instead.
     if (target?.closest('a[href]')) event.preventDefault();
@@ -262,6 +349,29 @@ export function startPreviewRuntime(options: RuntimeOptions): () => void {
       shift: key.shiftKey,
       alt: key.altKey,
     };
+    if (editing) {
+      // Keys stay in the field; only undo and redo reach the editor, after editing ends.
+      const letter = key.key.toLowerCase();
+      if (key.key === 'Escape') {
+        key.preventDefault();
+        endEditing();
+      } else if (key.key === 'Enter') {
+        key.preventDefault();
+        if (editing.el.hasAttribute('data-lp-rich')) doc.execCommand('insertLineBreak');
+        else endEditing();
+      } else if (input.mod && !input.alt && (letter === 'z' || letter === 'y')) {
+        key.preventDefault();
+        endEditing();
+        post({ type: 'key', input });
+      } else if (input.mod && (letter === 'd' || letter === 'u')) {
+        key.preventDefault();
+      } else if (key.key === ' ' && !input.mod && editing.el.closest('summary')) {
+        // A <summary> takes Space as its toggle and would swallow the character.
+        key.preventDefault();
+        doc.execCommand('insertText', false, ' ');
+      }
+      return;
+    }
     if (!isForwardedShortcut(input)) return;
     key.preventDefault();
     post({ type: 'key', input });
@@ -288,6 +398,12 @@ export function startPreviewRuntime(options: RuntimeOptions): () => void {
   doc.addEventListener('keydown', onKeyDown, true);
   doc.addEventListener('toggle', onToggle, true);
   doc.addEventListener('load', scheduleRects, true);
+  doc.addEventListener('dblclick', onDoubleClick, true);
+  doc.addEventListener('input', onInput, true);
+  doc.addEventListener('paste', onPaste, true);
+  doc.addEventListener('drop', onDrop, true);
+  doc.addEventListener('focusout', onFocusOut, true);
+  win.addEventListener('blur', endEditing);
   const resizes = typeof ResizeObserver === 'function' ? new ResizeObserver(scheduleRects) : null;
   resizes?.observe(doc.body);
 
@@ -305,6 +421,12 @@ export function startPreviewRuntime(options: RuntimeOptions): () => void {
     doc.removeEventListener('keydown', onKeyDown, true);
     doc.removeEventListener('toggle', onToggle, true);
     doc.removeEventListener('load', scheduleRects, true);
+    doc.removeEventListener('dblclick', onDoubleClick, true);
+    doc.removeEventListener('input', onInput, true);
+    doc.removeEventListener('paste', onPaste, true);
+    doc.removeEventListener('drop', onDrop, true);
+    doc.removeEventListener('focusout', onFocusOut, true);
+    win.removeEventListener('blur', endEditing);
     resizes?.disconnect();
     if (frame) win.cancelAnimationFrame(frame);
   };

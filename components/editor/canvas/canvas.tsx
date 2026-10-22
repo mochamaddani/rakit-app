@@ -12,6 +12,7 @@ import { createBlockHtmlCache, type BlockHtmlCache } from '@/lib/editor/canvas/r
 import { buildSrcdoc } from '@/lib/editor/canvas/srcdoc';
 import { canvasState, diffCanvas, type CanvasState } from '@/lib/editor/canvas/sync';
 import { VIEWPORT_WIDTHS } from '@/lib/editor/store';
+import { applyInlineEdit, finishInlineEdit } from '@/lib/editor/inline-edit';
 import { findBlock, findSection } from '@/lib/editor/structure';
 import { createId } from '@/lib/schema/ids';
 import { useDragState } from '../dnd/drag-context';
@@ -243,6 +244,21 @@ export function Canvas({
             m?.syncLatencies.push(now - entry.at);
             return false;
           });
+          return;
+        }
+        case 'edit':
+          applyInlineEdit(store, message);
+          return;
+        case 'editEnd': {
+          finishInlineEdit(store);
+          // The canvas showed what was typed; re-render the block from the document, which also
+          // restores a field whose last edit could not be stored.
+          if (s.sent) {
+            const blocks = new Map(s.sent.blocks);
+            blocks.delete(message.blockId);
+            s.sent = { ...s.sent, blocks };
+          }
+          if (!s.raf) s.raf = requestAnimationFrame(flushSync);
           return;
         }
         case 'error':

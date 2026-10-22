@@ -45,6 +45,8 @@ export interface EditorActions {
   select(selection: Selection | null): void;
   /** Sets the aria-live text without a command (drag start and cancel). */
   announce(text: string): void;
+  /** A visible notice, announced too (an inline edit that could not be stored). */
+  notify(text: string): void;
   setViewport(viewport: Viewport): void;
   endCoalescing(): void;
 }
@@ -123,6 +125,10 @@ export function createEditorStore(
 
       announce(text) {
         set({ announcement: text });
+      },
+
+      notify(text) {
+        set({ notice: text, announcement: text });
       },
 
       select(selection) {

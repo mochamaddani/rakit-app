@@ -7,6 +7,37 @@ const msg = (body: Record<string, unknown>) => ({ source: CANVAS_SOURCE, channel
 const rect = { id: 'b1', top: 0, left: 0, width: 390, height: 200 };
 
 describe('parseCanvasEvent', () => {
+  it('edit messages are validated', () => {
+    const edit = (body: Record<string, unknown>) =>
+      parseCanvasEvent(msg({ type: 'edit', blockId: 'b1', path: 'headline', ...body }), CH);
+    const nodes = [
+      { t: 'text', v: 'Botol ' },
+      { t: 'strong', v: 'anti bocor' },
+      { t: 'br' },
+      { t: 'link', href: 'https://x.example/', label: [{ t: 'em', v: 'a' }] },
+    ];
+    expect(edit({ nodes })).toEqual({ type: 'edit', blockId: 'b1', path: 'headline', nodes });
+    expect(edit({ nodes: [{ t: 'script', v: 'x' }] })).toBeNull();
+    expect(edit({ nodes: [{ t: 'text', v: 'x'.repeat(20_001) }] })).toBeNull();
+    expect(edit({ nodes: Array.from({ length: 2001 }, () => ({ t: 'br' })) })).toBeNull();
+    expect(edit({ nodes: [{ t: 'link', href: 'x'.repeat(2049), label: [] }] })).toBeNull();
+    expect(edit({ nodes, path: 42 })).toBeNull();
+    expect(
+      edit({
+        nodes: [
+          { t: 'text', v: 'x'.repeat(15_000) },
+          { t: 'text', v: 'y'.repeat(15_000) },
+        ],
+      }),
+    ).toBeNull();
+    expect(parseCanvasEvent(msg({ type: 'editEnd', blockId: 'b1', path: 'headline' }), CH)).toEqual(
+      {
+        type: 'editEnd',
+        blockId: 'b1',
+        path: 'headline',
+      },
+    );
+  });
   it('accepts each valid event', () => {
     expect(parseCanvasEvent(msg({ type: 'ready' }), CH)).toEqual({ type: 'ready' });
     expect(

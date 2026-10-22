@@ -5,3 +5,12 @@
   outline: 2px dashed #ca8a04;
   border-radius: 0.2em;
 }
+
+/* Inline editing (docs/DECISIONS.md D-044). */
+[data-lp-field]:hover {
+  cursor: text;
+}
+[data-lp-editing] {
+  outline: 2px solid #0284c7;
+  outline-offset: 2px;
+}

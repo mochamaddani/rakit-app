@@ -20,5 +20,5 @@ it('its body equals the canvas state with every slot filled', () => {
   expect(buildSrcdoc(doc, 'abcdefghij')).toContain(`<body>${filled}<script>`);
 });
 it('rejects a malformed channel', () => expect(() => buildSrcdoc(editorDoc(), 'x"><b')).toThrow());
-it('the runtime stays within 8 KB minified', () =>
-  expect(new TextEncoder().encode(asset.min).byteLength).toBeLessThanOrEqual(8192));
+it('the runtime stays within 10 KB minified', () =>
+  expect(new TextEncoder().encode(asset.min).byteLength).toBeLessThanOrEqual(10_240));

@@ -43,6 +43,73 @@ beforeEach(() => {
 afterEach(() => dispose());
 
 describe('preview runtime', () => {
+  const headlineOf = (id = 'b1') =>
+    document.querySelector<HTMLElement>(`[data-lp-block="${id}"] [data-lp-field="headline"]`)!;
+  const startEditing = (el: HTMLElement) =>
+    el.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
+  const key = (el: HTMLElement, init: KeyboardEventInit) =>
+    el.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, cancelable: true, ...init }));
+
+  it('dblclick makes the field editable and input posts edit nodes', async () => {
+    load();
+    const headline = headlineOf();
+    startEditing(headline);
+    expect(headline.getAttribute('contenteditable')).toBe('true');
+    expect(headline.hasAttribute('data-lp-editing')).toBe(true);
+    headline.innerHTML = 'Baru <b>tebal</b>';
+    headline.dispatchEvent(new Event('input', { bubbles: true }));
+    await frame();
+    expect(posts.find((p) => p.type === 'edit')).toMatchObject({
+      blockId: 'b1',
+      path: 'headline',
+      nodes: [
+        { t: 'text', v: 'Baru ' },
+        { t: 'strong', v: 'tebal' },
+      ],
+    });
+  });
+
+  it('patches for the block being edited wait until editing ends', async () => {
+    const before = load();
+    const headline = headlineOf();
+    startEditing(headline);
+    const r = applyCommand(
+      editorDoc(),
+      { type: 'setBlockProp', blockId: 'b1', path: ['headline'], value: 'Dari dokumen' },
+      null,
+      deps(),
+    );
+    if (!r.ok) throw new Error(r.reason);
+    const patch = diffCanvas(before, canvasState(r.doc, createBlockHtmlCache()))!;
+    send({ type: 'sync', rev: 1, ...patch });
+    await frame();
+    expect(headlineOf()).toBe(headline);
+    key(headline, { key: 'Escape' });
+    expect(posts.filter((p) => p.type === 'editEnd')).toEqual([
+      expect.objectContaining({ blockId: 'b1', path: 'headline' }),
+    ]);
+    expect(headline.hasAttribute('contenteditable')).toBe(false);
+    send({ type: 'sync', rev: 2, ...patch });
+    await frame();
+    expect(headlineOf()).not.toBe(headline);
+    expect(headlineOf().textContent).toBe('Dari dokumen');
+  });
+
+  it('Backspace is not forwarded while editing; Mod+Z ends editing and is', () => {
+    load();
+    const headline = headlineOf();
+    startEditing(headline);
+    key(headline, { key: 'Backspace' });
+    key(headline, { key: 'd', ctrlKey: true });
+    expect(posts.filter((p) => p.type === 'key')).toEqual([]);
+    key(headline, { key: 'z', ctrlKey: true });
+    expect(posts.map((p) => p.type).filter((t) => t === 'editEnd' || t === 'key')).toEqual([
+      'editEnd',
+      'key',
+    ]);
+    expect(headline.hasAttribute('data-lp-editing')).toBe(false);
+  });
+
   it('scrollBy scrolls the canvas and reports rects even at the edge', async () => {
     load();
     await frame();

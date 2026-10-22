@@ -21,6 +21,38 @@ const Rect = z.object({
   height: Coordinate,
 });
 
+// An edited field as the runtime read it (lib/editor/canvas/inline-nodes.ts), bounded in size.
+const NodeText = z.string().max(20_000);
+const InlineLeafSchema = z.discriminatedUnion('t', [
+  z.object({ t: z.literal('text'), v: NodeText }),
+  z.object({ t: z.literal('strong'), v: NodeText }),
+  z.object({ t: z.literal('em'), v: NodeText }),
+  z.object({ t: z.literal('mark'), v: NodeText }),
+  z.object({ t: z.literal('br') }),
+]);
+type InlineLeaf = z.output<typeof InlineLeafSchema>;
+const InlineNodeSchema = z.union([
+  InlineLeafSchema,
+  z.object({
+    t: z.literal('link'),
+    href: z.string().max(2048),
+    label: z.array(InlineLeafSchema).max(2000),
+  }),
+]);
+const textLength = (
+  nodes: readonly (InlineLeaf | { href: string; label: InlineLeaf[] })[],
+): number =>
+  nodes.reduce(
+    (sum, node) =>
+      sum + ('v' in node ? node.v.length : 'href' in node ? textLength(node.label) : 0),
+    0,
+  );
+const InlineNodesSchema = z
+  .array(InlineNodeSchema)
+  .max(2000)
+  .refine((nodes) => textLength(nodes) <= 20_000);
+const FieldPath = z.string().max(200);
+
 const CanvasEventSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('ready') }),
   z.object({
@@ -51,6 +83,13 @@ const CanvasEventSchema = z.discriminatedUnion('type', [
     }),
   }),
   z.object({ type: z.literal('synced'), rev: Rev }),
+  z.object({
+    type: z.literal('edit'),
+    blockId: IdSchema,
+    path: FieldPath,
+    nodes: InlineNodesSchema,
+  }),
+  z.object({ type: z.literal('editEnd'), blockId: IdSchema, path: FieldPath }),
   z.object({ type: z.literal('error'), message: z.string().max(500) }),
 ]);
 

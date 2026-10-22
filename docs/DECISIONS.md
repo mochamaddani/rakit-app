@@ -185,7 +185,7 @@ Consequences:
 - **Not in history:** selection, hover and viewport. Undo restores the selection recorded with the entry if it still exists.
 
 ## D-039 Canvas protocol and patching — Accepted
-- **Isolation:** the canvas is `<iframe sandbox="allow-scripts" srcdoc>`. Its origin is opaque, so page scripts can never reach the editor's cookies or DOM. Its document is `renderPage(doc, { mode: 'preview' })` plus a bundled runtime (`lib/editor/canvas/runtime.ts`, ≤ 8 KB) that carries a per-load channel id.
+- **Isolation:** the canvas is `<iframe sandbox="allow-scripts" srcdoc>`. Its origin is opaque, so page scripts can never reach the editor's cookies or DOM. Its document is `renderPage(doc, { mode: 'preview' })` plus a bundled runtime (`lib/editor/canvas/runtime.ts`, ≤ 8 KB; 10 KB since D-044) that carries a per-load channel id.
 - **Patching:**
   - The parent keeps the HTML it last sent for each block. The cache is keyed on the block object, the settings object, the section anchors, the block's section and its first-section and first-block position.
   - Once per animation frame it sends only what changed: CSS, JS, `lang`, the body skeleton (sections with one slot per block) and changed blocks.
@@ -234,4 +234,14 @@ Consequences:
   - The target is recomputed on every move and every new rects message. Near the canvas's top or bottom edge the editor asks the iframe to scroll (at most 20 px a frame), and the iframe always answers with rects.
 - **Dropping:** a drop commits on the editor's pointerup only (D-034); a release outside the canvas cancels; the click that ends a palette drag is swallowed. Screen readers hear "Dragging <Label>. Press Escape to cancel.", "Drag cancelled." or the command's own announcement.
 - **No-op edits:** a command that produces no patches fails with `noop` "Nothing changed", so it never records an undo step (M2a review M1).
+
+## D-044 Inline editing in the canvas — Accepted
+- **Markers:** in preview mode the renderer marks every element whose whole content is a text or rich field with `data-lp-field="<path>"`, plus `data-lp-rich` for rich fields (`ctx.field(path, kind)`; CTA labels through `renderCta`). Export output never carries them, and a registry-wide test checks every marker against its block's schema.
+- **Editing:** a double-click on a marked element makes it `contenteditable` (`plaintext-only` for text fields, `true` for rich ones).
+  - Bold and italic come from the browser's Mod+B and Mod+I. Existing highlights and links survive editing; new links and highlights are added in the inspector.
+  - Paste and drop insert plain text only.
+- **While editing:** the runtime sends the field as a node list, at most once per frame. The editor checks the block and the field path against the schema, serializes the nodes (rich fields: canonical inline markup, D-009; text fields: plain text) and dispatches one `setBlockProp` with the inspector's coalescing key, so a typing run is one undo step. Patches for the edited block wait until editing ends, so the caret never jumps.
+- **Keys:** Escape ends editing. Enter ends it in a text field and inserts a line break in a rich one. Mod+Z and Mod+Y end editing, then undo or redo. Mod+D and Mod+U do nothing. Every other key, Backspace and Delete included, stays in the field. In a `<summary>` the runtime inserts Space itself, because the browser would toggle the answer instead.
+- **Ending:** focus leaving the field, the window losing focus, or the keys above end editing. The editor then re-renders the block from the document, which also restores a field whose last edit could not be stored (an emptied required field, text over its limit); a notice names the field and the reason.
+- **Budget:** the canvas runtime may grow to 10 KB minified (from 8 KB, D-039).
 
