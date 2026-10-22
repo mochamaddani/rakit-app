@@ -3,6 +3,7 @@
 import type { PageDocument } from '@/lib/schema/document';
 import { Canvas } from './canvas/canvas';
 import { EditorProvider, useEditor, useEditorStore } from './editor-context';
+import { Inspector } from './inspector/inspector';
 import { Palette } from './palette';
 import { SaveBanner } from './save-banner';
 import { TopBar } from './top-bar';
@@ -46,7 +47,12 @@ function EditorShell({
             <Palette />
           </aside>
           <Canvas onKey={onCanvasKey} />
-          <aside className="w-[340px] shrink-0 overflow-y-auto border-l bg-background" />
+          <aside
+            aria-label="Inspector"
+            className="w-[340px] shrink-0 overflow-y-auto border-l bg-background"
+          >
+            <Inspector />
+          </aside>
         </div>
       </div>
       <div role="status" aria-live="polite" className="sr-only" data-testid="announcer">
