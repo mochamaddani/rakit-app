@@ -2,7 +2,7 @@
 
 **Status:** proposed for owner review · 2026-10-21
 **Spec:** [`docs/PRD.md`](PRD.md) · **Decisions:** [`docs/DECISIONS.md`](DECISIONS.md) (D-xxx below)
-**Detailed task plans:** [M0 Foundation](superpowers/plans/2026-10-21-m0-foundation.md) · [M1 Renderer](superpowers/plans/2026-10-21-m1-renderer.md). Plans for M2–M7 are written when each milestone starts, because each one depends on interfaces the previous milestone settles.
+**Detailed task plans:** [M0 Foundation](superpowers/plans/2026-10-21-m0-foundation.md) · [M1 Renderer](superpowers/plans/2026-10-21-m1-renderer.md) · [M2a Editor core](superpowers/plans/2026-10-22-m2a-editor-core.md). Plans for M2b–M7 are written when each milestone starts, because each one depends on interfaces the previous milestone settles.
 
 ---
 
@@ -92,8 +92,8 @@ tests/          e2e (renderer, app), fixtures, helpers, repo-level unit tests
 - **Scope:** schema primitives/theme/settings; HTML safety utilities; asset pipeline (esbuild → committed generated modules); block contract and render context; Hero, Benefits, Testimonials, FAQ, Footer; Product Carousel (static markup, then the snippet, ≤ 1.5 KB); registry and document schema with unique-ID validation; migrations; `renderPage` with CSS/JS collectors, preview mode, landmarks, stats; example document; `pnpm render` CLI; registry-wide XSS/validity tests; Playwright carousel e2e (JS on, JS off, touch, keyboard, two carousels, no overflow at 360 px).
 - **Exit:** all unit and snapshot tests green; html-validate clean on every block and the full example; carousel snippet ≤ 1536 bytes; `pnpm render` writes `out/example.html`, which opens via `file://` with no external requests; `pnpm test:e2e` green.
 
-### M2 — Editor engine MVP (custom)
-Probably split into two plans: **M2a** (state, canvas, inspector) and **M2b** (DnD, inline editing, uploads).
+### M2 — Editor engine MVP (custom) · [M2a plan](superpowers/plans/2026-10-22-m2a-editor-core.md)
+Split into two plans: **M2a** (state, canvas, inspector; [detailed plan](superpowers/plans/2026-10-22-m2a-editor-core.md)) and **M2b** (DnD, inline editing, uploads). M2b plan: written after M2a.
 - Dashboard: list, create blank, open, delete, rename; page CRUD server actions with `requireUser()` and optimistic concurrency on `updated_at`.
 - Editor state: Zustand store, Immer `produceWithPatches`, a command bus, undo/redo stacks, coalesced typing, selection; autosave (debounced ~800 ms, flushed on blur/unload, conflict warning).
 - Canvas: sandboxed iframe (`sandbox="allow-scripts"`, opaque origin) rendered with `renderPage(mode:'preview')`; a preview runtime reports geometry and applies per-block patches; Zod-validated message protocol; per-block render cache.
@@ -187,4 +187,6 @@ Base UI primitives (dialogs, popovers) are UI building blocks, not builders or D
 |---|---|---|
 | M0 Foundation | [`superpowers/plans/2026-10-21-m0-foundation.md`](superpowers/plans/2026-10-21-m0-foundation.md) | Ready for review |
 | M1 Renderer | [`superpowers/plans/2026-10-21-m1-renderer.md`](superpowers/plans/2026-10-21-m1-renderer.md) | Ready for review |
-| M2–M7 | Written at the start of each milestone | — |
+| M2a Editor core | [`superpowers/plans/2026-10-22-m2a-editor-core.md`](superpowers/plans/2026-10-22-m2a-editor-core.md) | In progress |
+| M2b Direct manipulation | Written after M2a | — |
+| M3–M7 | Written at the start of each milestone | — |
