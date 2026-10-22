@@ -35,6 +35,15 @@ export interface RenderResult {
   warnings: string[];
 }
 
+/** Where a block sits: the first section is above the fold, and its first block owns the h1. */
+export interface BlockAt {
+  sectionId: string;
+  sectionIndex: number;
+  indexInSection: number;
+}
+
+export type BlockRenderer = (block: BlockInstance, at: BlockAt) => SafeHtml | null;
+
 const sectionAnchor = (section: Section) => section.anchor ?? `s-${section.id}`;
 
 function blockClasses(block: BlockInstance): string {
@@ -46,6 +55,57 @@ function blockClasses(block: BlockInstance): string {
   return classes.join(' ');
 }
 
+export function createRenderEnv(doc: PageDocument, mode: RenderMode): RenderEnv {
+  return {
+    mode,
+    settings: doc.settings,
+    sectionAnchors: new Map(doc.sections.map((section) => [section.id, sectionAnchor(section)])),
+  };
+}
+
+/** One block's wrapper and content exactly as renderPage emits them; null for an unregistered type. */
+export function renderBlock(env: RenderEnv, block: BlockInstance, at: BlockAt): SafeHtml | null {
+  const definition = getBlockDefinition(block.type);
+  if (!definition) return null;
+  const ctx = createRenderContext(env, { blockId: block.id, ...at });
+  return html`<div class="${blockClasses(block)}" id="b-${block.id}"${
+    env.mode === 'preview' ? html` data-lp-block="${block.id}" data-lp-type="${block.type}"` : ''
+  }>${definition.render(block.props, ctx)}</div>`;
+}
+
+/**
+ * Index of the first trailing section made only of footer-landmark blocks; sections.length when
+ * none. Those sections render after </main>, so their <footer> is the page's contentinfo (D-017).
+ */
+export function footerStart(doc: PageDocument): number {
+  const isFooterOnly = (section: Section) =>
+    section.blocks.length > 0 &&
+    section.blocks.every((block) => getBlockDefinition(block.type)?.landmark === 'footer');
+  let start = doc.sections.length;
+  while (start > 0 && isFooterOnly(doc.sections[start - 1]!)) start -= 1;
+  return start;
+}
+
+/** `<main>…</main>` plus the trailing footer sections; a block rendered as null emits nothing. */
+export function renderBody(doc: PageDocument, env: RenderEnv, renderOne: BlockRenderer): SafeHtml {
+  const preview = env.mode === 'preview';
+  const mainEnd = footerStart(doc);
+  const sections = doc.sections.map((section, sectionIndex) => {
+    const blocks = section.blocks.map(
+      (block, indexInSection) =>
+        renderOne(block, { sectionId: section.id, sectionIndex, indexInSection }) ?? '',
+    );
+    const attributes = html` id="${sectionAnchor(section)}" class="lp-s lp-tone-${section.style.tone} lp-pad-${section.style.padY}"${
+      preview ? html` data-lp-section="${section.id}"` : ''
+    }`;
+    const inner = html`<div class="lp-c lp-w-${section.style.width}">${blocks}</div>`;
+    return sectionIndex < mainEnd
+      ? html`<section${attributes}>${inner}</section>`
+      : html`<div${attributes}>${inner}</div>`;
+  });
+  return html`<main>${sections.slice(0, mainEnd)}</main>${sections.slice(mainEnd)}`;
+}
+
 /**
  * The page is data; this is the only function that turns it into HTML (PRD §5). Pure and
  * deterministic: no DOM, no I/O, no clock or randomness — the same document gives the same bytes.
@@ -53,64 +113,24 @@ function blockClasses(block: BlockInstance): string {
 export function renderPage(doc: PageDocument, options: RenderOptions): RenderResult {
   const { mode } = options;
   const minify = options.minify ?? mode === 'export';
-  const preview = mode === 'preview';
-  const env: RenderEnv = {
-    mode,
-    settings: doc.settings,
-    sectionAnchors: new Map(doc.sections.map((section) => [section.id, sectionAnchor(section)])),
-  };
+  const env = createRenderEnv(doc, mode);
   const stats: BlockStat[] = [];
   const warnings: string[] = [];
 
-  const renderSection = (
-    section: Section,
-    sectionIndex: number,
-    element: 'section' | 'div',
-  ): SafeHtml => {
-    const blocks = section.blocks.map((block, indexInSection) => {
-      const definition = getBlockDefinition(block.type);
-      if (!definition) {
-        warnings.push(`Unknown block type "${block.type}" in block ${block.id} was skipped`);
-        return '';
-      }
-      const ctx = createRenderContext(env, {
-        blockId: block.id,
-        sectionId: section.id,
-        sectionIndex,
-        indexInSection,
-      });
-      const markup = html`<div class="${blockClasses(block)}" id="b-${block.id}"${
-        preview ? html` data-lp-block="${block.id}" data-lp-type="${block.type}"` : ''
-      }>${definition.render(block.props, ctx)}</div>`;
-      stats.push({
-        blockId: block.id,
-        type: block.type,
-        sectionId: section.id,
-        bytes: byteLength(markup.value),
-      });
-      return markup;
+  const body = renderBody(doc, env, (block, at) => {
+    const markup = renderBlock(env, block, at);
+    if (!markup) {
+      warnings.push(`Unknown block type "${block.type}" in block ${block.id} was skipped`);
+      return null;
+    }
+    stats.push({
+      blockId: block.id,
+      type: block.type,
+      sectionId: at.sectionId,
+      bytes: byteLength(markup.value),
     });
-    const attributes = html` id="${sectionAnchor(section)}" class="lp-s lp-tone-${section.style.tone} lp-pad-${section.style.padY}"${
-      preview ? html` data-lp-section="${section.id}"` : ''
-    }`;
-    const inner = html`<div class="lp-c lp-w-${section.style.width}">${blocks}</div>`;
-    return element === 'section'
-      ? html`<section${attributes}>${inner}</section>`
-      : html`<div${attributes}>${inner}</div>`;
-  };
-
-  // Trailing sections made only of footer-landmark blocks go after </main>, so their <footer> is
-  // the page's contentinfo landmark (docs/DECISIONS.md D-017).
-  const isFooterOnly = (section: Section) =>
-    section.blocks.length > 0 &&
-    section.blocks.every((block) => getBlockDefinition(block.type)?.landmark === 'footer');
-  let mainEnd = doc.sections.length;
-  while (mainEnd > 0 && isFooterOnly(doc.sections[mainEnd - 1]!)) mainEnd -= 1;
-  const sections = doc.sections.map((section, i) =>
-    renderSection(section, i, i < mainEnd ? 'section' : 'div'),
-  );
-  const mainSections = sections.slice(0, mainEnd);
-  const afterMain = sections.slice(mainEnd);
+    return markup;
+  });
   const css = collectCss(doc, { mode, minify });
   const js = collectJs(doc, { minify });
   const { lang, seo } = doc.settings;
@@ -121,7 +141,7 @@ export function renderPage(doc: PageDocument, options: RenderOptions): RenderRes
     seo.noindex ? html`<meta name="robots" content="noindex,nofollow">` : ''
   }<style>${unsafeRaw(escapeInlineStyle(css))}</style>`;
   const script = js ? html`<script>${unsafeRaw(escapeInlineScript(js))}</script>` : '';
-  const page = html`<!doctype html><html lang="${lang}"><head>${head}</head><body><main>${mainSections}</main>${afterMain}${script}</body></html>`;
+  const page = html`<!doctype html><html lang="${lang}"><head>${head}</head><body>${body}${script}</body></html>`;
 
   return {
     html: page.value,

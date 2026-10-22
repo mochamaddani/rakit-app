@@ -1,8 +1,15 @@
 import { describe, expect, it, vi } from 'vitest';
 import { asset as baseCss } from '@/lib/renderer/base.generated';
-import { byteLength } from '@/lib/renderer/html';
-import { renderPage } from '@/lib/renderer/page';
+import { byteLength, html } from '@/lib/renderer/html';
+import {
+  createRenderEnv,
+  footerStart,
+  renderBlock,
+  renderBody,
+  renderPage,
+} from '@/lib/renderer/page';
 import { parseDocument, type PageDocument } from '@/lib/schema/document';
+import { exampleDocument } from '@/tests/fixtures/example-document';
 import { validateHtml } from '@/tests/helpers/validate-html';
 
 const doc = parseDocument({
@@ -117,5 +124,48 @@ describe('footer landmark placement', () => {
     );
     expect(html).toContain('<main><section id="s-sFoot"');
     expect(html).not.toContain('</main><div');
+  });
+});
+
+describe('block-level API', () => {
+  const example = parseDocument(exampleDocument);
+  it('renderBlock returns exactly the markup renderPage emits for each block', () => {
+    for (const mode of ['export', 'preview'] as const) {
+      const page = renderPage(example, { mode }).html;
+      const env = createRenderEnv(example, mode);
+      example.sections.forEach((section, sectionIndex) =>
+        section.blocks.forEach((block, indexInSection) => {
+          const markup = renderBlock(env, block, {
+            sectionId: section.id,
+            sectionIndex,
+            indexInSection,
+          });
+          expect(page).toContain(markup!.value);
+        }),
+      );
+    }
+  });
+  it('renderBody with slots keeps every block in order and the footer after </main>', () => {
+    const env = createRenderEnv(example, 'preview');
+    const body = renderBody(
+      example,
+      env,
+      (block) => html`<div data-lp-slot="${block.id}"></div>`,
+    ).value;
+    const ids = example.sections.flatMap((s) => s.blocks.map((b) => b.id));
+    expect([...body.matchAll(/data-lp-slot="([^"]+)"/g)].map((m) => m[1])).toEqual(ids);
+    expect(body.startsWith('<main>')).toBe(true);
+    expect(body.indexOf('</main>')).toBeLessThan(body.indexOf(`data-lp-slot="${ids.at(-1)}"`));
+  });
+  it('footerStart finds only trailing footer-only sections', () => {
+    const s = (id: string, type: string, props: unknown = {}) => ({
+      id,
+      blocks: [{ id: `b${id}`, type, props }],
+    });
+    const hero = { headline: 'Hi' };
+    const sections = (...list: unknown[]) => parseDocument({ schemaVersion: 1, sections: list });
+    expect(footerStart(sections(s('1', 'hero', hero), s('2', 'footer')))).toBe(1);
+    expect(footerStart(sections(s('1', 'footer'), s('2', 'hero', hero)))).toBe(2);
+    expect(footerStart(sections())).toBe(0);
   });
 });
