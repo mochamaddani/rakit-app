@@ -58,5 +58,21 @@ export function everyCommand(): EditorCommand[] {
     { type: 'listMove', blockId: 'b4', path: ['items'], from: 0, to: 2 },
     { type: 'listDuplicate', blockId: 'b4', path: ['items'], index: 1 },
     { type: 'listRemove', blockId: 'b4', path: ['items'], index: 0 },
+    // Drops and the structural cases they combine with (s2 holds only b2 here; the next id is n10).
+    {
+      type: 'insertBlockAt',
+      blockType: 'faq',
+      target: { kind: 'into', sectionId: 's2', index: 1 },
+    },
+    { type: 'insertBlockAt', blockType: 'hero', target: { kind: 'between', index: 1 } },
+    { type: 'moveBlock', blockId: 'b2', direction: 'down' }, // swap inside s2
+    { type: 'moveBlock', blockId: 'b2', direction: 'down' }, // split out of s2
+    { type: 'moveBlockTo', blockId: 'n6', target: { kind: 'into', sectionId: 's1', index: 1 } },
+    { type: 'duplicateBlock', blockId: 'n6' }, // shared duplicate
+    { type: 'moveBlockTo', blockId: 'b1', target: { kind: 'into', sectionId: 's1', index: 2 } },
+    { type: 'moveBlockTo', blockId: 'b1', target: { kind: 'between', index: 0 } },
+    { type: 'moveBlockTo', blockId: 'n6', target: { kind: 'into', sectionId: 's3', index: 0 } },
+    { type: 'moveBlockTo', blockId: 'n2', target: { kind: 'between', index: 0 } },
+    { type: 'removeBlock', blockId: 'n2' }, // empties its section
   ];
 }

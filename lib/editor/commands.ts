@@ -30,8 +30,16 @@ import {
 // exact. A command that would leave the document invalid changes nothing (docs/DECISIONS.md D-037).
 enablePatches();
 
+export type DropTarget =
+  /** A new section at this index, 0…footerStart(doc). */
+  | { kind: 'between'; index: number }
+  /** Into this section, before the block now at `index` (0…blocks.length). */
+  | { kind: 'into'; sectionId: string; index: number };
+
 export type EditorCommand =
   | { type: 'addBlock'; blockType: string }
+  | { type: 'insertBlockAt'; blockType: string; target: DropTarget }
+  | { type: 'moveBlockTo'; blockId: string; target: DropTarget }
   | { type: 'moveBlock'; blockId: string; direction: Direction }
   | { type: 'duplicateBlock'; blockId: string }
   | { type: 'removeBlock'; blockId: string }
@@ -166,6 +174,9 @@ const blockAt = (doc: PageDocument, at: BlockLocation) =>
 
 const BLOCK_GONE = 'That block no longer exists';
 const SECTION_GONE = 'That section no longer exists';
+const FOOTER_STAYS = 'The footer always stays at the end';
+const NO_FOOTER_JOIN = "Blocks can't join the footer";
+const NO_POSITION = 'That drop position no longer exists';
 
 /** A copy of a section with a new section id, new block ids and no anchor (anchors are unique). */
 function copySection(section: Section, newId: IdFactory): Section {
@@ -183,9 +194,25 @@ export function applyCommand(
   selection: Selection | null,
   deps: CommandDeps,
 ): CommandResult {
+  const result = runCommand(doc, command, selection, deps);
+  // An edit that changes nothing (12.50 for 12.5) must not become an undo step (M2a review M1).
+  if (result.ok && result.patches.length === 0) return fail('noop', 'Nothing changed');
+  return result;
+}
+
+function runCommand(
+  doc: PageDocument,
+  command: EditorCommand,
+  selection: Selection | null,
+  deps: CommandDeps,
+): CommandResult {
   switch (command.type) {
     case 'addBlock':
       return addBlock(doc, command.blockType, selection, deps);
+    case 'insertBlockAt':
+      return insertBlockAt(doc, command.blockType, command.target, deps);
+    case 'moveBlockTo':
+      return moveBlockTo(doc, command.blockId, command.target, deps);
     case 'moveBlock':
       return moveBlock(doc, command.blockId, command.direction, selection, deps);
     case 'duplicateBlock':
@@ -278,6 +305,51 @@ export function applyCommand(
   }
 }
 
+/** A new block instance with parsed default props and default style (M2a review M6). */
+export function newBlockInstance(definition: AnyBlockDefinition, newId: IdFactory): BlockInstance {
+  const id = newId();
+  return {
+    id,
+    type: definition.type,
+    props: definition.schema.parse(definition.defaultProps(newId)),
+    style: BlockStyleSchema.parse({}),
+  } as BlockInstance;
+}
+
+const sectionFull = (section: Section): CommandFailure | null =>
+  section.blocks.length >= LIMITS.blocksPerSection
+    ? fail('limit', `A section holds at most ${LIMITS.blocksPerSection} blocks`)
+    : null;
+
+const pageFull = (doc: PageDocument): CommandFailure | null =>
+  totalBlocks(doc) >= LIMITS.totalBlocks
+    ? fail('limit', `A page holds at most ${LIMITS.totalBlocks} blocks`)
+    : null;
+
+type ResolvedTarget =
+  { kind: 'between'; index: number } | { kind: 'into'; sectionIndex: number; index: number };
+
+/** A drop target checked against the document: never after or into the trailing footer. */
+function resolveTarget(doc: PageDocument, target: DropTarget): ResolvedTarget | CommandFailure {
+  const end = footerStart(doc);
+  const within = (i: number, max: number) => Number.isInteger(i) && i >= 0 && i <= max;
+  if (target.kind === 'between') {
+    return within(target.index, end)
+      ? { kind: 'between', index: target.index }
+      : fail('invalid', NO_POSITION);
+  }
+  const sectionIndex = findSection(doc, target.sectionId);
+  if (sectionIndex < 0) return fail('not_found', SECTION_GONE);
+  if (sectionIndex >= end) return fail('invalid', NO_FOOTER_JOIN);
+  if (!within(target.index, doc.sections[sectionIndex]!.blocks.length)) {
+    return fail('invalid', NO_POSITION);
+  }
+  return { kind: 'into', sectionIndex, index: target.index };
+}
+
+const isFailure = (value: ResolvedTarget | CommandFailure): value is CommandFailure =>
+  'ok' in value;
+
 /** A limit failure when the page cannot take one more section holding `blocks` blocks. */
 function roomFor(doc: PageDocument, blocks: number): CommandFailure | null {
   if (doc.sections.length >= LIMITS.sections) {
@@ -315,20 +387,151 @@ function addBlock(
   }
   // Ids in a fixed order: section, block, then the block's own items.
   const sectionId = deps.newId();
-  const blockId = deps.newId();
-  const block = {
-    id: blockId,
-    type: definition.type,
-    props: definition.defaultProps(deps.newId),
-    style: BlockStyleSchema.parse({}),
-  } as BlockInstance;
+  const block = newBlockInstance(definition, deps.newId);
   const section: Section = { id: sectionId, style: SectionStyleSchema.parse({}), blocks: [block] };
   const label = definition.label;
   return commit(doc, (draft) => void draft.sections.splice(index, 0, section), {
     label: `Add ${label}`,
-    selection: { kind: 'block', blockId },
+    selection: { kind: 'block', blockId: block.id },
     announcement: `Added ${label}`,
   });
+}
+
+function insertBlockAt(
+  doc: PageDocument,
+  blockType: string,
+  target: DropTarget,
+  deps: CommandDeps,
+): CommandResult {
+  const definition = getBlockDefinition(blockType);
+  if (!definition) return fail('not_found', `Unknown block type "${blockType}"`);
+  const label = definition.label;
+  // A Footer always goes last, wherever it was dropped (D-017).
+  const resolved: ResolvedTarget | CommandFailure =
+    definition.landmark === 'footer'
+      ? { kind: 'between', index: doc.sections.length }
+      : resolveTarget(doc, target);
+  if (isFailure(resolved)) return resolved;
+
+  if (resolved.kind === 'between') {
+    const limit = roomFor(doc, 1);
+    if (limit) return limit;
+    // Ids in a fixed order: section, block, then the block's own items.
+    const sectionId = deps.newId();
+    const block = newBlockInstance(definition, deps.newId);
+    const section: Section = {
+      id: sectionId,
+      style: SectionStyleSchema.parse({}),
+      blocks: [block],
+    };
+    return commit(doc, (draft) => void draft.sections.splice(resolved.index, 0, section), {
+      label: `Add ${label}`,
+      selection: { kind: 'block', blockId: block.id },
+      announcement: `Added ${label} as section ${resolved.index + 1} of ${doc.sections.length + 1}`,
+    });
+  }
+
+  const into = doc.sections[resolved.sectionIndex]!;
+  const limit = sectionFull(into) ?? pageFull(doc);
+  if (limit) return limit;
+  const block = newBlockInstance(definition, deps.newId);
+  return commit(
+    doc,
+    (draft) => void draft.sections[resolved.sectionIndex]!.blocks.splice(resolved.index, 0, block),
+    {
+      label: `Add ${label}`,
+      selection: { kind: 'block', blockId: block.id },
+      announcement: `Added ${label} to section ${resolved.sectionIndex + 1}, block ${
+        resolved.index + 1
+      } of ${into.blocks.length + 1}`,
+    },
+  );
+}
+
+function moveBlockTo(
+  doc: PageDocument,
+  blockId: string,
+  target: DropTarget,
+  deps: CommandDeps,
+): CommandResult {
+  const found = locateBlock(doc, blockId);
+  if (!found) return fail('not_found', BLOCK_GONE);
+  const { sectionIndex: from, blockIndex, label, definition } = found;
+  if (definition.landmark === 'footer') return fail('invalid', FOOTER_STAYS);
+  const resolved = resolveTarget(doc, target);
+  if (isFailure(resolved)) return resolved;
+  const section = doc.sections[from]!;
+  const lone = section.blocks.length === 1;
+  const already = () => fail('noop', `${label} is already there`);
+  const meta = (announcement: string): Meta => ({
+    label: `Move ${label}`,
+    selection: { kind: 'block', blockId },
+    announcement,
+  });
+
+  if (resolved.kind === 'between') {
+    const { index } = resolved;
+    if (lone) {
+      // The block and its band move together, keeping the band's id, style and anchor (D-037).
+      if (index === from || index === from + 1) return already();
+      const to = index > from ? index - 1 : index;
+      return commit(
+        doc,
+        (draft) => {
+          const [moved] = draft.sections.splice(from, 1);
+          draft.sections.splice(to, 0, moved!);
+        },
+        meta(`Moved ${label} to section ${to + 1} of ${doc.sections.length}`),
+      );
+    }
+    // Out of a shared band into a new one with the same style; anchors stay unique.
+    const limit = roomFor(doc, 0);
+    if (limit) return limit;
+    const newSectionId = deps.newId();
+    return commit(
+      doc,
+      (draft) => {
+        const [moved] = draft.sections[from]!.blocks.splice(blockIndex, 1);
+        draft.sections.splice(index, 0, {
+          id: newSectionId,
+          style: { ...section.style },
+          blocks: [moved!],
+        });
+      },
+      meta(`Moved ${label} to section ${index + 1} of ${doc.sections.length + 1}`),
+    );
+  }
+
+  const { sectionIndex: into, index } = resolved;
+  if (into === from) {
+    if (lone || index === blockIndex || index === blockIndex + 1) return already();
+    const to = index > blockIndex ? index - 1 : index;
+    return commit(
+      doc,
+      (draft) => {
+        const blocks = draft.sections[from]!.blocks;
+        const [moved] = blocks.splice(blockIndex, 1);
+        blocks.splice(to, 0, moved!);
+      },
+      meta(`Moved ${label} into section ${from + 1}, block ${to + 1} of ${section.blocks.length}`),
+    );
+  }
+  const destination = doc.sections[into]!;
+  const full = sectionFull(destination);
+  if (full) return full;
+  // A lone block's band disappears with it; sections after it move up by one.
+  const position = lone && from < into ? into : into + 1;
+  return commit(
+    doc,
+    (draft) => {
+      const [moved] = draft.sections[from]!.blocks.splice(blockIndex, 1);
+      draft.sections[into]!.blocks.splice(index, 0, moved!);
+      if (lone) draft.sections.splice(from, 1);
+    },
+    meta(
+      `Moved ${label} into section ${position}, block ${index + 1} of ${destination.blocks.length + 1}`,
+    ),
+  );
 }
 
 function moveBlock(
@@ -421,12 +624,8 @@ function duplicateBlock(doc: PageDocument, blockId: string, deps: CommandDeps): 
       meta(copy.blocks[0]!.id),
     );
   }
-  if (section.blocks.length >= LIMITS.blocksPerSection) {
-    return fail('limit', `A section holds at most ${LIMITS.blocksPerSection} blocks`);
-  }
-  if (totalBlocks(doc) >= LIMITS.totalBlocks) {
-    return fail('limit', `A page holds at most ${LIMITS.totalBlocks} blocks`);
-  }
+  const full = sectionFull(section) ?? pageFull(doc);
+  if (full) return full;
   const copy = { ...structuredClone(found.block), id: deps.newId() };
   return commit(
     doc,

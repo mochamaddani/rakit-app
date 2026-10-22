@@ -1,7 +1,14 @@
 import { applyPatches } from 'immer';
 import { describe, expect, it } from 'vitest';
 import { PageDocumentSchema, parseDocument } from '@/lib/schema/document';
-import { applyCommand, type CommandSuccess, type EditorCommand } from './commands';
+import { hero } from '@/lib/blocks/hero';
+import {
+  applyCommand,
+  newBlockInstance,
+  type CommandFailure,
+  type CommandSuccess,
+  type EditorCommand,
+} from './commands';
 import { deps, editorDoc, everyCommand, order } from './test-fixtures';
 
 const run = (
@@ -11,6 +18,11 @@ const run = (
 ) => applyCommand(doc, command, selection, deps());
 const ok = (result: ReturnType<typeof run>) => {
   if (!result.ok) throw new Error(result.reason);
+  return result;
+};
+const fail = (command: EditorCommand, doc = editorDoc()): CommandFailure => {
+  const result = run(command, doc);
+  if (result.ok) throw new Error(`${command.type} unexpectedly succeeded`);
   return result;
 };
 
@@ -53,6 +65,159 @@ describe('addBlock', () => {
       ok: false,
       code: 'limit',
     });
+  });
+});
+
+describe('drops: insertBlockAt and moveBlockTo', () => {
+  it('insertBlockAt between makes a new section; into joins one', () => {
+    const between = ok(
+      run({ type: 'insertBlockAt', blockType: 'faq', target: { kind: 'between', index: 1 } }),
+    );
+    expect(order(between.doc)).toEqual(['s1:b1', 'n1:n2', 's2:b2,b3', 's3:b4', 's4:b5']);
+    expect(between.announcement).toBe('Added FAQ as section 2 of 5');
+    expect(between.selection).toEqual({ kind: 'block', blockId: 'n2' });
+    const into = ok(
+      run({
+        type: 'insertBlockAt',
+        blockType: 'faq',
+        target: { kind: 'into', sectionId: 's2', index: 1 },
+      }),
+    );
+    expect(order(into.doc)).toEqual(['s1:b1', 's2:b2,n1,b3', 's3:b4', 's4:b5']);
+    expect(into.announcement).toBe('Added FAQ to section 2, block 2 of 3');
+  });
+  it('a lone block moves its whole section; a shared block leaves into a copy of its band', () => {
+    const lone = ok(
+      run({ type: 'moveBlockTo', blockId: 'b1', target: { kind: 'between', index: 3 } }),
+    );
+    expect(order(lone.doc)).toEqual(['s2:b2,b3', 's3:b4', 's1:b1', 's4:b5']);
+    expect(lone.announcement).toBe('Moved Hero to section 3 of 4');
+    expect(lone.selection).toEqual({ kind: 'block', blockId: 'b1' });
+    const left = ok(
+      run({ type: 'moveBlockTo', blockId: 'b3', target: { kind: 'between', index: 0 } }),
+    );
+    expect(order(left.doc)).toEqual(['n1:b3', 's1:b1', 's2:b2', 's3:b4', 's4:b5']);
+    expect(left.doc.sections[0]!.style.tone).toBe('muted');
+    expect(left.doc.sections[0]!.anchor).toBeUndefined();
+  });
+  it('moveBlockTo into another section removes an emptied section; within a section it reorders', () => {
+    const joined = ok(
+      run({
+        type: 'moveBlockTo',
+        blockId: 'b4',
+        target: { kind: 'into', sectionId: 's2', index: 0 },
+      }),
+    );
+    expect(order(joined.doc)).toEqual(['s1:b1', 's2:b4,b2,b3', 's4:b5']);
+    expect(joined.announcement).toBe('Moved Product Carousel into section 2, block 1 of 3');
+    expect(
+      order(
+        ok(
+          run({
+            type: 'moveBlockTo',
+            blockId: 'b2',
+            target: { kind: 'into', sectionId: 's2', index: 2 },
+          }),
+        ).doc,
+      ),
+    ).toEqual(['s1:b1', 's2:b3,b2', 's3:b4', 's4:b5']);
+  });
+  it('dropping a block where it already is is a noop', () => {
+    for (const target of [
+      { kind: 'between', index: 0 },
+      { kind: 'between', index: 1 },
+      { kind: 'into', sectionId: 's1', index: 0 },
+    ] as const) {
+      const result = fail({ type: 'moveBlockTo', blockId: 'b1', target });
+      expect(result.code).toBe('noop');
+      expect(result.reason).toBe('Hero is already there');
+    }
+    expect(
+      fail({
+        type: 'moveBlockTo',
+        blockId: 'b2',
+        target: { kind: 'into', sectionId: 's2', index: 1 },
+      }).code,
+    ).toBe('noop');
+  });
+  it('the footer stays last and nothing joins it', () => {
+    expect(
+      fail({ type: 'moveBlockTo', blockId: 'b5', target: { kind: 'between', index: 0 } }).reason,
+    ).toBe('The footer always stays at the end');
+    expect(
+      fail({
+        type: 'insertBlockAt',
+        blockType: 'faq',
+        target: { kind: 'into', sectionId: 's4', index: 0 },
+      }).reason,
+    ).toBe("Blocks can't join the footer");
+    const outside = fail({
+      type: 'insertBlockAt',
+      blockType: 'faq',
+      target: { kind: 'between', index: 4 },
+    });
+    expect(outside).toMatchObject({
+      code: 'invalid',
+      reason: 'That drop position no longer exists',
+    });
+    expect(
+      fail({
+        type: 'insertBlockAt',
+        blockType: 'faq',
+        target: { kind: 'into', sectionId: 'nope', index: 0 },
+      }).code,
+    ).toBe('not_found');
+    const footer = ok(
+      run({ type: 'insertBlockAt', blockType: 'footer', target: { kind: 'between', index: 0 } }),
+    );
+    expect(order(footer.doc).at(-1)).toBe('n1:n2');
+  });
+  it('a section holds at most 30 blocks', () => {
+    const doc = editorDoc();
+    const filler = doc.sections[1]!.blocks[1]!;
+    const full = {
+      ...doc,
+      sections: doc.sections.map((s) =>
+        s.id === 's2'
+          ? { ...s, blocks: Array.from({ length: 30 }, (_, i) => ({ ...filler, id: `f${i}` })) }
+          : s,
+      ),
+    };
+    for (const command of [
+      {
+        type: 'insertBlockAt',
+        blockType: 'faq',
+        target: { kind: 'into', sectionId: 's2', index: 0 },
+      },
+      { type: 'moveBlockTo', blockId: 'b1', target: { kind: 'into', sectionId: 's2', index: 0 } },
+    ] as const) {
+      expect(fail(command, full)).toMatchObject({
+        code: 'limit',
+        reason: 'A section holds at most 30 blocks',
+      });
+    }
+  });
+  it('an edit that changes nothing is a noop (M1)', () => {
+    const price = {
+      type: 'setBlockProp',
+      blockId: 'b4',
+      path: ['items', 0, 'price'],
+      value: 12.5,
+    } as const;
+    const priced = ok(run(price)).doc;
+    expect(applyCommand(priced, price, null, deps())).toMatchObject({ ok: false, code: 'noop' });
+  });
+  it('new blocks store parsed defaults (M6)', () => {
+    const stub = {
+      ...hero,
+      defaultProps: () => ({
+        headline: 'x',
+        primaryCta: { label: 'Pesan', link: { kind: 'default' } },
+      }),
+    };
+    expect(newBlockInstance(stub as unknown as typeof hero, deps().newId).props).toEqual(
+      hero.schema.parse(stub.defaultProps()),
+    );
   });
 });
 

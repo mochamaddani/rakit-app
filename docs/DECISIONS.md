@@ -216,3 +216,14 @@ Consequences:
 - **Listening:** the session itself handles `pagehide`, `visibilitychange`, `blur`, `online` and `beforeunload`, so it keeps saving and warning after the editor unmounts.
 - **Leaving:** the Pages link waits up to 3 s for the save. When the draft still isn't saved (offline, failed or conflicting), it asks "Leave without saving?"; the changes stay in the tab either way.
 - **Cost:** sessions, with their undo history, stay in memory until the tab closes or reloads, one per page opened in the tab.
+
+## D-043 Drag and drop: drop targets and moves — Accepted
+- **Targets:** a drop lands `between` sections (a new section at that index, never after the trailing footer sections) or `into` a section, before one of its blocks. Indices refer to the document before the drop.
+- **Inserting** (`insertBlockAt`): `between` makes a new default section; `into` joins the section. A Footer always goes last, wherever it was dropped (D-017).
+- **Moving** (`moveBlockTo`):
+  - A block alone in its section moves with the section (its id, style and anchor kept), or joins the target section; its emptied section disappears with its anchor.
+  - A block in a shared section leaves into a new section that copies its band's style (not the anchor), reorders within its own section, or joins another section.
+  - Dropping a block where it already is changes nothing (`noop`). Footer blocks are not draggable, and nothing joins a footer section.
+- **Limits:** 30 blocks per section, 60 sections, 200 blocks (`LIMITS`).
+- **No-op edits:** a command that produces no patches fails with `noop` "Nothing changed", so it never records an undo step (M2a review M1).
+
