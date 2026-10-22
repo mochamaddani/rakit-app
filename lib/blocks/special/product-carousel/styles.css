@@ -1,0 +1,196 @@
+.lp-carousel__head .lp-sub {
+  margin: 0;
+}
+.lp-carousel__head {
+  margin-bottom: 16px;
+}
+
+/* Native horizontal scrolling with snap points: swipes without JavaScript. The track bleeds into
+   the container gutter so cards reach the screen edge on phones. */
+.lp-carousel__track {
+  position: relative;
+  display: flex;
+  gap: var(--lp-gap);
+  margin-inline: -16px;
+  padding: 4px 16px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: 16px;
+}
+.lp-carousel__slide {
+  flex: 0 0 calc((100% - (var(--lp-spv-m) - 1) * var(--lp-gap)) / var(--lp-spv-m));
+  min-width: 0;
+  scroll-snap-align: start;
+}
+
+/* Cards sit on --lp-card-bg (light in every tone): reset the tone variables they use. */
+.lp-card {
+  --lp-line: var(--lp-border);
+  --lp-btn-bg: var(--lp-primary);
+  --lp-btn-fg: var(--lp-on-primary);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  border: 1px solid var(--lp-line);
+  border-radius: var(--lp-radius);
+  background: var(--lp-card-bg);
+  color: var(--lp-text);
+}
+.lp-card__media {
+  position: relative;
+  aspect-ratio: var(--lp-ar);
+  background: var(--lp-surface);
+}
+.lp-card__img {
+  width: 100%;
+  height: 100%;
+  object-fit: var(--lp-fit);
+}
+.lp-card__media .lp-img-ph {
+  height: 100%;
+  min-height: 0;
+}
+.lp-card__body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px;
+}
+.lp-card__title {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.3;
+}
+.lp-card__desc {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--lp-muted);
+}
+.lp-card .lp-btn {
+  margin-top: auto;
+}
+.lp-rating {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.875rem;
+}
+.lp-rating__count {
+  color: var(--lp-muted);
+}
+.lp-price {
+  margin: 0;
+  font-weight: 700;
+}
+.lp-price__was {
+  margin-left: 4px;
+  font-weight: 400;
+  color: var(--lp-muted);
+}
+.lp-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--lp-dark);
+  color: var(--lp-on-dark);
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1.5;
+}
+.lp-badge + .lp-badge {
+  top: 36px;
+}
+.lp-badge--discount {
+  background: var(--lp-accent);
+  color: var(--lp-on-accent);
+}
+
+/* Controls are revealed by the script; [hidden] must win over display:flex. */
+.lp-carousel__nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 16px;
+}
+.lp-carousel__nav[hidden] {
+  display: none;
+}
+.lp-carousel__arrow {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid var(--lp-border);
+  border-radius: 50%;
+  background: var(--lp-background);
+  color: var(--lp-text);
+  cursor: pointer;
+}
+.lp-carousel__arrow:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.lp-carousel__dots {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.lp-carousel__dot {
+  position: relative;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+}
+.lp-carousel__dot::before {
+  content: '';
+  position: absolute;
+  inset: 7px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.3;
+}
+.lp-carousel__dot[aria-current='true']::before {
+  background: var(--lp-btn-bg);
+  opacity: 1;
+}
+
+@media (min-width: 640px) {
+  .lp-carousel__track {
+    margin-inline: -24px;
+    padding-inline: 24px;
+    scroll-padding-inline: 24px;
+  }
+  .lp-carousel__slide {
+    flex-basis: calc((100% - (var(--lp-spv-t) - 1) * var(--lp-gap)) / var(--lp-spv-t));
+  }
+}
+@media (min-width: 1024px) {
+  .lp-carousel__slide {
+    flex-basis: calc((100% - (var(--lp-spv-d) - 1) * var(--lp-gap)) / var(--lp-spv-d));
+  }
+}
+/* Touch screens swipe: hide the scrollbar and (by default) the arrows. */
+@media (hover: none) {
+  .lp-carousel__track {
+    scrollbar-width: none;
+  }
+  .lp-carousel__track::-webkit-scrollbar {
+    display: none;
+  }
+  .lp-carousel:not(.lp-carousel--touch-arrows) .lp-carousel__arrow {
+    display: none;
+  }
+}

@@ -10,6 +10,7 @@
 }
 /* Quotes sit on --lp-card-bg (light in every tone), so they use the page text colors. */
 .lp-quote {
+  --lp-line: var(--lp-border);
   display: flex;
   flex-direction: column;
   gap: 12px;

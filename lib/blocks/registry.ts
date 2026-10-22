@@ -2,11 +2,12 @@ import { benefits } from './benefits';
 import { faq } from './faq';
 import { footer } from './footer';
 import { hero } from './hero';
+import { productCarousel } from './special/product-carousel';
 import { testimonials } from './testimonials';
 import type { AnyBlockDefinition } from './types';
 
 // Every block type, one line each. Adding a block = its own folder + one line here (PRD §9).
-export const BLOCKS = [hero, benefits, testimonials, faq, footer] as const;
+export const BLOCKS = [hero, benefits, testimonials, faq, footer, productCarousel] as const;
 
 export type RegisteredBlock = (typeof BLOCKS)[number];
 export type BlockType = RegisteredBlock['type'];
