@@ -1,0 +1,10 @@
+pnpm-lock.yaml
+.next
+out
+test-results
+playwright-report
+supabase/.temp
+**/*.generated.ts
+lib/supabase/database.types.ts
+docs
+.superpowers
