@@ -1,6 +1,7 @@
 import { defineBlock } from '../../types';
 import { renderProductCarousel } from './render';
 import { ProductCarouselPropsSchema } from './schema';
+import { asset as script } from './snippet.generated';
 import { asset as css } from './styles.generated';
 
 export const productCarousel = defineBlock({
@@ -21,5 +22,10 @@ export const productCarousel = defineBlock({
       })),
     }),
   css,
+  // Without controls (navigation 'none' or a single card) the page ships no JavaScript at all.
+  snippet: {
+    asset: script,
+    isNeeded: (props) => props.navigation !== 'none' && props.items.length > 1,
+  },
   render: renderProductCarousel,
 });

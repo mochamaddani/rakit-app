@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { productCarousel } from '@/lib/blocks/special/product-carousel';
 import { renderBlock, singleBlockDoc } from '@/lib/blocks/test-utils';
+import { byteLength } from '@/lib/renderer/html';
 import { renderPage } from '@/lib/renderer/page';
 import { parseDocument } from '@/lib/schema/document';
 import { validateHtml } from '@/tests/helpers/validate-html';
@@ -114,5 +115,42 @@ describe('product carousel: markup', () => {
     await expect(
       renderBlock(productCarousel, { ...props, subheading: 'Semua ukuran 750ml' }),
     ).toMatchFileSnapshot('./__snapshots__/product-carousel.html');
+  });
+});
+
+const carouselDoc = (blocks: { id: string; navigation?: string }[]) =>
+  parseDocument({
+    schemaVersion: 1,
+    sections: [
+      {
+        id: 's1',
+        blocks: blocks.map((b) => ({
+          id: b.id,
+          type: 'product-carousel',
+          props: { ...props, navigation: b.navigation ?? 'both' },
+        })),
+      },
+    ],
+  });
+
+describe('product carousel: script', () => {
+  it('ships a minified script within the 1.5 KB budget', () => {
+    expect(productCarousel.snippet).toBeDefined();
+    expect(byteLength(productCarousel.snippet!.asset.min)).toBeLessThanOrEqual(1536);
+  });
+  it('includes the script exactly once for several carousels', () => {
+    const { html } = renderPage(carouselDoc([{ id: 'c1' }, { id: 'c2' }]), { mode: 'export' });
+    expect(html.match(/<script>/g)).toHaveLength(1);
+    expect(html).toContain(productCarousel.snippet!.asset.min);
+  });
+  it('ships no script when no carousel needs one', () => {
+    expect(
+      renderPage(carouselDoc([{ id: 'c1', navigation: 'none' }]), { mode: 'export' }).html,
+    ).not.toContain('<script');
+  });
+  it('uses the readable script when minify is off', () => {
+    expect(
+      renderPage(carouselDoc([{ id: 'c1' }]), { mode: 'export', minify: false }).html,
+    ).toContain(productCarousel.snippet!.asset.src);
   });
 });
