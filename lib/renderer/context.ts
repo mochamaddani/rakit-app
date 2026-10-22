@@ -1,6 +1,6 @@
 import type { Link } from '@/lib/schema/primitives';
 import type { Lang, PageSettings } from '@/lib/schema/settings';
-import type { SafeHtml } from './html';
+import { html, type SafeHtml } from './html';
 import { t, type MessageKey } from './i18n';
 import { renderInline, renderText } from './inline';
 import { sanitizeUrl } from './url';
@@ -38,6 +38,11 @@ export interface RenderContext {
   t(key: MessageKey, vars?: Record<string, string | number>): string;
   /** Block-scoped DOM id: 'b-<blockId>-<parts…>'. */
   domId(...parts: string[]): string;
+  /**
+   * Preview only: attributes marking the element whose whole content is this field, so the canvas
+   * can edit it in place (docs/DECISIONS.md D-044). Empty in export.
+   */
+  field(path: string, kind: 'text' | 'rich'): SafeHtml;
 }
 
 export function createRenderContext(env: RenderEnv, block: BlockPosition): RenderContext {
@@ -68,5 +73,9 @@ export function createRenderContext(env: RenderEnv, block: BlockPosition): Rende
     rich: (value) => renderInline(value, inlineOptions),
     t: (key, vars) => t(env.settings.lang, key, vars),
     domId: (...parts) => ['b', block.blockId, ...parts].join('-'),
+    field: (path, kind) =>
+      env.mode === 'preview'
+        ? html` data-lp-field="${path}"${kind === 'rich' ? html` data-lp-rich` : ''}`
+        : html``,
   };
 }

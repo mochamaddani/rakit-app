@@ -9,8 +9,10 @@ import { PageSettingsSchema } from '@/lib/schema/settings';
 import {
   describeFields,
   fieldError,
+  fieldSpecAt,
   initialValueAt,
   listItemSummary,
+  parseFieldPath,
   seedValue,
   type FieldSpec,
   type ListSpec,
@@ -104,5 +106,35 @@ describe('seeds and initial values', () => {
     expect(fieldError(headline, '')).toBe('Required');
     expect(fieldError(headline, 'x'.repeat(201))).toBe('At most 200 characters');
     expect(fieldError(headline, 'ok')).toBeNull();
+  });
+});
+
+describe('field paths', () => {
+  it('parseFieldPath reads dotted paths and refuses anything else', () => {
+    expect(parseFieldPath('items.2.title')).toEqual(['items', 2, 'title']);
+    expect(parseFieldPath('headline')).toEqual(['headline']);
+    for (const bad of [
+      '',
+      'a..b',
+      '__proto__.x',
+      '1234.x',
+      'a.b.c.d.e.f.g',
+      'items.-1',
+      'a b',
+      'a.',
+    ]) {
+      expect(parseFieldPath(bad), bad).toBeNull();
+    }
+  });
+  it('fieldSpecAt walks groups and list items', () => {
+    const hero = describeFields(HeroPropsSchema);
+    expect(fieldSpecAt(hero, ['primaryCta', 'label'])?.kind).toBe('text');
+    expect(fieldSpecAt(hero, ['headline'])?.kind).toBe('rich');
+    const carousel = describeFields(productCarousel.schema);
+    expect(fieldSpecAt(carousel, ['items', 0, 'title'])?.kind).toBe('text');
+    expect(fieldSpecAt(carousel, ['items', 0, 'nope'])).toBeNull();
+    expect(fieldSpecAt(carousel, ['items', 'title'])).toBeNull();
+    expect(fieldSpecAt(carousel, ['heading', 'x'])).toBeNull();
+    expect(fieldSpecAt(carousel, ['constructor'])).toBeNull();
   });
 });

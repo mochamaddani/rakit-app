@@ -285,3 +285,25 @@ export function fieldError(spec: FieldSpec, value: unknown): string | null {
   if (spec.kind === 'color') return 'Use a color like #2563EB';
   return issue.message;
 }
+
+const PATH_SEGMENT = /^(?:[A-Za-z][A-Za-z0-9]*|\d{1,3})$/;
+
+/** 'items.2.title' → ['items', 2, 'title']; null unless ≤ 6 segments of [A-Za-z][A-Za-z0-9]* or ≤ 3 digits. */
+export function parseFieldPath(path: string): PropPath | null {
+  const segments = path.split('.');
+  if (segments.length > 6 || !segments.every((segment) => PATH_SEGMENT.test(segment))) return null;
+  return segments.map((segment) => (/^\d/.test(segment) ? Number(segment) : segment));
+}
+
+/** The field at a prop path, walking groups and list items; null if there is none. */
+export function fieldSpecAt(fields: readonly FieldSpec[], path: PropPath): FieldSpec | null {
+  const [head, ...rest] = path;
+  if (typeof head !== 'string') return null;
+  const spec = fields.find((field) => field.key === head);
+  if (!spec || rest.length === 0) return spec ?? null;
+  if (spec.kind === 'group') return fieldSpecAt(spec.fields, rest);
+  if (spec.kind !== 'list') return null;
+  const [index, ...after] = rest;
+  if (typeof index !== 'number') return null;
+  return after.length === 0 ? spec.item : fieldSpecAt(spec.item.fields, after);
+}

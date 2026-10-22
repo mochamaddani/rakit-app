@@ -43,6 +43,8 @@ export interface CtaExtras {
   className?: string;
   /** Extra `data-*` attributes (keys without the `data-` prefix), e.g. for tracking. */
   dataAttrs?: Record<string, string>;
+  /** The label's prop path, marked for inline editing in preview ('primaryCta.label'). */
+  field?: string;
 }
 
 const DATA_KEY = /^[a-z][a-z0-9-]*$/;
@@ -58,7 +60,7 @@ export function renderCta(cta: Cta, ctx: RenderContext, extras: CtaExtras = {}):
     });
   return html`<a class="${classes}" href="${ctx.resolveLink(cta.link)}"${
     newTab ? html` target="_blank" rel="noopener"` : ''
-  } data-lp-cta${data}>${ctx.text(cta.label)}</a>`;
+  } data-lp-cta${data}${extras.field ? ctx.field(extras.field, 'text') : ''}>${ctx.text(cta.label)}</a>`;
 }
 
 export function renderIcon(name: UiIconName, className = 'lp-icon'): SafeHtml {

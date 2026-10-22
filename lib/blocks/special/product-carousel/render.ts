@@ -52,17 +52,29 @@ function renderSlide(
       highPriority: ctx.aboveFold && index === 0,
     },
     ctx,
-  )}${item.badge ? html`<span class="lp-badge">${ctx.text(item.badge)}</span>` : ''}${
+  )}${
+    item.badge
+      ? html`<span class="lp-badge"${ctx.field(`items.${index}.badge`, 'text')}>${ctx.text(item.badge)}</span>`
+      : ''
+  }${
     discount === null ? '' : html`<span class="lp-badge lp-badge--discount">-${discount}%</span>`
   }</div>`;
   const cta = item.cta.label
     ? renderCta({ label: item.cta.label, link: item.cta.link, variant: 'primary' }, ctx, {
         className: 'lp-btn--block',
         dataAttrs: { 'lp-item': item.id },
+        field: `items.${index}.cta.label`,
       })
     : '';
-  const body = html`<div class="lp-card__body"><h3 class="lp-card__title">${ctx.text(item.title)}</h3>${
-    item.description ? html`<p class="lp-card__desc">${ctx.rich(item.description)}</p>` : ''
+  const body = html`<div class="lp-card__body"><h3 class="lp-card__title"${ctx.field(
+    `items.${index}.title`,
+    'text',
+  )}>${ctx.text(item.title)}</h3>${
+    item.description
+      ? html`<p class="lp-card__desc"${ctx.field(`items.${index}.description`, 'rich')}>${ctx.rich(
+          item.description,
+        )}</p>`
+      : ''
   }${renderRating(item, ctx)}${renderPrice(item, ctx)}${cta}</div>`;
   const label = `${ctx.t('slideLabel', { n: index + 1, total: props.items.length })}: ${item.title}`;
   return html`<div class="lp-carousel__slide" role="group" aria-roledescription="slide" aria-label="${label}" id="${ctx.domId(
@@ -111,8 +123,14 @@ export function renderProductCarousel(props: ProductCarouselProps, ctx: RenderCo
   const head =
     props.heading || props.subheading
       ? html`<div class="lp-carousel__head">${
-          props.heading ? html`<h2 class="lp-h2">${ctx.rich(props.heading)}</h2>` : ''
-        }${props.subheading ? html`<p class="lp-sub">${ctx.rich(props.subheading)}</p>` : ''}</div>`
+          props.heading
+            ? html`<h2 class="lp-h2"${ctx.field('heading', 'rich')}>${ctx.rich(props.heading)}</h2>`
+            : ''
+        }${
+          props.subheading
+            ? html`<p class="lp-sub"${ctx.field('subheading', 'rich')}>${ctx.rich(props.subheading)}</p>`
+            : ''
+        }</div>`
       : '';
   const slides = props.items.map((item, i) => renderSlide(item, i, props, ctx));
   return html`<section class="${classes}" aria-roledescription="carousel" aria-label="${label}" data-lp-carousel data-loop="${

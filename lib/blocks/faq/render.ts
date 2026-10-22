@@ -9,11 +9,15 @@ export function renderFaq(props: FaqProps, ctx: RenderContext): SafeHtml {
     (item, i) =>
       html`<details class="lp-faq__item"${group}${
         props.openFirst && i === 0 ? html` open` : ''
-      }><summary class="lp-faq__q">${ctx.text(item.question)}</summary><div class="lp-faq__a">${ctx.rich(
+      }><summary class="lp-faq__q"${ctx.field(`items.${i}.question`, 'text')}>${ctx.text(
+        item.question,
+      )}</summary><div class="lp-faq__a"${ctx.field(`items.${i}.answer`, 'rich')}>${ctx.rich(
         item.answer,
       )}</div></details>`,
   );
   return html`<div class="lp-faq">${
-    props.heading ? html`<h2 class="lp-h2">${ctx.rich(props.heading)}</h2>` : ''
+    props.heading
+      ? html`<h2 class="lp-h2"${ctx.field('heading', 'rich')}>${ctx.rich(props.heading)}</h2>`
+      : ''
   }${items}</div>`;
 }
