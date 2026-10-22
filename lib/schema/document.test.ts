@@ -2,6 +2,7 @@ import { describe, expect, expectTypeOf, it } from 'vitest';
 import type { BlockType } from '@/lib/blocks/registry';
 import {
   collectIdIssues,
+  createEmptyDocument,
   parseDocument,
   safeParseDocument,
   type BlockInstance,
@@ -95,5 +96,12 @@ describe('PageDocument', () => {
   it('types block instances by registered type', () => {
     expectTypeOf<BlockInstance['type']>().toEqualTypeOf<BlockType>();
     expectTypeOf<BlockType>().not.toEqualTypeOf<string>();
+  });
+  it('createEmptyDocument is a valid document with no sections and ad-page defaults', () => {
+    const doc = createEmptyDocument();
+    expect(doc.sections).toEqual([]);
+    expect(doc.settings.lang).toBe('id');
+    expect(doc.settings.seo.noindex).toBe(true);
+    expect(parseDocument(doc)).toEqual(doc);
   });
 });

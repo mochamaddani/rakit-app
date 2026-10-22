@@ -169,3 +169,8 @@ export function parseDocument(raw: unknown): PageDocument {
   if (!result.ok) throw result.error;
   return result.doc;
 }
+
+/** A new blank page: no sections and default settings. */
+export function createEmptyDocument(): PageDocument {
+  return parseDocument({ schemaVersion: CURRENT_SCHEMA_VERSION, sections: [] });
+}
