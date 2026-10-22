@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import { z } from 'zod';
 import { safeNextPath } from '@/lib/auth/routing';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { signInErrorMessage } from './messages';
 
 export type SignInState = { error: string | null };
 
@@ -26,7 +27,7 @@ export async function signIn(_prev: SignInState, formData: FormData): Promise<Si
     email: parsed.data.email,
     password: parsed.data.password,
   });
-  if (error) return { error: 'Wrong email or password.' };
+  if (error) return { error: signInErrorMessage(error) };
 
   redirect(safeNextPath(parsed.data.next));
 }

@@ -6,7 +6,7 @@ describe('isPublicPath', () => {
     ['/login', true],
     ['/login/', true],
     ['/auth/callback', true],
-    ['/p/my-page', true],
+    ['/p/my-page', false],
     ['/api/public/beacon', true],
     ['/loginx', false],
     ['/pages', false],
@@ -35,8 +35,14 @@ describe('safeNextPath', () => {
 
 describe('decideAuthRoute', () => {
   it('lets anyone through public paths', () => {
+    expect(
+      decideAuthRoute({ pathname: '/api/public/beacon', search: '', isAuthenticated: false }),
+    ).toEqual({ kind: 'continue' });
+  });
+  it('protects /p until hosted pages exist on their own domain (D-022)', () => {
     expect(decideAuthRoute({ pathname: '/p/offer', search: '', isAuthenticated: false })).toEqual({
-      kind: 'continue',
+      kind: 'redirect',
+      location: '/login?next=%2Fp%2Foffer',
     });
   });
   it('redirects anonymous page requests to /login with the full return path', () => {

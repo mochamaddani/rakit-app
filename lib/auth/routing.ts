@@ -1,5 +1,6 @@
 // Default-deny: every route needs a session unless it sits under one of these prefixes.
-export const PUBLIC_PATH_PREFIXES = ['/login', '/auth', '/p', '/api/public'] as const;
+// Hosted pages get their own domain (D-022), so there is no public /p prefix on the editor origin.
+export const PUBLIC_PATH_PREFIXES = ['/login', '/auth', '/api/public'] as const;
 
 const DEFAULT_AFTER_LOGIN = '/dashboard';
 
