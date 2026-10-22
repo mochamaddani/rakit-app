@@ -23,7 +23,8 @@
     "owner:create": "tsx scripts/create-owner.ts",
     "test:e2e:app": "PW_APP=1 playwright test --project=app",
     "assets": "tsx scripts/build-assets.ts",
-    "assets:check": "tsx scripts/build-assets.ts --check"
+    "assets:check": "tsx scripts/build-assets.ts --check",
+    "render": "tsx scripts/render.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",
@@ -50,6 +51,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.4.2",
     "eslint-config-prettier": "10.1.8",
+    "happy-dom": "21.0.4",
     "html-validate": "11.17.0",
     "prettier": "3.9.10",
     "supabase": "2.121.0",
