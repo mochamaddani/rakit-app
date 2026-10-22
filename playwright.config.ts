@@ -23,7 +23,11 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? 'github' : 'list',
-  projects: [...appProjects],
+  projects: [
+    // Exported pages opened from file:// — no server or database needed.
+    { name: 'renderer', testDir: 'tests/e2e/renderer', use: { ...devices['Desktop Chrome'] } },
+    ...appProjects,
+  ],
   webServer: withApp
     ? {
         command: 'pnpm dev',

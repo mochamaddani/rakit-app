@@ -24,7 +24,8 @@
     "test:e2e:app": "PW_APP=1 playwright test --project=app",
     "assets": "tsx scripts/build-assets.ts",
     "assets:check": "tsx scripts/build-assets.ts --check",
-    "render": "tsx scripts/render.ts"
+    "render": "tsx scripts/render.ts",
+    "test:e2e": "playwright test --project=renderer"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",
