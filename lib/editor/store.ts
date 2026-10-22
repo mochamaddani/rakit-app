@@ -43,6 +43,8 @@ export interface EditorActions {
   undo(): boolean;
   redo(): boolean;
   select(selection: Selection | null): void;
+  /** Sets the aria-live text without a command (drag start and cancel). */
+  announce(text: string): void;
   setViewport(viewport: Viewport): void;
   endCoalescing(): void;
 }
@@ -117,6 +119,10 @@ export function createEditorStore(
         const { history, doc } = get();
         const label = history.future.at(-1)?.label;
         return step(redoStep(history, doc), label ? `Redid ${label}` : '');
+      },
+
+      announce(text) {
+        set({ announcement: text });
       },
 
       select(selection) {

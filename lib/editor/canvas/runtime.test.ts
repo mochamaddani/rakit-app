@@ -43,6 +43,14 @@ beforeEach(() => {
 afterEach(() => dispose());
 
 describe('preview runtime', () => {
+  it('scrollBy scrolls the canvas and reports rects even at the edge', async () => {
+    load();
+    await frame();
+    posts.length = 0;
+    send({ type: 'scrollBy', dy: -50 });
+    await frame();
+    expect(posts.filter((p) => p.type === 'rects')).toHaveLength(1);
+  });
   it('posts ready and rects on start, and ready again on hello', async () => {
     load();
     await frame();

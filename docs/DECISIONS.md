@@ -227,5 +227,11 @@ Consequences:
 - **Zones** (`lib/editor/dnd/geometry.ts`, from the cached rects): the top and bottom quarter of a section's height drop `between` sections; the middle half drops `into` it, before the first visible block whose midpoint lies below the pointer. Above the first section or below the last, the drop goes to the first or last position; a pointer between two section rects goes to the nearer boundary.
 - **Marker:** `between` is a full-width line at the section boundary; `into` is inset 16 px and sits at the gap between blocks.
 - **Limits:** 30 blocks per section, 60 sections, 200 blocks (`LIMITS`).
+- **Starting a drag** (`lib/editor/dnd/controller.ts`): mouse and pen drags start after 4 px of movement; touch drags after a 250 ms long-press, and moving 10 px first is a scroll. Palette rows drag from the button with a mouse or pen, and from the grip with any pointer, so a tap still adds and the palette still scrolls on touch. A selected block drags from the toolbar's "Drag to move" grip, which footer blocks don't have.
+- **While dragging** (`components/editor/dnd/drag-context.tsx`):
+  - A shield covers the iframe, so every pointer event stays in the editor; window listeners follow the pointer.
+  - Every key is swallowed (editor shortcuts never fire mid-drag), Escape cancels, and so do window blur and pointercancel.
+  - The target is recomputed on every move and every new rects message. Near the canvas's top or bottom edge the editor asks the iframe to scroll (at most 20 px a frame), and the iframe always answers with rects.
+- **Dropping:** a drop commits on the editor's pointerup only (D-034); a release outside the canvas cancels; the click that ends a palette drag is swallowed. Screen readers hear "Dragging <Label>. Press Escape to cancel.", "Drag cancelled." or the command's own announcement.
 - **No-op edits:** a command that produces no patches fails with `noop` "Nothing changed", so it never records an undo step (M2a review M1).
 

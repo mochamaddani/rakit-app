@@ -18,6 +18,13 @@ const headline = (text: string) => ({
 });
 
 describe('editor store', () => {
+  it('announce sets the announcement without touching history', () => {
+    const store = setup();
+    store.getState().announce('Dragging Hero. Press Escape to cancel.');
+    expect(store.getState().announcement).toBe('Dragging Hero. Press Escape to cancel.');
+    expect(store.getState().history.past).toHaveLength(0);
+    expect(store.getState().version).toBe(0);
+  });
   it('applies a command, bumps the version, records history and selects', () => {
     const store = setup();
     const result = store.getState().dispatch({ type: 'addBlock', blockType: 'faq' });

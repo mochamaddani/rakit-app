@@ -80,6 +80,8 @@ export interface SyncPayload {
 export type CanvasCommand =
   | ({ type: 'sync'; rev: number } & SyncPayload)
   | { type: 'scrollTo'; blockId: string }
+  /** Auto-scroll during a drag; answered with rects even at the scroll edge (D-034). */
+  | { type: 'scrollBy'; dy: number }
   | { type: 'hello' };
 
 /** Adds `source` and `channel`, ready for postMessage. */

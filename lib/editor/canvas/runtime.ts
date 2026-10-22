@@ -215,6 +215,10 @@ export function startPreviewRuntime(options: RuntimeOptions): () => void {
       }
     } else if (message.type === 'scrollTo' && typeof message.blockId === 'string') {
       blockElement(message.blockId)?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+    } else if (message.type === 'scrollBy' && Number.isFinite(message.dy)) {
+      win.scrollBy(0, Math.max(-2000, Math.min(2000, message.dy as number)));
+      // At the scroll edge nothing scrolls, but the drag layer still waits for rects.
+      scheduleRects();
     }
   };
 

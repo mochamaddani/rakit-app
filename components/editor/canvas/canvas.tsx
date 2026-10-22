@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type RefObject } from 'react';
 import type { KeyInput } from '@/lib/editor/canvas/constants';
 import {
   envelope,
@@ -14,7 +14,9 @@ import { canvasState, diffCanvas, type CanvasState } from '@/lib/editor/canvas/s
 import { VIEWPORT_WIDTHS } from '@/lib/editor/store';
 import { findBlock, findSection } from '@/lib/editor/structure';
 import { createId } from '@/lib/schema/ids';
+import { useDragState } from '../dnd/drag-context';
 import { useEditor, useEditorStore } from '../editor-context';
+import type { CanvasHandle } from './canvas-handle';
 import { Overlay, type CanvasGeometry } from './overlay';
 
 declare global {
@@ -73,7 +75,14 @@ function metrics() {
  * The live canvas: a sandboxed srcdoc iframe running the preview runtime (D-039). Document
  * changes are diffed against what the iframe shows and sent once per animation frame.
  */
-export function Canvas({ onKey }: { onKey?: (input: KeyInput) => void }) {
+export function Canvas({
+  onKey,
+  handleRef,
+}: {
+  onKey?: (input: KeyInput) => void;
+  /** Filled with the drag layer's view of the canvas (D-043). */
+  handleRef?: RefObject<CanvasHandle | null>;
+}) {
   const store = useEditorStore();
   const viewport = useEditor((s) => s.viewport);
   const selection = useEditor((s) => s.selection);
@@ -89,6 +98,10 @@ export function Canvas({ onKey }: { onKey?: (input: KeyInput) => void }) {
   const [ready, setReady] = useState(false);
   const [geometry, setGeometry] = useState<CanvasGeometry | null>(null);
   const [hover, setHover] = useState<string | null>(null);
+  const dragging = useDragState().source !== null;
+  const draggingRef = useRef(false);
+  const scaleRef = useRef(1);
+  const geometryListeners = useRef(new Set<() => void>());
 
   const post = useCallback((command: CanvasCommand) => {
     const target = iframeRef.current?.contentWindow;
@@ -139,6 +152,28 @@ export function Canvas({ onKey }: { onKey?: (input: KeyInput) => void }) {
     onKeyRef.current = onKey;
   }, [onKey]);
 
+  useEffect(() => {
+    draggingRef.current = dragging;
+  }, [dragging]);
+
+  useEffect(() => {
+    if (!handleRef) return;
+    const listeners = geometryListeners.current;
+    handleRef.current = {
+      frame: () => iframeRef.current,
+      scale: () => scaleRef.current,
+      geometry: () => geometryRef.current,
+      scrollBy: (dy) => post({ type: 'scrollBy', dy }),
+      onGeometry: (listener) => {
+        listeners.add(listener);
+        return () => listeners.delete(listener);
+      },
+    };
+    return () => {
+      handleRef.current = null;
+    };
+  }, [handleRef, post]);
+
   // The frame is built on the client only, so the server HTML never carries a second copy of
   // the page. The ref guard keeps StrictMode's double effect from building it twice.
   useEffect(() => {
@@ -171,12 +206,14 @@ export function Canvas({ onKey }: { onKey?: (input: KeyInput) => void }) {
         case 'rects': {
           const next = {
             scrollY: message.scrollY,
+            viewportWidth: message.viewportWidth,
             viewportHeight: message.viewportHeight,
             sections: message.sections,
             blocks: message.blocks,
           };
           geometryRef.current = next;
           setGeometry(next);
+          for (const listener of geometryListeners.current) listener();
           return;
         }
         case 'hover':
@@ -195,7 +232,8 @@ export function Canvas({ onKey }: { onKey?: (input: KeyInput) => void }) {
           return;
         }
         case 'key':
-          onKeyRef.current?.(message.input);
+          // A drag owns the keyboard until it ends.
+          if (!draggingRef.current) onKeyRef.current?.(message.input);
           return;
         case 'synced': {
           const m = metrics();
@@ -274,6 +312,10 @@ export function Canvas({ onKey }: { onKey?: (input: KeyInput) => void }) {
   const scale = available > 0 ? Math.min(1, available / deviceWidth) : 1;
   const frameHeight = Math.max(0, pane.height - PADDING * 2) / scale;
 
+  useEffect(() => {
+    scaleRef.current = scale;
+  }, [scale]);
+
   return (
     <div ref={paneRef} className="relative min-w-0 flex-1 overflow-hidden bg-muted">
       {frame && pane.width > 0 ? (
@@ -292,6 +334,8 @@ export function Canvas({ onKey }: { onKey?: (input: KeyInput) => void }) {
             className="block origin-top-left border-0 bg-white shadow-sm"
             style={{ width: deviceWidth, height: frameHeight, transform: `scale(${scale})` }}
           />
+          {/* While dragging, every pointer event stays in the editor (D-034). */}
+          {dragging ? <div data-testid="canvas-shield" className="absolute inset-0" /> : null}
           <Overlay geometry={geometry} hover={hover} scale={scale} width={deviceWidth * scale} />
         </div>
       ) : null}

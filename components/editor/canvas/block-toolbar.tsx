@@ -1,8 +1,24 @@
 'use client';
 
-import { ArrowDown, ArrowUp, Copy, Rows3, Trash2, type LucideIcon } from 'lucide-react';
+import {
+  ArrowDown,
+  ArrowUp,
+  Copy,
+  GripVertical,
+  Rows3,
+  Trash2,
+  type LucideIcon,
+} from 'lucide-react';
+import { getBlockDefinition } from '@/lib/blocks/registry';
 import type { CanvasRect } from '@/lib/editor/canvas/constants';
-import { canMoveBlock, canMoveSection, findBlock, type Selection } from '@/lib/editor/structure';
+import {
+  blockTypeLabel,
+  canMoveBlock,
+  canMoveSection,
+  findBlock,
+  type Selection,
+} from '@/lib/editor/structure';
+import { useDragSource, type DragSource } from '../dnd/drag-context';
 import { useEditor } from '../editor-context';
 
 const TOOLBAR_HEIGHT = 30;
@@ -33,6 +49,16 @@ export function BlockToolbar({
   const doc = useEditor((s) => s.doc);
   const dispatch = useEditor((s) => s.dispatch);
   const select = useEditor((s) => s.select);
+  // Footer blocks always stay last (D-017), so they get no drag handle.
+  let dragSource: DragSource | null = null;
+  if (selection.kind === 'block') {
+    const at = findBlock(doc, selection.blockId);
+    const type = at ? doc.sections[at.sectionIndex]!.blocks[at.blockIndex]!.type : null;
+    if (type && getBlockDefinition(type)?.landmark !== 'footer') {
+      dragSource = { kind: 'block', blockId: selection.blockId, label: blockTypeLabel(type) };
+    }
+  }
+  const grip = useDragSource(dragSource);
 
   let label: string;
   let actions: Action[];
@@ -104,6 +130,18 @@ export function BlockToolbar({
       className="pointer-events-auto absolute flex items-center gap-0.5 rounded-md border bg-background p-0.5 shadow-sm"
       style={{ top: y, right }}
     >
+      {dragSource ? (
+        <button
+          type="button"
+          aria-label="Drag to move"
+          title="Drag to move"
+          onPointerDown={grip.onPointerDown}
+          onContextMenu={grip.onContextMenu}
+          className="flex size-6 cursor-grab touch-none items-center justify-center rounded text-foreground hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+        >
+          <GripVertical className="size-3.5" aria-hidden="true" />
+        </button>
+      ) : null}
       {actions.map(({ label: name, icon: Icon, disabled, run }) => (
         <button
           key={name}

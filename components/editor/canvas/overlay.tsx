@@ -3,11 +3,13 @@
 import type { CanvasRect } from '@/lib/editor/canvas/constants';
 import { blockTypeLabel, findBlock } from '@/lib/editor/structure';
 import { cn } from '@/lib/utils';
+import { useDragState } from '../dnd/drag-context';
 import { useEditor } from '../editor-context';
 import { BlockToolbar } from './block-toolbar';
 
 export interface CanvasGeometry {
   scrollY: number;
+  viewportWidth: number;
   viewportHeight: number;
   sections: CanvasRect[];
   blocks: CanvasRect[];
@@ -33,6 +35,7 @@ export function Overlay({
   width: number;
 }) {
   const selection = useEditor((s) => s.selection);
+  const drag = useDragState();
   const selectedType = useEditor((s) => {
     if (s.selection?.kind !== 'block') return null;
     const at = findBlock(s.doc, s.selection.blockId);
@@ -58,6 +61,11 @@ export function Overlay({
       : undefined;
   const label =
     selection?.kind === 'section' ? 'Section' : selectedType ? blockTypeLabel(selectedType) : '';
+  const dragged =
+    drag.source?.kind === 'block'
+      ? geometry.blocks.find((rect) => rect.id === (drag.source as { blockId: string }).blockId)
+      : undefined;
+  const marker = drag.marker;
 
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden">
@@ -89,6 +97,27 @@ export function Overlay({
       ) : null}
       {visible(selected) && selection && selection.kind !== 'page' ? (
         <BlockToolbar selection={selection} rect={selected} scale={scale} width={width} />
+      ) : null}
+      {visible(dragged) ? (
+        <div
+          className="absolute rounded-sm border-2 border-dashed border-sky-600/70 bg-sky-500/5"
+          style={box(dragged)}
+        />
+      ) : null}
+      {marker ? (
+        <div
+          data-testid="drop-marker"
+          className="absolute h-0.5 rounded-full bg-sky-600"
+          style={{
+            top: marker.top * scale - 1,
+            left: marker.left * scale,
+            width: marker.width * scale,
+          }}
+        >
+          <span className="absolute -top-2.5 left-2 rounded-sm bg-sky-600 px-1.5 py-0.5 text-[11px] leading-none font-medium whitespace-nowrap text-white">
+            {marker.kind === 'between' ? 'New section' : 'Into this section'}
+          </span>
+        </div>
       ) : null}
     </div>
   );
