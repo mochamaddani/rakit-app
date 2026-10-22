@@ -147,7 +147,7 @@ Full Playwright journeys (template → export; wizard → export; import → edi
 ## 7. Dependencies
 
 **Expected direct dependencies** (anything else needs a note in DECISIONS):
-- **Runtime:** `next`, `react`, `react-dom`, `@supabase/supabase-js`, `@supabase/ssr`, `zod`, `server-only`; the shadcn/ui output (`radix-ui` primitives, `class-variance-authority`, `clsx`, `tailwind-merge`, `lucide-react`, `tw-animate-css`); `zustand`, `immer`, `sharp` (M2); `@anthropic-ai/sdk` (M5); `parse5`, `postcss`, `postcss-selector-parser` (M6).
+- **Runtime:** `next`, `react`, `react-dom`, `@supabase/supabase-js`, `@supabase/ssr`, `zod`, `server-only`; the shadcn/ui output (`@base-ui/react`, `class-variance-authority`, `cn`, `shadcn` (CSS), `lucide-react`, `tw-animate-css`; D-031); `zustand`, `immer`, `sharp` (M2); `@anthropic-ai/sdk` (M5); `parse5`, `postcss`, `postcss-selector-parser` (M6).
 - **Dev:** `typescript`, `eslint`, `eslint-config-next`, `eslint-config-prettier`, `prettier`, `tailwindcss`, `@tailwindcss/postcss`, `vitest`, `happy-dom`, `@playwright/test`, `tsx`, `esbuild`, `html-validate`, `supabase` (CLI), `@types/*`; `@axe-core/playwright`, `lighthouse` (M7).
 
 **Banned** (enforced by test):
@@ -155,7 +155,7 @@ Full Playwright journeys (template → export; wizard → export; import → edi
 - **DnD:** `@dnd-kit/*`, `react-dnd*`, `react-beautiful-dnd`, `@hello-pangea/dnd`, `sortablejs`, `react-sortablejs`, `dragula`, `react-dragula`, `interactjs`, `@atlaskit/pragmatic-drag-and-drop*`, `react-grid-layout`.
 - **Carousels:** `swiper`, `keen-slider`, `embla-carousel*`, `slick-carousel`, `react-slick`, `flickity`, `@glidejs/glide`, `@splidejs/*`.
 
-Radix primitives (dialogs, popovers) are UI building blocks, not builders or DnD, so they are allowed.
+Base UI primitives (dialogs, popovers) are UI building blocks, not builders or DnD, so they are allowed.
 
 **Exported pages have zero runtime dependencies.** Their only external requests are tracking tags, the form embed, optional video embeds, and images in Hosted mode.
 

@@ -23,7 +23,7 @@ Next.js 16 renamed the middleware file convention to `proxy.ts` (exported functi
 
 ## D-005 Single-tenant auth — Accepted
 - Login is email and password through Supabase Auth.
-- **Public sign-ups are disabled**: `enable_signup = false` locally, and the same switch in the hosted project's dashboard. The owner account is created with `pnpm owner:create`. Without this, anyone holding the public key could create an account and spend AI quota and storage.
+- **Public sign-ups are disabled**: `[auth] enable_signup = false` in `supabase/config.toml`, and "Allow new users to sign up" off in the hosted project's dashboard. The owner account is created with `pnpm owner:create`. Without this, anyone holding the public key could create an account and spend AI quota and storage. Keep `[auth.email] enable_signup = true` and the Email provider enabled: in this CLI version, turning that key off disables email *logins* too (`email_provider_disabled`).
 - A trigger creates one workspace for each new user.
 - Every RLS policy calls `public.is_workspace_member(workspace_id)`. Today that function checks `workspaces.owner_id`. To add multi-user later, add a `workspace_members` table and change only that function.
 
@@ -126,3 +126,9 @@ The PRD's `PageDocument.version` and `schemaVersion` are one field, `schemaVersi
 
 ## D-030 React Compiler off — Accepted
 It is disabled at scaffold time to keep builds simple. Revisit in M2 if profiling the editor shows render cost from props that should be memoized.
+
+## D-031 shadcn/ui 4 output and the editor font — Accepted
+`shadcn@4.22` (style `base-nova`) builds components on `@base-ui/react` (not Radix), merges classes with `cn` (shadcn's own replacement for clsx + tailwind-merge, repo `shadcn-ui/cn`), and needs the `shadcn` package at runtime for `@import "shadcn/tailwind.css"`. These replace the Radix/clsx/tailwind-merge entries expected in Plan §7. The editor UI uses the system font stack: the scaffold's and shadcn's `next/font/google` (Geist) was removed so builds never fetch Google Fonts.
+
+## D-032 Type-checking setup — Accepted
+`tsconfig` targets ES2022 (type-checking only; Next compiles with SWC), so ES2018+ regex features (the `s` flag, lookbehind) type-check. `pnpm typecheck` runs `next typegen` before `tsc`, because the global `PageProps`/`LayoutProps` route types are generated into `.next/` and are missing from fresh clones and CI.
