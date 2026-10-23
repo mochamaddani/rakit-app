@@ -57,4 +57,33 @@ describe('readInlineNodes', () => {
       { t: 'text', v: ' [REPLACE: x]' },
     ]);
   });
+
+  // What Chrome makes of Mod+B over a link, Mod+I over a highlight, and Enter inside a mark.
+  for (const [name, html, markup] of [
+    [
+      'a link inside bold',
+      '<b>Kunjungi <a href="https://botolku.example/">toko kami</a> sekarang</b>',
+      '**Kunjungi** [**toko kami**](https://botolku.example/) **sekarang**',
+    ],
+    [
+      'a highlight inside italic',
+      '<i>Harga <mark class="lp-hl">Rp 10.000</mark> saja</i>',
+      '*Harga* ==Rp 10.000== *saja*',
+    ],
+    ['italic inside a highlight', '<mark class="lp-hl"><i>Rp</i> 10.000</mark>', '==Rp 10.000=='],
+    [
+      'a line break inside bold',
+      'Botol <strong>anti<br>bocor</strong>',
+      'Botol **anti**\n**bocor**',
+    ],
+    [
+      'a line break inside a highlight',
+      'Harga <mark class="lp-hl">Rp 10.000<br>saja</mark>',
+      'Harga ==Rp 10.000==\n==saja==',
+    ],
+  ]) {
+    it(`keeps ${name}`, () => {
+      expect(serializeInline(readInlineNodes(fragment(html!)))).toBe(markup);
+    });
+  }
 });
