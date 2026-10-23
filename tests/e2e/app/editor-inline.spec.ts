@@ -1,9 +1,10 @@
-import { expect, test, type FrameLocator, type Page } from '@playwright/test';
+import { expect, test, type FrameLocator, type Locator, type Page } from '@playwright/test';
 import {
   blockTypes,
   docWith,
   ensureOwner,
   openEditor,
+  pointIn,
   resetOwnerPages,
   seedPage,
   signIn,
@@ -28,6 +29,22 @@ const caretToEnd = async (page: Page) => {
 const caretToStart = async (page: Page) => {
   await page.keyboard.press('ControlOrMeta+A');
   await page.keyboard.press('ArrowLeft');
+};
+/** The page point over an element's first character, so a double-click there hits its first word. */
+const firstCharacter = async (locator: Locator) => {
+  const [fx, fy] = await locator.evaluate((el) => {
+    const text = document.createTreeWalker(el, NodeFilter.SHOW_TEXT).nextNode()!;
+    const range = document.createRange();
+    range.setStart(text, 0);
+    range.setEnd(text, 1);
+    const char = range.getBoundingClientRect();
+    const box = el.getBoundingClientRect();
+    return [
+      (char.left + char.width / 2 - box.left) / box.width,
+      (char.top + char.height / 2 - box.top) / box.height,
+    ];
+  });
+  return pointIn(locator, fx!, fy!);
 };
 
 test('double-click the headline, type, and the inspector follows; one undo reverts the run', async ({
@@ -168,6 +185,27 @@ test('editing an FAQ question does not toggle its answer', async ({ page }) => {
   await page.keyboard.press('Escape');
   await expect(question).toContainText('sekarang ya');
   await expect(details).not.toHaveAttribute('open');
+});
+
+test('double-clicking a word in a button label or a footer link selects that word', async ({
+  page,
+}) => {
+  const frame = await openEditor(
+    page,
+    await seedPage({ name: 'Inline', document: docWith(['hero', 'footer']) }),
+  );
+  for (const [type, path, rest] of [
+    ['hero', 'primaryCta.label', ' now'],
+    ['footer', 'links.0.label', ' Policy'],
+  ] as const) {
+    const label = field(frame, type, path);
+    await label.scrollIntoViewIfNeeded();
+    await page.mouse.dblclick(...(await firstCharacter(label)));
+    await expect(editing(frame)).toHaveCount(1);
+    await page.keyboard.type('X');
+    await page.keyboard.press('Escape');
+    await expect(label).toHaveText(`X${rest}`);
+  }
 });
 
 test('arrow keys move the caret in a carousel card instead of scrolling the cards', async ({

@@ -259,7 +259,28 @@ export function startPreviewRuntime(options: RuntimeOptions): () => void {
     post({ type: 'editEnd', blockId: current.blockId, path: current.path });
   };
 
-  const startEditing = (field: Element) => {
+  /** Selects the word under a point, or puts the caret there between words. */
+  const selectWordAt = (el: HTMLElement, x: number, y: number) => {
+    const d = doc as Partial<Pick<Document, 'caretPositionFromPoint' | 'caretRangeFromPoint'>>;
+    const at = d.caretPositionFromPoint?.(x, y);
+    const legacy = at ? null : d.caretRangeFromPoint?.(x, y);
+    const node = at ? at.offsetNode : legacy?.startContainer;
+    const offset = at ? at.offset : (legacy?.startOffset ?? 0);
+    const selection = win.getSelection();
+    if (!node || !selection || !el.contains(node)) return;
+    const text = node.nodeType === 3 ? (node.nodeValue ?? '') : '';
+    let start = offset;
+    let end = offset;
+    while (start > 0 && /\S/.test(text.charAt(start - 1))) start--;
+    while (end < text.length && /\S/.test(text.charAt(end))) end++;
+    const range = doc.createRange();
+    range.setStart(node, start);
+    range.setEnd(node, end);
+    selection.removeAllRanges();
+    selection.addRange(range);
+  };
+
+  const startEditing = (field: Element, x: number, y: number) => {
     const blockId = closestId(field, 'data-lp-block');
     const path = field.getAttribute('data-lp-field');
     if (!blockId || !path || editing?.el === field) return;
@@ -268,12 +289,17 @@ export function startPreviewRuntime(options: RuntimeOptions): () => void {
     el.setAttribute('contenteditable', el.hasAttribute('data-lp-rich') ? 'true' : 'plaintext-only');
     el.setAttribute(EDITING, '');
     editing = { el, blockId, path, frame: 0 };
+    // A double-click selects its word, and editing keeps it; in a link Chrome selects nothing.
+    const selection = win.getSelection();
+    const selected = !!selection && !selection.isCollapsed && el.contains(selection.anchorNode);
     el.focus();
+    if (!selected) selectWordAt(el, x, y);
   };
 
   const onDoubleClick = (event: Event) => {
     const field = asElement(event.target)?.closest('[data-lp-field]');
-    if (field?.closest('[data-lp-block]')) startEditing(field);
+    const { clientX, clientY } = event as MouseEvent;
+    if (field?.closest('[data-lp-block]')) startEditing(field, clientX, clientY);
   };
 
   const onInput = (event: Event) => {
