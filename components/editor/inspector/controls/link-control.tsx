@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import type { LinkSpec } from '@/lib/editor/inspector/fields';
 import { blockTypeLabel } from '@/lib/editor/structure';
@@ -182,7 +181,10 @@ function UrlFields({
   );
 }
 
-/** One UTM value: typed as is (spaces included), trimmed when the field loses focus (M2a review M2). */
+/**
+ * One UTM value: typed as is (spaces included), trimmed when the field loses focus (M2a review M2).
+ * Like every field it follows undo and redo, so an undone value is not written back on blur.
+ */
 function UtmField({
   id,
   label,
@@ -198,21 +200,17 @@ function UtmField({
   onChange(value: string): void;
   onBlur(): void;
 }) {
-  const [draft, setDraft] = useState<string | null>(null);
+  const { draft, change } = useFieldDraft(value, () => null);
   return (
     <FieldShell id={id} label={label}>
       <Input
         id={id}
         disabled={disabled}
-        value={draft ?? value}
-        onChange={(event) => {
-          setDraft(event.target.value);
-          onChange(event.target.value);
-        }}
+        value={draft}
+        onChange={(event) => change(event.target.value, onChange)}
         onBlur={() => {
-          const trimmed = (draft ?? value).trim();
-          setDraft(null);
-          if (trimmed !== value) onChange(trimmed);
+          const trimmed = draft.trim();
+          if (trimmed !== draft) change(trimmed, onChange);
           onBlur();
         }}
       />

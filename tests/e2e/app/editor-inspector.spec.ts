@@ -108,6 +108,25 @@ test('typing a UTM campaign with a space keeps it', async ({ page }) => {
   );
 });
 
+test('an undo while a UTM field has focus stays undone when it loses focus', async ({ page }) => {
+  const frame = await heroAndCarousel(page);
+  await selectBlock(page, 'hero');
+  const cta = page.getByRole('group', { name: 'Primary button' });
+  await cta.getByLabel('Link type').selectOption('url');
+  await cta.getByLabel('Address').fill('https://botolku.example/beli');
+  await cta.getByText('UTM parameters').click();
+  const campaign = cta.getByLabel('Campaign');
+  const button = frame.locator('.lp-hero .lp-btn--primary');
+  await campaign.pressSequentially('promo');
+  await expect(button).toHaveAttribute('href', 'https://botolku.example/beli?utm_campaign=promo');
+  await page.keyboard.press('ControlOrMeta+Z');
+  await expect(button).toHaveAttribute('href', 'https://botolku.example/beli');
+  await expect(campaign).toHaveValue('');
+  await campaign.press('Tab');
+  await expect(page.getByRole('button', { name: 'Redo' })).toBeEnabled();
+  await expect(button).toHaveAttribute('href', 'https://botolku.example/beli');
+});
+
 test('a theme color change restyles the canvas and shows a contrast warning', async ({ page }) => {
   const frame = await heroAndCarousel(page);
   await page.getByRole('button', { name: 'Page settings' }).click();
