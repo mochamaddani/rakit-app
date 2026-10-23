@@ -350,7 +350,9 @@ export function startPreviewRuntime(options: RuntimeOptions): () => void {
       alt: key.altKey,
     };
     if (editing) {
-      // Keys stay in the field; only undo and redo reach the editor, after editing ends.
+      // Keys stay in the field; only undo and redo reach the editor, after editing ends. Block
+      // scripts never see them either: the carousel would take the arrows to scroll its cards.
+      if (inField(key.target)) key.stopPropagation();
       const letter = key.key.toLowerCase();
       if (key.key === 'Escape') {
         key.preventDefault();

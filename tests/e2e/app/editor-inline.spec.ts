@@ -169,3 +169,21 @@ test('editing an FAQ question does not toggle its answer', async ({ page }) => {
   await expect(question).toContainText('sekarang ya');
   await expect(details).not.toHaveAttribute('open');
 });
+
+test('arrow keys move the caret in a carousel card instead of scrolling the cards', async ({
+  page,
+}) => {
+  const frame = await openEditor(
+    page,
+    await seedPage({ name: 'Inline', document: docWith(['product-carousel']) }),
+  );
+  const title = field(frame, 'product-carousel', 'items.0.title');
+  await title.dblclick();
+  await caretToEnd(page);
+  await page.keyboard.press('ArrowLeft');
+  await page.keyboard.press('ArrowLeft');
+  await page.keyboard.type('X');
+  await page.keyboard.press('Escape');
+  await expect(title).toHaveText('ProductX 1');
+  expect(await frame.locator('.lp-carousel__track').evaluate((el) => el.scrollLeft)).toBe(0);
+});
