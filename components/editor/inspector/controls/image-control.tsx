@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { uploadImage, type UploadResult } from '@/lib/assets/client';
@@ -137,6 +137,12 @@ function UploadButton({ onUploaded }: { onUploaded(image: UploadedImage): void }
   const input = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // An upload outlives the render that started it: it ends with the latest callback, which sees
+  // what changed meanwhile (alt text typed while it ran).
+  const latest = useRef(onUploaded);
+  useEffect(() => {
+    latest.current = onUploaded;
+  });
 
   const upload = async (file: File | undefined) => {
     if (!file) return;
@@ -155,7 +161,7 @@ function UploadButton({ onUploaded }: { onUploaded(image: UploadedImage): void }
       newId: () => crypto.randomUUID(),
     });
     setBusy(false);
-    if (result.ok) onUploaded(result.image);
+    if (result.ok) latest.current(result.image);
     else setError(result.message);
   };
 

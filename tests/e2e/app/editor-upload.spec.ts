@@ -65,6 +65,43 @@ test('uploading a JPEG replaces the hero image with its 1600 px WebP', async ({ 
   }
 });
 
+test('alt text typed while the image uploads is kept', async ({ page }) => {
+  const ws = await ownerWorkspaceId();
+  const { frame, field, input } = await heroImageField(page);
+  // Hold the processing request until the alt text is in.
+  let reached!: () => void;
+  let release!: () => void;
+  const arrived = new Promise<void>((resolve) => (reached = resolve));
+  const held = new Promise<void>((resolve) => (release = resolve));
+  await page.route('**/api/assets', async (route) => {
+    reached();
+    await held;
+    await route.continue();
+  });
+  const jpeg = await sharp({
+    create: { width: 2400, height: 1600, channels: 3, background: '#0e7490' },
+  })
+    .jpeg()
+    .toBuffer();
+  await input.setInputFiles({ name: 'botol.jpg', mimeType: 'image/jpeg', buffer: jpeg });
+  await arrived;
+  const alt = field.getByLabel('Alt text');
+  await alt.fill('Botol biru di atas meja');
+  release();
+  const img = frame.locator('.lp-hero img');
+  await expect(img).toHaveAttribute('src', /-1600\.webp$/, { timeout: 20_000 });
+  const assetId = /\/([0-9a-f-]{36})-1600\.webp$/.exec((await img.getAttribute('src'))!)![1]!;
+  try {
+    await expect(img).toHaveAttribute('alt', 'Botol biru di atas meja');
+    await expect(alt).toHaveValue('Botol biru di atas meja');
+  } finally {
+    await adminClient()
+      .storage.from('assets')
+      .remove([`${ws}/${assetId}-1600.webp`, `${ws}/${assetId}-800.webp`]);
+    await adminClient().from('assets').delete().eq('id', assetId);
+  }
+});
+
 test('a file that is not an image shows an error and changes nothing', async ({ page }) => {
   const { field, input } = await heroImageField(page);
   await input.setInputFiles({
