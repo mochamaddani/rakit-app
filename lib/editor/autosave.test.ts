@@ -165,3 +165,65 @@ describe('autosave', () => {
     expect(sends).toHaveLength(0);
   });
 });
+
+describe('autosave unload during an in-flight save', () => {
+  /** The first send waits for release(); later sends use `later`. */
+  const holdFirst = (later: (req: SaveRequest) => Promise<SaveResponse>) => {
+    let release!: () => void;
+    respond = (req) => {
+      if (sends.length > 1) return later(req);
+      return new Promise((r) => {
+        release = () => r({ kind: 'ok', revision: req.baseRevision + 1 });
+      });
+    };
+    return () => release();
+  };
+
+  it('an unload during an in-flight save sends the newest edits at once, based on the revision that save will create', async () => {
+    holdFirst(() => new Promise(() => {}));
+    const a = make();
+    edit(a);
+    await vi.advanceTimersByTimeAsync(800);
+    expect(status(a)).toBe('saving');
+    edit(a);
+    void a.flush({ unloading: true });
+    expect(sends).toHaveLength(2);
+    expect(sends[1]).toMatchObject({ baseRevision: 5, keepalive: true });
+    expect(sends[1]!.saveId).not.toBe(sends[0]!.saveId);
+    expect(status(a)).toBe('saving');
+  });
+
+  it('if the page stays, the next save recognizes the keepalive copy that landed', async () => {
+    let keepaliveId = '';
+    const release = holdFirst(async (req) => {
+      if (req.keepalive) {
+        keepaliveId = req.saveId;
+        return { kind: 'ok', revision: 6 }; // ignored: the page was expected to be gone
+      }
+      return req.baseRevision === 5
+        ? { kind: 'conflict', revision: 6, saveId: keepaliveId }
+        : { kind: 'ok', revision: req.baseRevision + 1 };
+    });
+    const a = make();
+    edit(a);
+    await vi.advanceTimersByTimeAsync(800);
+    edit(a);
+    void a.flush({ unloading: true });
+    release();
+    await vi.advanceTimersByTimeAsync(0);
+    edit(a);
+    await vi.advanceTimersByTimeAsync(2000);
+    await vi.runOnlyPendingTimersAsync();
+    expect(sends.map((s) => s.baseRevision)).toEqual([4, 5, 5, 6]);
+    expect(a.store.getState()).toMatchObject({ status: 'saved', revision: 7, savedVersion: 3 });
+  });
+
+  it('an unload with nothing newer than the in-flight save sends nothing more', async () => {
+    holdFirst(() => new Promise(() => {}));
+    const a = make();
+    edit(a);
+    await vi.advanceTimersByTimeAsync(800);
+    void a.flush({ unloading: true });
+    expect(sends).toHaveLength(1);
+  });
+});

@@ -2,8 +2,8 @@ import { createStore, type StoreApi } from 'zustand/vanilla';
 import type { PageDocument } from '@/lib/schema/document';
 
 // Saves the draft in the background (docs/DECISIONS.md D-035): debounced, never more than one
-// request in flight, retried with backoff when offline, and stopped on a conflict until the user
-// decides. Each attempt carries its own save id, so a 409 that names an attempt whose answer was
+// request in flight (except the keepalive copy sent on unload), retried with backoff when offline,
+// and stopped on a conflict until the user decides. Each attempt carries its own save id, so a 409 that names an attempt whose answer was
 // lost means that save landed, not that someone else saved. Time comes from the global timers, so
 // tests drive it with fake timers.
 
@@ -75,6 +75,10 @@ export function createAutosave(options: AutosaveOptions): Autosave {
 
   let timer: ReturnType<typeof setTimeout> | undefined;
   let inFlight: Promise<void> | null = null;
+  /** The document version the in-flight request carries. */
+  let inFlightVersion = 0;
+  /** The newest version sent as an unload copy. */
+  let copiedVersion = 0;
   /** When the oldest change that no request has carried yet was made. */
   let firstUnsentAt: number | null = null;
   let retries = 0;
@@ -87,6 +91,10 @@ export function createAutosave(options: AutosaveOptions): Autosave {
     timer = undefined;
   };
   const unsaved = () => options.getSnapshot().version > state().savedVersion;
+  /** Forgets attempts that the server's answer has already accounted for. */
+  const forgetUpTo = (version: number) => {
+    for (const [id, sent] of unanswered) if (sent <= version) unanswered.delete(id);
+  };
 
   const scheduleDebounced = () => {
     clearTimer();
@@ -108,7 +116,7 @@ export function createAutosave(options: AutosaveOptions): Autosave {
     switch (response.kind) {
       case 'ok':
         retries = 0;
-        unanswered.clear();
+        forgetUpTo(sentVersion);
         store.setState({ revision: response.revision, savedVersion: sentVersion, error: null });
         if (unsaved()) {
           store.setState({ status: 'dirty' });
@@ -126,7 +134,7 @@ export function createAutosave(options: AutosaveOptions): Autosave {
         }
         // The server holds this tab's own earlier save: build on it and send the rest now.
         retries = 0;
-        unanswered.clear();
+        forgetUpTo(landed);
         store.setState({
           revision: response.revision,
           savedVersion: Math.max(state().savedVersion, landed),
@@ -162,6 +170,7 @@ export function createAutosave(options: AutosaveOptions): Autosave {
     if (version <= state().savedVersion || state().status === 'conflict') return;
     firstUnsentAt = null;
     store.setState({ status: 'saving' });
+    inFlightVersion = version;
     const saveId = newSaveId();
     inFlight = options
       .send({ doc, baseRevision: state().revision, keepalive, saveId })
@@ -172,6 +181,23 @@ export function createAutosave(options: AutosaveOptions): Autosave {
         inFlight = null;
       });
     await inFlight;
+  }
+
+  /**
+   * The page is going away while a save is in flight: send the newest edits now, based on the
+   * revision that save will create, instead of waiting for an answer that may never be read. The
+   * answer is ignored; if the page stays, the next save meets this copy in a 409 and builds on it.
+   */
+  function sendUnloadCopy() {
+    const { doc, version } = options.getSnapshot();
+    if (disposed || state().status === 'conflict') return;
+    if (version <= Math.max(inFlightVersion, copiedVersion)) return;
+    copiedVersion = version;
+    const saveId = newSaveId();
+    unanswered.set(saveId, version);
+    options
+      .send({ doc, baseRevision: state().revision + 1, keepalive: true, saveId })
+      .catch(() => {});
   }
 
   return {
@@ -189,6 +215,10 @@ export function createAutosave(options: AutosaveOptions): Autosave {
     },
 
     async flush({ unloading = false } = {}) {
+      if (unloading && inFlight) {
+        sendUnloadCopy();
+        return;
+      }
       if (inFlight) await inFlight;
       if (unsaved()) await save(unloading);
     },
