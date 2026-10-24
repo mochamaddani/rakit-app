@@ -30,7 +30,7 @@ Next.js 16 renamed the middleware file convention to `proxy.ts` (exported functi
 ## D-006 Version HTML lives in Storage, not in `page_versions.html` — Accepted (deviates from PRD §7)
 `page_versions` keeps `html_path` (private bucket `page-versions`), `byte_size` and `html_sha256`. A Portable export is 0.3–3 MB, and base64 compresses poorly, so a few hundred exports would fill the free plan's 500 MB database and bloat backups. Storage is cheaper, and downloads come straight from it. Revisit if you prefer the HTML in Postgres; that is a single-column migration.
 
-## D-007 Export runs in the browser — Proposed (M3)
+## D-007 Export runs in the browser — Accepted (M3)
 `renderPage` runs on both server and browser. Portable mode inlines image variants that were already resized to WebP at upload (D-008), so export needs no server-side re-encoding. The browser assembles the file, downloads it as a Blob, uploads the same bytes to `page-versions`, and inserts the `page_versions` row under RLS. This avoids Vercel's 4.5 MB function response limit and server compute, and the download is immediate. Images on third-party hosts that block CORS stay as URLs, with a checklist warning.
 
 ## D-008 Upload pipeline — Accepted (M2b; details in D-045)
@@ -275,3 +275,11 @@ Consequences:
   - **Google Forms** (`docs.google.com/forms`), `conversions: 'none'`; `embedded=true` is added.
 - **Submit detection** (snippet ≤ 1024 bytes, shipped only when a form's provider posts messages): a message counts only when its `source` is an iframe inside that form's root, its origin is the provider's and its data matches; then `lp:track` `Lead` once per form, and, with a thank-you URL (http(s)), `location.assign` after 500 ms.
 - **Performance (M7):** measure a Storelink page in the Lighthouse work; if mobile Performance drops below 90, load the code when the form section nears the viewport.
+
+## D-046 Export images — Accepted (M3)
+- **Portable** (the default) inlines block images as `data:` URIs. An uploaded asset's `-1600.webp` URL is swapped for its `-800.webp` variant: 800 px covers a 400 CSS px slot at 2× on the phones ad traffic lands on, and keeps a typical page under the 1 MB warning; 1600 px roughly triples the file. Each URL is fetched once (`mode: 'cors'`, no credentials); PNG, JPEG, WebP, GIF and AVIF are inlined.
+- **Failures stay links.** An image the browser can't fetch (a host without CORS, a 404) or that isn't one of those types keeps its URL, and the checklist counts it ("… couldn't be inlined and stay links"). The export never fails on an image.
+- **Hosted** leaves block images as URLs (Supabase Storage public URLs for uploads).
+- **Favicon:** in both modes it is drawn into a 64×64 PNG on a canvas and inlined (PRD §6.6); one that can't be read is dropped and counted.
+- **Social image** (`og:image`) is never inlined: crawlers need an absolute URL.
+- The document is never changed by export; the export copy is built with `structuredClone`.
