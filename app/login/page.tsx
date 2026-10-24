@@ -8,7 +8,7 @@ export default async function LoginPage({ searchParams }: PageProps<'/login'>) {
     <main className="flex flex-1 items-center justify-center p-4">
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle>Sign in to LaunchPad</CardTitle>
+          <CardTitle>Sign in to Rakit</CardTitle>
         </CardHeader>
         <CardContent>
           <LoginForm next={typeof next === 'string' ? next : ''} />

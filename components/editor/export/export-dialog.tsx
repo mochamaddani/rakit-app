@@ -209,7 +209,7 @@ function ExportPanel() {
         {(
           [
             ['portable', 'Portable', 'Images inside the file; works offline'],
-            ['hosted', 'Hosted', "Images load from LaunchPad's storage; lighter file"],
+            ['hosted', 'Hosted', "Images load from Rakit's storage; lighter file"],
           ] as const
         ).map(([value, label, hint]) => (
           <label key={value} className="flex items-start gap-2">

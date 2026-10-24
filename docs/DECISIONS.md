@@ -1,6 +1,6 @@
 # Decisions Log
 
-Assumptions and decisions made while planning and building LaunchPad. "PRD" means `docs/PRD.md`; "Plan" means `docs/PLAN.md`.
+Assumptions and decisions made while planning and building Rakit (named LaunchPad in the PRD; see D-025). "PRD" means `docs/PRD.md`; "Plan" means `docs/PLAN.md`.
 
 Status values: **Accepted**: in effect. **Proposed**: in effect unless the owner objects at plan review. **Superseded**: replaced by a later entry. Newest entries go at the bottom.
 
@@ -106,7 +106,7 @@ The default is path-based: `https://<APP_BASE_DOMAIN>/<slug>`, on a registrable 
 - `ai_runs` logs `input_tokens`, `output_tokens`, `cache_read_input_tokens`, `cache_creation_input_tokens`, latency and status.
 
 ## D-025 Naming — Accepted
-The product is "LaunchPad" in the UI, as in the PRD. The repo and package are named `rakit-app`, after the folder.
+The product is "Rakit" in the UI, like the repo and package (`rakit-app`). The PRD calls it "LaunchPad"; the owner renamed it on 2026-10-24, and the PRD keeps its original wording. Internal identifiers keep the old name: the canvas message tag `launchpad-canvas` and the `@launchpad.test` test accounts.
 
 ## D-026 Test layout — Accepted
 - Unit tests sit next to the code as `*.test.ts`.

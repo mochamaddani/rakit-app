@@ -68,7 +68,7 @@ describe('uploadImage', () => {
         setup(reply(413, { error: 'too_large', reason: 'bytes' })),
         'This image is larger than 10 MB.',
       ],
-      [setup(reply(415, { error: 'unsupported' })), "This file isn't an image LaunchPad can read."],
+      [setup(reply(415, { error: 'unsupported' })), "This file isn't an image Rakit can read."],
       [setup(reply(500)), "The image couldn't be processed (HTTP 500)."],
     ];
     for (const [{ deps }, message] of cases) {

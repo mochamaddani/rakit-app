@@ -1,4 +1,4 @@
-# LaunchPad — Milestone Plan
+# Rakit — Milestone Plan
 
 **Status:** proposed for owner review · 2026-10-21
 **Spec:** [`docs/PRD.md`](PRD.md) · **Decisions:** [`docs/DECISIONS.md`](DECISIONS.md) (D-xxx below)

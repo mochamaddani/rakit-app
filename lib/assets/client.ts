@@ -67,7 +67,7 @@ export async function uploadImage(file: File, deps: UploadDeps): Promise<UploadR
     };
   }
   if (response.status === 415) {
-    return { ok: false, message: "This file isn't an image LaunchPad can read." };
+    return { ok: false, message: "This file isn't an image Rakit can read." };
   }
   return { ok: false, message: `The image couldn't be processed (HTTP ${response.status}).` };
 }

@@ -1,4 +1,4 @@
-# LaunchPad
+# Rakit
 
 A landing-page builder for ad tests. A custom editor produces a page document (JSON), and a pure
 renderer turns it into one self-contained `.html` file to download and upload to any hosting.

@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'LaunchPad',
+  title: 'Rakit',
   description: 'Landing pages for ad tests',
 };
 

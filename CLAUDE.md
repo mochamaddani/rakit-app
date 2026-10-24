@@ -1,4 +1,4 @@
-# LaunchPad (repo: rakit-app)
+# Rakit (repo: rakit-app)
 
 Landing-page builder for ad tests: a custom editor produces a PageDocument (JSON); a pure renderer turns it into one self-contained `.html` file.
 Spec: `docs/PRD.md` · Plan: `docs/PLAN.md` · Decisions: `docs/DECISIONS.md` · Task plans: `docs/superpowers/plans/`.
