@@ -197,3 +197,20 @@ test('the file name is editable and must be unique', async ({ page }, info) => {
   const { data } = await adminClient().from('pages').select('slug').eq('id', pageId).single();
   expect(data!.slug).toBe('teh-c');
 });
+
+test('editing keys inside the export dialog never change the page behind it', async ({ page }) => {
+  const pageId = await seedPage({ name: 'Teh', document: shopDocument() });
+  await openEditor(page, pageId);
+  await canvas(page)
+    .locator('[data-lp-type="hero"]')
+    .click({ position: { x: 8, y: 8 } });
+  await exportButton(page).click();
+  await expect(downloadButton(page)).toBeEnabled();
+  await exportDialog(page).getByRole('button', { name: 'Copy HTML' }).focus();
+  for (const key of ['Delete', 'Backspace', 'ControlOrMeta+d', 'ControlOrMeta+z'])
+    await page.keyboard.press(key);
+  await page.keyboard.press('Escape');
+  await expect(exportDialog(page)).toBeHidden();
+  await expect(canvas(page).locator('[data-lp-block]')).toHaveCount(3);
+  await expect(page.getByRole('button', { name: 'Undo' })).toBeDisabled();
+});

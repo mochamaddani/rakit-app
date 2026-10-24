@@ -10,13 +10,18 @@ function isEditingText(target: EventTarget | null): boolean {
   return target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName);
 }
 
+/** Keys pressed in a dialog belong to it: the page behind a modal never changes. */
+const inDialog = (target: EventTarget | null) =>
+  target instanceof Element && target.closest('[role="dialog"], [role="alertdialog"]') !== null;
+
 /**
- * Editor shortcuts from the window, plus a handler for keys the canvas forwards (the canvas has
- * no editable text in M2a). Returns that handler for `<Canvas onKey>`.
+ * Editor shortcuts from the window (never from inside a dialog), plus a handler for keys the
+ * canvas forwards. Returns that handler for `<Canvas onKey>`.
  */
 export function useShortcuts(store: EditorStore): (input: KeyInput) => void {
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
+      if (inDialog(event.target)) return;
       const input = {
         key: event.key,
         mod: event.metaKey || event.ctrlKey,

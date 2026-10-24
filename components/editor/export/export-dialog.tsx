@@ -118,6 +118,12 @@ function ExportPanel() {
     if (phase.kind !== 'ready') return;
     let cancelled = false;
     const timer = setTimeout(() => {
+      // Only a saved draft is exported (D-049); anything else goes back to waiting for the save.
+      const reason = unsavedReason(autosave.store.getState());
+      if (reason) {
+        setPhase({ kind: 'blocked', reason });
+        return;
+      }
       setBuilding(true);
       const doc = store.getState().doc;
       const draftRevision = autosave.store.getState().revision;
