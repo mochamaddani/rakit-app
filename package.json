@@ -21,6 +21,7 @@
     "db:test": "supabase test db",
     "db:types": "supabase gen types typescript --local > lib/supabase/database.types.ts",
     "owner:create": "tsx scripts/create-owner.ts",
+    "page:create": "tsx --conditions=react-server scripts/create-page.ts",
     "env:local": "tsx scripts/write-env-local.ts",
     "test:e2e:app": "PW_APP=1 playwright test --project=app",
     "assets": "tsx scripts/build-assets.ts",
