@@ -2,7 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 import { trackingDocument } from '@/tests/fixtures/example-document';
 import { STORELINK_SNIPPET } from '@/tests/fixtures/forms';
 import { renderToFile } from './render-to-file';
-import { dataLayer, fbCalls, stubVendors } from './vendor-stubs';
+import { dataLayer, fbCalls, stubStorelink, stubVendors } from './vendor-stubs';
 
 /** A Tally stand-in whose button posts Tally's submit message to the page. */
 async function stubTally(page: Page) {
@@ -62,35 +62,7 @@ test("a Storelink snippet runs once and its widget shares the page's pixel", asy
     if (/storelink\.id|gabung\.id/.test(request.url())) contacted.push(request.url());
   });
   await stubVendors(page);
-  // Stand-ins that behave like Storelink's loader and widget (read 2026-10-24): the loader puts
-  // div#evf-embed-widget before #evf-widget-script and loads the widget into the page itself.
-  await page.route('https://srstorebdg.storelink.id/script/embed', (route) =>
-    route.fulfill({
-      contentType: 'text/javascript',
-      body: `window.embedEvfScript = function (params) {
-  var x = document.createElement('div'); x.id = 'evf-embed-widget'; x.textContent = 'Loading Widget...';
-  var y = document.getElementById('evf-widget-script'); y.parentNode.insertBefore(x, y);
-  setTimeout(function () {
-    var t = document.createElement('script'); t.async = true;
-    t.src = 'https://cdn.gabung.id/form-builder/embed/bundle-test.js';
-    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(t, s);
-  }, params.delayLoad || 0);
-};`,
-    }),
-  );
-  await page.route('https://cdn.gabung.id/**', (route) =>
-    route.fulfill({
-      contentType: 'text/javascript',
-      body: `(function () {
-  var root = document.getElementById('evf-embed-widget');
-  root.innerHTML = '<button type="button">Pesan</button>';
-  root.querySelector('button').addEventListener('click', function () {
-    fbq('init', '1234567890');
-    fbq('trackSingle', '1234567890', 'Purchase', { value: 1 }, { eventID: 'x' });
-  });
-})();`,
-    }),
-  );
+  await stubStorelink(page);
   const fbevents: string[] = [];
   page.on('request', (request) => {
     if (request.url().includes('fbevents.js')) fbevents.push(request.url());

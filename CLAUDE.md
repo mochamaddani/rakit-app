@@ -36,17 +36,19 @@ Spec: `docs/PRD.md` · Plan: `docs/PLAN.md` · Decisions: `docs/DECISIONS.md` ·
 - The canvas iframe is `sandbox="allow-scripts"` only, and every message from it is untrusted (D-039).
 - The drag engine is pure in `lib/editor/dnd/` (geometry, controller); drops are `insertBlockAt` / `moveBlockTo` commands (D-043).
 - Storage objects live under `<workspaceId>/`; their policies use `public.is_workspace_member(public.workspace_from_path(name))` (D-045).
+- Exported HTML never runs on the editor origin: download it as a Blob or store it; never open it in a tab or an unsandboxed iframe (D-022, D-049).
+- Preview output never carries vendor tags, custom code, the page runtime or form embeds (D-047, D-048); export runs in the browser (`lib/export`, D-007, D-046).
 - App e2e tests run serially against the one owner account and reset its pages.
 - Small conventional commits (`feat:`, `fix:`, `test:`, `docs:`, `chore:`, `ci:`).
 
 ## How to add a block
 
 1. Create `lib/blocks/<type>/` (interactive components go in `lib/blocks/special/<type>/`):
-   - `schema.ts`: Zod props. Use `text()` / `rich()` for every user-visible string; every list item has an `id`; nested objects with defaulted fields use `.prefault({})`.
+   - `schema.ts`: Zod props. Use `text()` / `rich()` for every user-visible string (`code()` for raw owner code, which only export emits); every list item has an `id`; nested objects with defaulted fields use `.prefault({})`.
    - `render.ts`: build markup only with the `html` tag. Text via `ctx.text` / `ctx.rich`, links via `ctx.resolveLink` or `renderCta`, images via `renderImage`, inner ids via `ctx.domId`. No Date/Math.random/Intl.
    - Mark each text or rich field rendered as an element's whole content with `ctx.field(path, kind)` (preview-only), and CTA labels with `renderCta(…, { field })`, so the canvas can edit them in place. The registry test checks the markers (D-044).
    - `styles.css`: classes prefixed `lp-<type>`; mobile-first; breakpoints 640px / 1024px; per-instance options arrive as CSS custom properties. An element that paints its own background (a card) resets the tone variables it uses, including `--lp-fg`, which the focus ring uses (D-033).
-   - Optional `snippet.js`: vanilla ES2017, no globals, query only inside each `[data-lp-<type>]` root, idempotent (`data-lp-ready`), honor `prefers-reduced-motion`. Gate it with `isNeeded(props)`. In the editor canvas a snippet may run again after DOM patches, so top-level code must only initialize roots that lack `data-lp-ready`.
+   - Optional `snippet.js`: vanilla ES2017, no globals, query only inside each `[data-lp-<type>]` root, idempotent (`data-lp-ready`), honor `prefers-reduced-motion`. Gate it with `isNeeded(props)`; set `exportOnly` when it only talks to third-party code. To fire a tracking event, dispatch a `lp:track` DOM event (`{ name, params }`); the page runtime sends it on (D-047). In the editor canvas a snippet may run again after DOM patches, so top-level code must only initialize roots that lack `data-lp-ready`.
    - `index.ts`: `defineBlock({ type, category, label, description, icon, schema, defaultProps, css, snippet?, render })`. Defaults must never invent social proof; use `[REPLACE: …]`.
    - `<type>.test.ts`: schema edge cases, "renders valid HTML with only required fields", behavior assertions, and an `.html` file snapshot.
 2. Run `pnpm assets` and commit the generated `*.generated.ts` files.

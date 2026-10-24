@@ -105,7 +105,7 @@ Split into two plans: **M2a** (state, canvas, inspector; [detailed plan](superpo
 
 ### M3 — Export + tracking · [detailed plan](superpowers/plans/2026-10-24-m3-export-tracking.md)
 - Settings additions (SEO: OG image, favicon; tracking IDs validated by format; custom head/body snippets; default CTA target); tracking generators and an event dispatcher with `event_id` (D-019, D-021); UTM/click-ID passthrough to CTAs and form URLs.
-- Form Embed block (iframe/snippet/presets, lazy, responsive, submit detection, thank-you redirect; D-020).
+- Form Embed block (iframe/snippet/presets, lazy, responsive, submit detection, thank-you redirect; D-020). The owner's form is Storelink, which sends its own conversion events (D-048). There is no "preview form" toggle: forms show as a placeholder in the canvas and are tested in the exported file (D-048).
 - Export pipeline in the browser (D-007): Portable/Hosted images, minify toggle, tracking toggle, size report per block, sha256, Download `<slug>.html`, Copy HTML.
 - Pre-export checklist (PRD §6.7, plus `[REPLACE:]` placeholders and Custom HTML scripts); versions in Storage (D-006) with list and one-click rollback; status updates (draft/exported).
 - **Exit (e2e):** build → export → open via `file://` with stubbed vendor scripts → assert PageView, CTA event, `Lead` on a simulated provider message, UTM/gclid appended to CTA and form URLs; version recorded with hash; rollback restores the draft.
@@ -163,7 +163,7 @@ Base UI primitives (dialogs, popovers) are UI building blocks, not builders or D
 
 | Q | Default (decision) | What would change it |
 |---|---|---|
-| 1 Form providers | Generic iframe/snippet + Tally, Typeform, Jotform, Google Forms presets (D-020) | **Tell me which providers you use**, especially local COD order-form services; M3 presets those first |
+| 1 Form providers | Storelink (the owner's), plus generic iframe/snippet, Tally and Google Forms presets (D-020, D-048) | Another provider the owner starts using |
 | 2 Manual carousel data | Yes: repeater + bulk paste (D-023) | — |
 | 3 Carousel events | Meta `ViewContent`, GA4 `select_item`; configurable (D-019) | If your campaigns optimize for a different event |
 | 4 Hosted URL scheme | Path-based on a separate domain (D-022) | Need for per-page subdomains (wildcard DNS) |
@@ -177,7 +177,8 @@ Base UI primitives (dialogs, popovers) are UI building blocks, not builders or D
 - [ ] **Before M0:** OK to install Node 24 with nvm and make it the default (`nvm install 24 && nvm alias default 24`). Your other projects would also default to Node 24 (`nvm use 20` switches back per shell).
 - [ ] **During M0:** start Docker Desktop. Local Supabase and the database tests need it.
 - [ ] **By M2:** a GitHub repo, if you want CI to run (no `gh` CLI or remote yet), and a hosted Supabase project plus a Vercel project for deployment (env vars per `.env.example`, sign-ups disabled in the Supabase dashboard).
-- [ ] **By M3:** which form providers you use; your Meta Pixel / GA4 / Google Ads / GTM IDs for a manual end-to-end check.
+- [x] **By M3:** which form providers you use: Storelink (D-048).
+- [ ] **Before the first live test:** your Meta Pixel / GA4 / Google Ads / GTM IDs for a manual end-to-end check (Meta Pixel Helper, Tag Assistant); use the same Pixel ID in Storelink.
 - [ ] **By M5:** an Anthropic API key in the server env.
 - [ ] **By M7 (optional):** a domain for hosted pages, separate from the editor's.
 
@@ -189,5 +190,6 @@ Base UI primitives (dialogs, popovers) are UI building blocks, not builders or D
 | M1 Renderer | [`superpowers/plans/2026-10-21-m1-renderer.md`](superpowers/plans/2026-10-21-m1-renderer.md) | Ready for review |
 | M2a Editor core | [`superpowers/plans/2026-10-22-m2a-editor-core.md`](superpowers/plans/2026-10-22-m2a-editor-core.md) | Done |
 | M2b Direct manipulation | [`superpowers/plans/2026-10-22-m2b-direct-manipulation.md`](superpowers/plans/2026-10-22-m2b-direct-manipulation.md) | Done |
-| M3 Export + tracking | [`superpowers/plans/2026-10-24-m3-export-tracking.md`](superpowers/plans/2026-10-24-m3-export-tracking.md) | In progress |
-| M4–M7 | Written at the start of each milestone | — |
+| M3 Export + tracking | [`superpowers/plans/2026-10-24-m3-export-tracking.md`](superpowers/plans/2026-10-24-m3-export-tracking.md) | Done |
+| M4 Production workflow | Written at the start of the milestone | Next |
+| M5–M7 | Written at the start of each milestone | — |

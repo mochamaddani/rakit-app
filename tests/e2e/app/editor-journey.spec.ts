@@ -14,6 +14,22 @@ import {
 } from './helpers';
 
 test.beforeAll(ensureOwner);
+
+/**
+ * Polls until the canvas shows the step, and returns the state that passed: reading again could
+ * catch the canvas between two patches (the old journey's flake, M2b review M6).
+ */
+async function settled<S>(read: () => Promise<S>, ready: (s: S) => boolean): Promise<S> {
+  let passed: S | undefined;
+  await expect
+    .poll(async () => {
+      const s = await read();
+      if (ready(s)) passed = s;
+      return passed !== undefined;
+    })
+    .toBe(true);
+  return passed!;
+}
 test.beforeEach(async ({ page }) => {
   await resetOwnerPages();
   await signIn(page);
@@ -34,19 +50,21 @@ test('create → add Hero and Carousel → edit → reorder items and blocks →
     headlines: await frame.locator('h1, h2.lp-h1').allTextContents(),
     cards: await frame.locator('.lp-card__title').allTextContents(),
   });
-  const steps = [await state()];
-  const step = async () => steps.push(await state());
+  type State = Awaited<ReturnType<typeof state>>;
+  const steps: State[] = [await state()];
+  // A step is captured once the canvas shows it (M2b review M6): edits sync asynchronously.
+  const step = async (ready: (s: State) => boolean) => steps.push(await settled(state, ready));
 
   await addBlock(page, 'Hero');
-  await step();
+  await step((s) => s.types.join() === 'hero');
   await addBlock(page, 'Product Carousel');
-  await step();
+  await step((s) => s.types.join() === 'hero,product-carousel');
   await canvas(page)
     .locator('[data-lp-type="hero"]')
     .click({ position: { x: 8, y: 8 } });
   // exact: getByLabel matches substrings, and "Subheadline" contains "headline".
   await page.getByLabel('Headline', { exact: true }).fill('Botol anti bocor');
-  await step();
+  await step((s) => s.headlines.includes('Botol anti bocor'));
   await canvas(page)
     .locator('[data-lp-type="product-carousel"]')
     .click({ position: { x: 8, y: 8 } });
@@ -56,12 +74,12 @@ test('create → add Hero and Carousel → edit → reorder items and blocks →
     .nth(2)
     .getByRole('button', { name: 'Move item up' })
     .click();
-  await step();
+  await step((s) => s.cards.join() === 'Product 1,Product 3,Product 2');
   await page
     .getByRole('toolbar', { name: 'Block actions' })
     .getByRole('button', { name: 'Move up' })
     .click();
-  await step();
+  await step((s) => s.types.join() === 'product-carousel,hero');
 
   for (let i = steps.length - 2; i >= 0; i--) {
     await page.getByRole('button', { name: 'Undo' }).click();
@@ -113,10 +131,7 @@ test('M2 exit: add by drag, edit inline and in the inspector, reorder items and 
   type State = Awaited<ReturnType<typeof state>>;
   const steps: State[] = [await state()];
   // A step is captured once the canvas shows it: drags and inline edits sync asynchronously.
-  const step = async (ready: (s: State) => boolean) => {
-    await expect.poll(async () => ready(await state())).toBe(true);
-    steps.push(await state());
-  };
+  const step = async (ready: (s: State) => boolean) => steps.push(await settled(state, ready));
   const grip = (label: string) => paletteItem(page, label).locator('[data-drag-handle]');
 
   await dragWithMouse(page, await pointIn(grip('Hero'), 0.5, 0.5), await pointIn(iframe, 0.5, 0.3));
