@@ -52,7 +52,8 @@ const DATA_KEY = /^[a-z][a-z0-9-]*$/;
 export function renderCta(cta: Cta, ctx: RenderContext, extras: CtaExtras = {}): SafeHtml {
   const classes = ['lp-btn', `lp-btn--${cta.variant}`, extras.className].filter(Boolean).join(' ');
   const newTab = cta.link.kind === 'url' && cta.link.newTab;
-  const data = Object.entries(extras.dataAttrs ?? {})
+  const attrs = { ...extras.dataAttrs, ...(cta.event !== 'none' && { 'lp-event': cta.event }) };
+  const data = Object.entries(attrs)
     .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
     .map(([key, value]) => {
       if (!DATA_KEY.test(key)) throw new Error(`Invalid data attribute name: ${key}`);

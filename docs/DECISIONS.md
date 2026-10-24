@@ -70,13 +70,15 @@ Trailing sections whose blocks all declare `landmark: 'footer'` render after `</
 ## D-018 Product Carousel scope split — Accepted
 **M1** covers the scroll-snap layout, cards (image, title, description, price, compare-at price, discount badge, badge, rating and review count, CTA), arrows, dots, loop, keyboard, accessibility, eager/lazy images and per-instance layout. **M4** adds autoplay, bulk paste, tracking events and the JSON-LD toggle (PRD §10). M4 fields arrive with Zod defaults, so M1 documents still parse.
 
-## D-019 Tracking event mapping (PRD Q3) — Proposed (M3/M4)
+## D-019 Tracking event mapping (PRD Q3) — Accepted (M3; carousel M4)
 | Trigger | Meta Pixel | GA4 | Google Ads |
 |---|---|---|---|
 | Page load | `PageView` | `page_view` (sent by `gtag('config')`) | — |
 | Carousel card CTA | `ViewContent` `{content_ids:[itemId], content_name, content_type:'product', value: price, currency}` | `select_item` `{item_list_id: blockId, item_list_name: heading, items:[{item_id, item_name, price, index}]}` | — |
-| Other CTA (hero, pricing, sticky) | none by default; configurable (`Contact`, `InitiateCheckout`, `Lead`, custom) | none by default; configurable | — |
+| Other CTA (hero, pricing, sticky) | none by default; per CTA `Lead`, `Contact` or `InitiateCheckout` | `generate_lead`, `contact`, `begin_checkout` | `conversion` for `Lead` |
 | Form submit (when detectable) | `Lead` | `generate_lead` | `conversion` `{send_to: 'AW-…/label'}` |
+
+GTM receives the GA4 names: `dataLayer.push({ event: 'generate_lead', event_id, … })`. Google Ads fires `conversion` (`transaction_id` = the event id) on every `Lead` when a lead conversion label is set. The carousel row arrives in M4 (`ViewContent` → `select_item`). Revised in M3 (D-047).
 
 The carousel default is `ViewContent`, not `AddToCart`: a card click shows interest in a product, and there is no cart, so `AddToCart` would feed the ad algorithm a misleading signal. The event is configurable per carousel.
 
@@ -256,3 +258,10 @@ Consequences:
 - **Storage:** each export's HTML goes to the private `page-versions` bucket (20 MiB per object, `text/html` only) at `<workspaceId>/<pageId>/<versionId>.html`. Members of the workspace may insert, read and delete there; nobody may update, so a stored export never changes (D-006).
 - **Recording:** the browser uploads the file, then calls `record_page_version` (security invoker, so RLS applies). In one transaction it inserts the `page_versions` row (`kind 'export'`, hash, size, export settings and the draft revision the export was built from) and points the page at it. A `draft` page becomes `exported`; `live` and `archived` pages keep their status. A trigger rejects any `html_path` other than the row's own `<workspace>/<page>/<version>.html`.
 - **Own versions only:** `pages (latest_version_id, id)` references `page_versions (id, page_id)`, so a page can only point at one of its own versions (M0/M1 review m-6).
+
+## D-047 Tracking in exported pages — Accepted (M3)
+- **Export only.** Vendor tags, the custom head/body code and the page runtime appear only in `mode: 'export'`; the editor preview never runs third-party code (Plan §2.10). The export dialog's "Include tracking" switch (`renderPage(…, { tracking: false })`) drops vendor tags and custom code but keeps the runtime's passthrough.
+- **Head order:** charset, viewport, title, description, robots, `og:title`, `og:description`, `og:type`, `og:image` (absolute http(s) only), favicon link, `<style>`, then Meta base code (`fbq('init')` and `PageView` with an event id computed in the browser), one `gtag.js` loader (the GA4 id, else the Ads id) with a `config` per id, the GTM snippet, and the custom head code. `<body>` starts with the GTM and Meta `<noscript>` fallbacks; the custom body code comes after the footer and before the page script.
+- **Page runtime** (`lib/tracking/snippet.js`, ≤ 2048 bytes minified, no globals): one dispatcher for `lp:track` DOM events (`{ name, params }`) and clicks on `[data-lp-event]`. Each event gets an id (`<ms base36>-<8 random base36>`, `crypto.getRandomValues`) shared by `fbq('track', name, params, { eventID })`, `gtag('event', gaName, { …params, event_id })`, the GTM push (with `data-lp-gtm` on `<body>`) and the Ads conversion (with `data-lp-conversion`). Blocks fire events by dispatching `lp:track`.
+- **Passthrough:** every `utm_*` key plus `gclid`, `fbclid`, `wbraid`, `gbraid` (at most 20 keys, values ≤ 500 characters) is read from the URL, merged over `sessionStorage['lp-params']`, and appended to `a[data-lp-cta]` web links and `iframe[data-lp-pass]` sources that don't already have that key. The hash and other parameters stay as typed; `#…`, `tel:` and `mailto:` links are untouched.
+- **When it ships:** with vendor ids (and tracking on), a CTA to a web URL, a CTA event or a passthrough iframe. A page whose CTAs only jump within the page still ships no JavaScript.

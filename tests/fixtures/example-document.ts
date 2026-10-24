@@ -390,3 +390,79 @@ export const stressDocument = {
     },
   ],
 };
+
+/** Every tracking id and both custom code fields, a CTA with an event and a web link (M3). */
+export const trackingDocument = {
+  schemaVersion: 1,
+  settings: {
+    lang: 'id',
+    seo: {
+      title: 'Teh Kumis Kucing',
+      description: 'Teh herbal untuk teman santai.',
+      ogImage: { src: 'https://cdn.example/og.webp', alt: '' },
+      favicon: { src: svgPlaceholder('T', '#0F766E'), alt: '' },
+    },
+    defaultCta: { kind: 'section', sectionId: 'sOrder' },
+    tracking: {
+      metaPixelId: '1234567890',
+      ga4Id: 'G-TEST1234',
+      googleAdsId: 'AW-123456789',
+      googleAdsLeadLabel: 'abcdEF12',
+      gtmId: 'GTM-TEST12',
+      headCode: '<meta name="lp-head-code" content="1">',
+      bodyCode: '<div id="lp-body-code"></div>',
+    },
+  },
+  sections: [
+    {
+      id: 'sHero',
+      blocks: [
+        {
+          id: 'bHero',
+          type: 'hero',
+          props: {
+            headline: 'Teh Kumis Kucing',
+            primaryCta: {
+              label: 'Beli di toko',
+              link: { kind: 'url', url: 'https://shop.example/p?utm_source=google#buy' },
+              event: 'Contact',
+            },
+            secondaryCta: { label: 'Pesan', link: { kind: 'default' }, variant: 'secondary' },
+          },
+        },
+      ],
+    },
+    {
+      id: 'sOrder',
+      anchor: 'pesan',
+      blocks: [
+        {
+          id: 'bFaq',
+          type: 'faq',
+          props: {
+            heading: 'Tanya jawab',
+            items: [{ id: 'q1', question: 'Kirim?', answer: 'Ya.' }],
+          },
+        },
+      ],
+    },
+    {
+      id: 'sFoot',
+      blocks: [
+        {
+          id: 'bFoot',
+          type: 'footer',
+          props: {
+            links: [
+              {
+                id: 'l1',
+                label: 'Kebijakan Privasi',
+                link: { kind: 'url', url: 'https://example.com/privasi' },
+              },
+            ],
+          },
+        },
+      ],
+    },
+  ],
+};

@@ -44,7 +44,10 @@ export function html(strings: TemplateStringsArray, ...values: HtmlValue[]): Saf
   return new SafeHtml(out);
 }
 
-/** Only for our own generated CSS/JS and icon SVG constants (and, in M4, the Custom HTML block). */
+/**
+ * Only for our own generated CSS/JS and icon SVG constants, and for owner code that runs in export
+ * only (custom head/body code, Form Embed snippets; M4 adds the Custom HTML block).
+ */
 export function unsafeRaw(markup: string): SafeHtml {
   return new SafeHtml(markup);
 }

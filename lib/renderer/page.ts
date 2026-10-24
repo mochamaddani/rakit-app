@@ -1,5 +1,12 @@
 import { getBlockDefinition } from '@/lib/blocks/registry';
+import { asset as pageRuntime } from '@/lib/tracking/snippet.generated';
+import {
+  renderTrackingBodyStart,
+  renderTrackingHead,
+  trackingBodyAttributes,
+} from '@/lib/tracking/vendors';
 import type { BlockInstance, PageDocument, Section } from '@/lib/schema/document';
+import { hasTrackingIds, type PageSettings } from '@/lib/schema/settings';
 import { collectCss, collectJs } from './collect';
 import { createRenderContext, type RenderEnv, type RenderMode } from './context';
 import {
@@ -11,11 +18,14 @@ import {
   type SafeHtml,
 } from './html';
 import { t } from './i18n';
+import { sanitizeUrl } from './url';
 
 export interface RenderOptions {
   mode: RenderMode;
   /** Defaults to true for export and false for preview. */
   minify?: boolean;
+  /** Export only (default true): vendor tags and custom code. Preview never tracks (D-047). */
+  tracking?: boolean;
 }
 
 export interface BlockStat {
@@ -106,6 +116,29 @@ export function renderBody(doc: PageDocument, env: RenderEnv, renderOne: BlockRe
   return html`<main>${sections.slice(0, mainEnd)}</main>${sections.slice(mainEnd)}`;
 }
 
+const pick = (asset: { min: string; src: string }, minify: boolean) =>
+  minify ? asset.min : asset.src;
+
+/** A web CTA, a CTA event, a form iframe or vendor ids need the page runtime (D-047). */
+function needsPageRuntime(body: string, tracking: PageSettings['tracking'] | null): boolean {
+  if (tracking && hasTrackingIds(tracking)) return true;
+  return /<a [^>]*href="https?:[^"]*"[^>]*data-lp-cta|data-lp-event=|data-lp-pass/.test(body);
+}
+
+/** og:* tags and the favicon, in export only; og:image must be an absolute http(s) URL. */
+function socialTags(doc: PageDocument, title: string): SafeHtml {
+  const { seo } = doc.settings;
+  const image = seo.ogImage && sanitizeUrl(seo.ogImage.src, 'image');
+  const favicon = seo.favicon && sanitizeUrl(seo.favicon.src, 'image');
+  return html`<meta property="og:title" content="${title}">${
+    seo.description.trim()
+      ? html`<meta property="og:description" content="${seo.description}">`
+      : ''
+  }<meta property="og:type" content="website">${
+    image && /^https?:\/\//i.test(image) ? html`<meta property="og:image" content="${image}">` : ''
+  }${favicon ? html`<link rel="icon" href="${favicon}">` : ''}`;
+}
+
 /**
  * The page is data; this is the only function that turns it into HTML (PRD §5). Pure and
  * deterministic: no DOM, no I/O, no clock or randomness — the same document gives the same bytes.
@@ -131,17 +164,31 @@ export function renderPage(doc: PageDocument, options: RenderOptions): RenderRes
     });
     return markup;
   });
+  const exporting = mode === 'export';
+  const tracking = exporting && options.tracking !== false ? doc.settings.tracking : null;
   const css = collectCss(doc, { mode, minify });
-  const js = collectJs(doc, { minify });
+  const js = [
+    exporting && needsPageRuntime(body.value, tracking) ? pick(pageRuntime, minify) : '',
+    collectJs(doc, { minify }),
+  ]
+    .filter(Boolean)
+    .join('\n');
   const { lang, seo } = doc.settings;
+  const title = seo.title.trim() || t(lang, 'untitled');
 
-  const head = html`<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${
-    seo.title.trim() || t(lang, 'untitled')
-  }</title>${seo.description.trim() ? html`<meta name="description" content="${seo.description}">` : ''}${
-    seo.noindex ? html`<meta name="robots" content="noindex,nofollow">` : ''
-  }<style>${unsafeRaw(escapeInlineStyle(css))}</style>`;
+  const head = html`<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${title}</title>${
+    seo.description.trim() ? html`<meta name="description" content="${seo.description}">` : ''
+  }${seo.noindex ? html`<meta name="robots" content="noindex,nofollow">` : ''}${
+    exporting ? socialTags(doc, title) : ''
+  }<style>${unsafeRaw(escapeInlineStyle(css))}</style>${
+    tracking ? html`${renderTrackingHead(tracking)}${unsafeRaw(tracking.headCode)}` : ''
+  }`;
   const script = js ? html`<script>${unsafeRaw(escapeInlineScript(js))}</script>` : '';
-  const page = html`<!doctype html><html lang="${lang}"><head>${head}</head><body>${body}${script}</body></html>`;
+  const page = html`<!doctype html><html lang="${lang}"><head>${head}</head><body${
+    tracking ? trackingBodyAttributes(tracking) : ''
+  }>${tracking ? renderTrackingBodyStart(tracking) : ''}${body}${
+    tracking ? unsafeRaw(tracking.bodyCode) : ''
+  }${script}</body></html>`;
 
   return {
     html: page.value,

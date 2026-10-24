@@ -9,7 +9,7 @@ import {
   renderPage,
 } from '@/lib/renderer/page';
 import { parseDocument, type PageDocument } from '@/lib/schema/document';
-import { exampleDocument } from '@/tests/fixtures/example-document';
+import { exampleDocument, trackingDocument } from '@/tests/fixtures/example-document';
 import { validateHtml } from '@/tests/helpers/validate-html';
 
 const doc = parseDocument({
@@ -72,6 +72,10 @@ describe('renderPage', () => {
     const rnd = vi.spyOn(Math, 'random');
     expect(renderPage(doc, { mode: 'export' }).html).toBe(
       renderPage(structuredClone(doc), { mode: 'export' }).html,
+    );
+    const tracked = parseDocument(trackingDocument);
+    expect(renderPage(tracked, { mode: 'export' }).html).toBe(
+      renderPage(structuredClone(tracked), { mode: 'export' }).html,
     );
     expect(now).not.toHaveBeenCalled();
     expect(rnd).not.toHaveBeenCalled();
@@ -167,5 +171,107 @@ describe('block-level API', () => {
     expect(footerStart(sections(s('1', 'hero', hero), s('2', 'footer')))).toBe(1);
     expect(footerStart(sections(s('1', 'footer'), s('2', 'hero', hero)))).toBe(2);
     expect(footerStart(sections())).toBe(0);
+  });
+});
+
+describe('tracking and social tags', () => {
+  const tracked = parseDocument(trackingDocument);
+  const exported = (options: { tracking?: boolean } = {}) =>
+    renderPage(tracked, { mode: 'export', ...options }).html;
+
+  it('preview never carries vendor tags, custom code or the page runtime', () => {
+    const preview = renderPage(tracked, { mode: 'preview' }).html;
+    for (const needle of [
+      'fbq',
+      'googletagmanager',
+      'lp-head-code',
+      'lp-body-code',
+      'lp:track',
+      'og:',
+    ])
+      expect(preview, needle).not.toContain(needle);
+    expect(preview).not.toContain('data-lp-gtm');
+  });
+
+  it('export carries vendor tags, custom code, body attributes and the page runtime', () => {
+    const html = exported();
+    expect(html).toContain('fbq("init","1234567890")');
+    expect(html).toContain('<meta name="lp-head-code" content="1"></head>');
+    expect(html).toContain(
+      '<body data-lp-gtm data-lp-conversion="AW-123456789/abcdEF12"><noscript>',
+    );
+    expect(html).toMatch(/<div id="lp-body-code"><\/div><script>/);
+    expect(html).toContain('lp:track');
+    expect(html).toContain('data-lp-event="Contact"');
+  });
+
+  it('export with tracking off drops vendor tags and custom code but keeps passthrough', () => {
+    const html = exported({ tracking: false });
+    // The runtime itself mentions fbq/gtag; it only calls them when the vendor code defined them.
+    for (const needle of [
+      'fbq("init"',
+      'googletagmanager',
+      'lp-head-code',
+      'lp-body-code',
+      '<body data-lp',
+    ])
+      expect(html, needle).not.toContain(needle);
+    expect(html).toContain('lp-params');
+  });
+
+  it('export head order and social tags', () => {
+    const html = exported();
+    const head = html.slice(0, html.indexOf('</head>'));
+    const order = [
+      '<meta name="robots"',
+      '<meta property="og:title" content="Teh Kumis Kucing">',
+      '<meta property="og:description" content="Teh herbal untuk teman santai.">',
+      '<meta property="og:type" content="website">',
+      '<meta property="og:image" content="https://cdn.example/og.webp">',
+      '<link rel="icon" href="data:image/svg+xml;base64,',
+      '<style>',
+      'fbq(',
+      '<meta name="lp-head-code"',
+    ].map((needle) => head.indexOf(needle));
+    expect(order.every((at) => at >= 0)).toBe(true);
+    expect([...order].sort((a, b) => a - b)).toEqual(order);
+
+    const relative = parseDocument({
+      ...trackingDocument,
+      settings: {
+        ...trackingDocument.settings,
+        seo: { ogImage: { src: '/og.webp' }, favicon: { src: 'javascript:alert(1)' } },
+      },
+    });
+    const other = renderPage(relative, { mode: 'export' }).html;
+    expect(other).not.toContain('og:image');
+    expect(other).not.toContain('rel="icon"');
+    expect(other).toContain('<meta property="og:title" content="Tanpa judul">');
+  });
+
+  it('pages whose CTAs only jump within the page ship no runtime', () => {
+    const anchorOnly = parseDocument({
+      schemaVersion: 1,
+      sections: [
+        {
+          id: 'sHero',
+          blocks: [
+            {
+              id: 'bHero',
+              type: 'hero',
+              props: {
+                headline: 'Halo',
+                primaryCta: { label: 'Pesan', link: { kind: 'section', sectionId: 'sHero' } },
+              },
+            },
+          ],
+        },
+      ],
+    });
+    expect(renderPage(anchorOnly, { mode: 'export' }).html).not.toContain('<script');
+  });
+
+  it('trackingDocument exports valid HTML', async () => {
+    expect(await validateHtml(exported())).toEqual([]);
   });
 });
