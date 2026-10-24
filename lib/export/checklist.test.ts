@@ -169,4 +169,22 @@ describe('pre-export checklist', () => {
       message: 'The file is 3.2 MB, over 3 MB. Use Hosted images.',
     });
   });
+
+  it('an empty or unreadable form is named, and gets no signal warning', () => {
+    for (const props of [
+      { mode: 'snippet', code: '  ' },
+      { mode: 'iframe', url: 'tally.so/r/abc' },
+    ]) {
+      const doc = variant((raw) => {
+        form(raw).props = props;
+      });
+      expect(item(input(doc), 'formMissing')).toEqual({
+        id: 'formMissing',
+        level: 'hard',
+        message: 'A form has no embed code or address, so the page shows "Form address missing".',
+        blockIds: ['bForm'],
+      });
+      expect(ids(input(doc))).not.toContain('formSignal');
+    }
+  });
 });

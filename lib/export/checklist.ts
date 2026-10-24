@@ -1,4 +1,4 @@
-import { detectFormProvider } from '@/lib/blocks/form-embed/providers';
+import { detectFormProvider, formIsMissing } from '@/lib/blocks/form-embed/providers';
 import type { FormEmbedProps } from '@/lib/blocks/form-embed/schema';
 import type { FooterProps } from '@/lib/blocks/footer/schema';
 import type { BlockInstance, PageDocument } from '@/lib/schema/document';
@@ -65,10 +65,20 @@ export function preExportChecklist(input: ChecklistInput): ChecklistItem[] {
     warn('privacy', 'Add a privacy policy link to the footer.');
   }
 
-  const forms = blocks
-    .filter((block) => block.type === 'form-embed')
+  const allForms = blocks.filter((block) => block.type === 'form-embed');
+  if (allForms.length === 0) warn('form', 'The page has no form.');
+  const missing = allForms.filter((block) => formIsMissing(block.props as FormEmbedProps));
+  if (missing.length > 0) {
+    items.push({
+      id: 'formMissing',
+      level: 'hard',
+      message: 'A form has no embed code or address, so the page shows "Form address missing".',
+      blockIds: missing.map((block) => block.id),
+    });
+  }
+  const forms = allForms
+    .filter((block) => !missing.includes(block))
     .map((block) => ({ block, provider: detectFormProvider(block.props as FormEmbedProps) }));
-  if (forms.length === 0) warn('form', 'The page has no form.');
   for (const { provider } of forms.filter((form) => form.provider?.conversions === 'self')) {
     warn(
       'formSelf',

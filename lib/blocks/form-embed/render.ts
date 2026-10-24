@@ -1,16 +1,10 @@
 import type { RenderContext } from '@/lib/renderer/context';
 import { html, unsafeRaw, type SafeHtml } from '@/lib/renderer/html';
-import { sanitizeUrl } from '@/lib/renderer/url';
-import { detectFormProvider } from './providers';
+import { detectFormProvider, webLink } from './providers';
 import type { FormEmbedProps } from './schema';
 
 // An external form (docs/DECISIONS.md D-048). Export carries the iframe or the provider's code;
 // preview shows a placeholder, because third-party code never runs in the editor (Plan §2.10).
-
-const webLink = (value: string): string | null => {
-  const url = sanitizeUrl(value, 'link');
-  return url && /^https?:\/\//i.test(url) ? url : null;
-};
 
 function renderForm(props: FormEmbedProps, ctx: RenderContext): SafeHtml {
   const missing = html`<p class="lp-form__missing">${ctx.t('formMissing')}</p>`;

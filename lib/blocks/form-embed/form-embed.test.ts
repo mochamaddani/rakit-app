@@ -66,6 +66,12 @@ describe('form tracking note', () => {
     expect(note({ mode: 'snippet', code: '<div>x</div>' })).toBe(
       "This form doesn't report submits, so Lead can't fire here.",
     );
+    expect(note({ mode: 'snippet', code: '' })).toBe(
+      'Paste the embed code from your form provider.',
+    );
+    expect(note({ mode: 'iframe', url: 'tally.so/r/abc' })).toBe(
+      'Enter the form address, starting with https://.',
+    );
   });
 });
 

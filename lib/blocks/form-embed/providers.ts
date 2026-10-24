@@ -1,3 +1,4 @@
+import { sanitizeUrl } from '@/lib/renderer/url';
 import type { FormEmbedProps } from './schema';
 
 // Form providers the Form Embed knows (docs/DECISIONS.md D-048). The owner's order form is
@@ -99,8 +100,24 @@ export function detectFormProvider(
   return null;
 }
 
-/** Who sends this form's conversion, for the inspector and the pre-export checklist. */
+/** An absolute http(s) link that is safe to emit, or null. */
+export function webLink(value: string): string | null {
+  const url = sanitizeUrl(value, 'link');
+  return url && /^https?:\/\//i.test(url) ? url : null;
+}
+
+/** True when export would show "Form address missing" instead of a form. */
+export function formIsMissing(props: Pick<FormEmbedProps, 'mode' | 'url' | 'code'>): boolean {
+  return props.mode === 'snippet' ? !props.code.trim() : webLink(props.url) === null;
+}
+
+/** What the form still needs, or who sends its conversion; for the inspector. */
 export function formTrackingNote(props: Pick<FormEmbedProps, 'mode' | 'url' | 'code'>): string {
+  if (formIsMissing(props)) {
+    return props.mode === 'snippet'
+      ? 'Paste the embed code from your form provider.'
+      : 'Enter the form address, starting with https://.';
+  }
   const provider = detectFormProvider(props);
   switch (provider?.conversions) {
     case 'self':
