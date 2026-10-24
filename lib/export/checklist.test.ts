@@ -23,8 +23,8 @@ const input = (doc: PageDocument, extra: Partial<ChecklistInput> = {}): Checklis
 });
 const ids = (i: ChecklistInput) => preExportChecklist(i).map((item) => item.id);
 const item = (i: ChecklistInput, id: string) => preExportChecklist(i).find((x) => x.id === id);
-const blocks = (raw: Raw) =>
-  raw.sections.flatMap((s) => s.blocks) as { type: string; props: Record<string, unknown> }[];
+type RawBlock = { id: string; type: string; props: Record<string, unknown> };
+const blocks = (raw: Raw) => raw.sections.flatMap((s) => s.blocks as unknown as RawBlock[]);
 const form = (raw: Raw) => blocks(raw).find((b) => b.type === 'form-embed')!;
 
 describe('pre-export checklist', () => {
