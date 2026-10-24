@@ -1,6 +1,6 @@
 'use client';
 
-import { ChevronLeft, Redo2, Settings2, Undo2 } from 'lucide-react';
+import { ChevronLeft, Download, Redo2, Settings2, Undo2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useRef, useState, type KeyboardEvent, type MouseEvent } from 'react';
@@ -18,6 +18,8 @@ import { Button } from '@/components/ui/button';
 import type { Viewport } from '@/lib/editor/store';
 import { cn } from '@/lib/utils';
 import { useEditor } from './editor-context';
+import { ExportDialog } from './export/export-dialog';
+import { ExportStatus } from './export/export-status';
 import { SaveStatus } from './save-status';
 import { useAutosaveApi } from './use-autosave';
 
@@ -35,6 +37,7 @@ export function TopBar({ name }: { name: string }) {
   const { autosave } = useAutosaveApi();
   const router = useRouter();
   const [confirmLeave, setConfirmLeave] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   // Save what is pending before leaving (at most 3 s), so the dashboard shows the latest edit,
   // and ask first when it could not be saved (offline, failed or conflicting).
@@ -58,6 +61,7 @@ export function TopBar({ name }: { name: string }) {
       </Link>
       <h1 className="min-w-0 truncate text-sm font-semibold">{name}</h1>
       <SaveStatus />
+      <ExportStatus />
       {notice ? <span className="truncate text-xs text-amber-700">{notice}</span> : null}
       <div className="ml-auto flex items-center gap-2">
         <HistoryButtons />
@@ -66,7 +70,12 @@ export function TopBar({ name }: { name: string }) {
           <Settings2 aria-hidden="true" />
           Page settings
         </Button>
+        <Button size="sm" onClick={() => setExporting(true)}>
+          <Download aria-hidden="true" />
+          Export
+        </Button>
       </div>
+      <ExportDialog open={exporting} onOpenChange={setExporting} />
       <LeaveDialog
         open={confirmLeave}
         onOpenChange={setConfirmLeave}

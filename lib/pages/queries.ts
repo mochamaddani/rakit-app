@@ -1,5 +1,6 @@
 import 'server-only';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import type { LatestExport } from '@/lib/export/record';
 import type { Database } from '@/lib/supabase/database.types';
 
 // Reads run as the signed-in user, so RLS scopes every query to their workspace.
@@ -40,8 +41,11 @@ export async function listPages(supabase: Supabase): Promise<PageSummary[]> {
 export interface EditorPageRecord {
   id: string;
   name: string;
+  /** Names the exported file (`<slug>.html`). */
+  slug: string;
   currentDraft: unknown;
   draftRevision: number;
+  latestExport: LatestExport | null;
 }
 
 /** null when the page does not exist or belongs to someone else. `pageId` must be a UUID. */
@@ -51,7 +55,7 @@ export async function getPageForEditor(
 ): Promise<EditorPageRecord | null> {
   const { data, error } = await supabase
     .from('pages')
-    .select('id, name, current_draft, draft_revision')
+    .select('id, name, slug, current_draft, draft_revision, latest_version_id')
     .eq('id', pageId)
     .maybeSingle();
   if (error) throw error;
@@ -59,9 +63,28 @@ export async function getPageForEditor(
   return {
     id: data.id,
     name: data.name,
+    slug: data.slug,
     currentDraft: data.current_draft,
     draftRevision: data.draft_revision,
+    latestExport: data.latest_version_id
+      ? await getLatestExport(supabase, data.latest_version_id)
+      : null,
   };
+}
+
+async function getLatestExport(
+  supabase: Supabase,
+  versionId: string,
+): Promise<LatestExport | null> {
+  const { data, error } = await supabase
+    .from('page_versions')
+    .select('id, created_at, draft_revision')
+    .eq('id', versionId)
+    .maybeSingle();
+  if (error) throw error;
+  return (
+    data && { versionId: data.id, createdAt: data.created_at, draftRevision: data.draft_revision }
+  );
 }
 
 /** The signed-in user's workspace (one per user, created by a trigger at sign-up). */

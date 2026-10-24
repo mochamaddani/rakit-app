@@ -40,7 +40,7 @@ export async function createPage(_prev: ActionState, formData: FormData): Promis
       .insert({
         workspace_id: workspaceId,
         name: name.data,
-        // Slugs name the exported file; renaming a page keeps it (M3 makes it editable).
+        // Slugs name the exported file; renaming a page keeps it (the export dialog edits it).
         slug: uniqueSlug(base, new Set(taken.map((row) => row.slug))),
         current_draft: createEmptyDocument() as unknown as NonNullable<Json>,
         schema_version: CURRENT_SCHEMA_VERSION,
@@ -73,6 +73,38 @@ export async function renamePage(_prev: ActionState, formData: FormData): Promis
   if (data.length === 0) return { error: GONE };
   revalidatePath('/dashboard');
   return { error: null, done: true };
+}
+
+const SlugSchema = z
+  .string()
+  .max(80)
+  .regex(/^[a-z0-9]+(-[a-z0-9]+)*$/);
+
+/** Renames the exported file (`<slug>.html`); slugs are unique per workspace. */
+export async function updatePageSlug(
+  pageId: string,
+  slug: string,
+): Promise<{ ok: true; slug: string } | { ok: false; error: string }> {
+  await requireUser();
+  if (!PageIdSchema.safeParse(pageId).success) return { ok: false, error: GONE };
+  const parsed = SlugSchema.safeParse(slug);
+  if (!parsed.success) return { ok: false, error: 'Use lowercase letters, numbers and dashes' };
+
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase
+    .from('pages')
+    .update({ slug: parsed.data })
+    .eq('id', pageId)
+    .select('slug');
+  if (error) {
+    return {
+      ok: false,
+      error: error.code === UNIQUE_VIOLATION ? 'Another page already uses this file name' : FAILED,
+    };
+  }
+  if (data.length === 0) return { ok: false, error: GONE };
+  revalidatePath('/dashboard');
+  return { ok: true, slug: parsed.data };
 }
 
 export async function deletePage(_prev: ActionState, formData: FormData): Promise<ActionState> {

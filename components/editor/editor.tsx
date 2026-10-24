@@ -1,11 +1,13 @@
 'use client';
 
 import { useRef } from 'react';
+import type { LatestExport } from '@/lib/export/record';
 import type { PageDocument } from '@/lib/schema/document';
 import { Canvas } from './canvas/canvas';
 import type { CanvasHandle } from './canvas/canvas-handle';
 import { DragProvider } from './dnd/drag-context';
 import { EditorProvider, useEditor, useEditorSession } from './editor-context';
+import { ExportProvider } from './export/export-context';
 import { Inspector } from './inspector/inspector';
 import { Palette } from './palette';
 import { SaveBanner } from './save-banner';
@@ -14,14 +16,21 @@ import { AutosaveContext, useAutosave } from './use-autosave';
 import { useShortcuts } from './use-shortcuts';
 
 export interface EditorProps {
-  page: { id: string; name: string };
+  page: { id: string; name: string; slug: string };
+  latestExport: LatestExport | null;
   initialDoc: PageDocument;
   initialRevision: number;
   workspaceId: string;
 }
 
 /** Three panes: block palette, live canvas, inspector. */
-export function Editor({ page, initialDoc, initialRevision, workspaceId }: EditorProps) {
+export function Editor({
+  page,
+  latestExport,
+  initialDoc,
+  initialRevision,
+  workspaceId,
+}: EditorProps) {
   return (
     <EditorProvider
       pageId={page.id}
@@ -29,7 +38,9 @@ export function Editor({ page, initialDoc, initialRevision, workspaceId }: Edito
       initialRevision={initialRevision}
       workspaceId={workspaceId}
     >
-      <EditorShell page={page} />
+      <ExportProvider pageId={page.id} slug={page.slug} latest={latestExport}>
+        <EditorShell page={page} />
+      </ExportProvider>
     </EditorProvider>
   );
 }

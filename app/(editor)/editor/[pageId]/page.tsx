@@ -19,7 +19,8 @@ export default async function EditorPage({ params }: PageProps<'/editor/[pageId]
   if (!parsed.ok) return <DraftError name={page.name} message={parsed.error.message} />;
   return (
     <Editor
-      page={{ id: page.id, name: page.name }}
+      page={{ id: page.id, name: page.name, slug: page.slug }}
+      latestExport={page.latestExport}
       initialDoc={parsed.doc}
       initialRevision={page.draftRevision}
       workspaceId={await getWorkspaceId(supabase)}

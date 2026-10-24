@@ -52,11 +52,35 @@ export async function ownerWorkspaceId(): Promise<string> {
 }
 
 export async function resetOwnerPages(): Promise<void> {
-  const { error } = await adminClient()
-    .from('pages')
-    .delete()
-    .eq('workspace_id', await ownerWorkspaceId());
+  const workspace = await ownerWorkspaceId();
+  const { error } = await adminClient().from('pages').delete().eq('workspace_id', workspace);
   if (error) throw error;
+  // Stored exports live under '<workspace>/<page>/' and outlive their rows here.
+  const versions = adminClient().storage.from('page-versions');
+  const { data: folders } = await versions.list(workspace);
+  for (const folder of folders ?? []) {
+    const { data: files } = await versions.list(`${workspace}/${folder.name}`);
+    const paths = (files ?? []).map((file) => `${workspace}/${folder.name}/${file.name}`);
+    if (paths.length > 0) await versions.remove(paths);
+  }
+}
+
+/** Newest first: the page's recorded versions as the server stores them. */
+export async function versionsOf(pageId: string) {
+  const { data, error } = await adminClient()
+    .from('page_versions')
+    .select('id, html_path, html_sha256, byte_size, draft_revision, export_settings')
+    .eq('page_id', pageId)
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return data;
+}
+
+/** A stored export file's text (admin client). */
+export async function storedExport(path: string): Promise<string> {
+  const { data, error } = await adminClient().storage.from('page-versions').download(path);
+  if (error) throw error;
+  return data.text();
 }
 
 /** Inserts a page whose draft is `document` exactly as given (it may be invalid on purpose). */

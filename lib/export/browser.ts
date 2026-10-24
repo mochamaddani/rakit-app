@@ -1,4 +1,10 @@
+import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Database, Json } from '@/lib/supabase/database.types';
 import type { BuildDeps, FetchedImage } from './build';
+import type { RecordDeps } from './record';
+
+/** Private bucket of exported files, '<workspace>/<page>/<version>.html' (D-049). */
+export const VERSION_BUCKET = 'page-versions';
 
 // Browser-only export dependencies (covered by the app e2e tests): image downloads without
 // credentials, and favicon rasterizing on a canvas.
@@ -42,3 +48,46 @@ async function rasterizeFavicon(image: FetchedImage & { ok: true }): Promise<str
 }
 
 export const browserExportDeps: BuildDeps = { fetchImage, rasterizeFavicon };
+
+/** Recording through the signed-in user's Supabase client (D-049 policies apply). */
+export function supabaseRecordDeps(supabase: SupabaseClient<Database>): RecordDeps {
+  const bucket = () => supabase.storage.from(VERSION_BUCKET);
+  return {
+    async upload(path, html) {
+      const { error } = await bucket().upload(path, html, {
+        contentType: 'text/html',
+        upsert: false,
+      });
+      return error ? { ok: false, message: error.message } : { ok: true };
+    },
+    async rpc(args) {
+      const { data, error } = await supabase.rpc('record_page_version', {
+        p_id: args.id,
+        p_page_id: args.pageId,
+        p_document: args.document as unknown as Json,
+        p_html_path: args.htmlPath,
+        p_export_settings: args.exportSettings as unknown as Json,
+        p_byte_size: args.byteSize,
+        p_html_sha256: args.sha256,
+        p_draft_revision: args.draftRevision,
+      });
+      return error ? { ok: false, message: error.message } : { ok: true, createdAt: data };
+    },
+    async remove(path) {
+      await bucket().remove([path]);
+    },
+    newId: () => crypto.randomUUID(),
+  };
+}
+
+/** Saves text as a file through a Blob link: the HTML never opens on the editor origin (D-022). */
+export function saveFile(text: string, fileName: string): void {
+  const url = URL.createObjectURL(new Blob([text], { type: 'text/html' }));
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = fileName;
+  document.body.append(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 10_000);
+}
