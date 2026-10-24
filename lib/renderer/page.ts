@@ -169,7 +169,7 @@ export function renderPage(doc: PageDocument, options: RenderOptions): RenderRes
   const css = collectCss(doc, { mode, minify });
   const js = [
     exporting && needsPageRuntime(body.value, tracking) ? pick(pageRuntime, minify) : '',
-    collectJs(doc, { minify }),
+    collectJs(doc, { mode, minify }),
   ]
     .filter(Boolean)
     .join('\n');

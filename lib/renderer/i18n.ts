@@ -10,7 +10,9 @@ export type MessageKey =
   | 'reviews'
   | 'originalPrice'
   | 'links'
-  | 'untitled';
+  | 'untitled'
+  | 'orderForm'
+  | 'formMissing';
 
 const MESSAGES: Record<Lang, Record<MessageKey, string>> = {
   id: {
@@ -24,6 +26,8 @@ const MESSAGES: Record<Lang, Record<MessageKey, string>> = {
     originalPrice: 'Harga normal',
     links: 'Tautan',
     untitled: 'Tanpa judul',
+    orderForm: 'Formulir pemesanan',
+    formMissing: 'Alamat formulir belum diisi.',
   },
   en: {
     products: 'Products',
@@ -36,6 +40,8 @@ const MESSAGES: Record<Lang, Record<MessageKey, string>> = {
     originalPrice: 'Original price',
     links: 'Links',
     untitled: 'Untitled',
+    orderForm: 'Order form',
+    formMissing: 'Form address missing.',
   },
 };
 

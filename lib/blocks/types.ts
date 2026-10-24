@@ -10,6 +10,8 @@ export interface BlockSnippet<P> {
   readonly asset: GeneratedAsset;
   /** Ship the script only when some instance needs it (default: always). */
   isNeeded?(props: P): boolean;
+  /** Ship it in exported pages only: it talks to third-party code the preview never runs. */
+  readonly exportOnly?: boolean;
 }
 
 // Pure block definition: no React, usable by the renderer, the AI catalog and the importer

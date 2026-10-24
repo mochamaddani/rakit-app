@@ -25,11 +25,11 @@ export function collectCss(doc: PageDocument, opts: { mode: RenderMode; minify: 
   return parts.join(opts.minify ? '' : '\n');
 }
 
-export function collectJs(doc: PageDocument, opts: { minify: boolean }): string {
+export function collectJs(doc: PageDocument, opts: { mode: RenderMode; minify: boolean }): string {
   const scripts: string[] = [];
   for (const type of presentBlockTypes(doc)) {
     const snippet = getBlockDefinition(type)?.snippet;
-    if (!snippet) continue;
+    if (!snippet || (snippet.exportOnly && opts.mode === 'preview')) continue;
     const needed = doc.sections.some((section) =>
       section.blocks.some((b) => b.type === type && snippet.isNeeded?.(b.props) !== false),
     );

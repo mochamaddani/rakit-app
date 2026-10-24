@@ -1,0 +1,24 @@
+.lp-form__head {
+  margin-bottom: 16px;
+}
+.lp-form__frame {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  border: 0;
+}
+.lp-form__missing,
+.lp-form__ph {
+  padding: 24px 16px;
+  border: 2px dashed var(--lp-line);
+  border-radius: var(--lp-radius);
+  text-align: center;
+  color: var(--lp-fg-muted);
+}
+.lp-form__ph p {
+  margin: 0;
+}
+.lp-form__ph-title {
+  font-weight: 700;
+  color: var(--lp-fg);
+}

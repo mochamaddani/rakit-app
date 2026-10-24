@@ -437,12 +437,9 @@ export const trackingDocument = {
       anchor: 'pesan',
       blocks: [
         {
-          id: 'bFaq',
-          type: 'faq',
-          props: {
-            heading: 'Tanya jawab',
-            items: [{ id: 'q1', question: 'Kirim?', answer: 'Ya.' }],
-          },
+          id: 'bForm',
+          type: 'form-embed',
+          props: { heading: 'Pesan di sini', mode: 'iframe', url: 'https://tally.so/r/abc' },
         },
       ],
     },

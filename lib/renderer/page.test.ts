@@ -186,8 +186,11 @@ describe('tracking and social tags', () => {
       'googletagmanager',
       'lp-head-code',
       'lp-body-code',
-      'lp:track',
+      // The page runtime (the Form Embed's own snippet may ship; it has no form to act on here).
+      'lp-params',
       'og:',
+      '<iframe',
+      'tally.so',
     ])
       expect(preview, needle).not.toContain(needle);
     expect(preview).not.toContain('data-lp-gtm');

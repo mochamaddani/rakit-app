@@ -27,7 +27,7 @@ export function canvasState(doc: PageDocument, cache: BlockHtmlCache): CanvasSta
   }).value;
   return {
     css: collectCss(doc, { mode: 'preview', minify: false }),
-    js: collectJs(doc, { minify: false }),
+    js: collectJs(doc, { mode: 'preview', minify: false }),
     lang: doc.settings.lang,
     skeleton,
     blocks,

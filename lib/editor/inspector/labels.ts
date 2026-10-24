@@ -44,6 +44,11 @@ const FIELD_LABELS: Readonly<Record<string, string>> = {
   ogImage: 'Social share image',
   favicon: 'Favicon',
   event: 'Tracking event',
+  mode: 'Form type',
+  url: 'Form address',
+  code: 'Embed code',
+  thankYouUrl: 'Thank-you page address',
+  height: 'Height (px)',
 };
 
 const OPTION_LABELS: Readonly<Record<string, Readonly<Record<string, string>>>> = {
@@ -53,6 +58,7 @@ const OPTION_LABELS: Readonly<Record<string, Readonly<Record<string, string>>>> 
   icon: { none: 'No icon' },
   tone: { base: 'Page', primary: 'Primary color' },
   event: { none: 'No event', InitiateCheckout: 'Initiate checkout' },
+  mode: { snippet: 'Embed code', iframe: 'Form address (iframe)' },
 };
 
 /** "compareAt" → "Compare at"; "neo-grotesque" → "Neo-grotesque". */

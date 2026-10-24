@@ -8,6 +8,7 @@ import { describeFields } from '@/lib/editor/inspector/fields';
 import { findBlock } from '@/lib/editor/structure';
 import { BlockStyleSchema } from '@/lib/schema/primitives';
 import { useEditor } from '../editor-context';
+import { BlockNote } from './block-note';
 import { FieldList } from './field-list';
 import { SectionFields } from './section-panel';
 import type { FieldActions } from './types';
@@ -76,6 +77,7 @@ export function BlockPanel({ blockId }: { blockId: string }) {
             actions={content}
             context={context}
           />
+          <BlockNote type={block.type} props={block.props} />
         </TabsContent>
         <TabsContent value="style" className="pt-2">
           <FieldList

@@ -10,9 +10,13 @@ const FB_STUB = `window.__fb = [];
   queued.forEach(function (args) { fbq.callMethod.apply(fbq, args); });
 })();`;
 
-const ALLOWED = ['https://connect.facebook.net/', 'https://www.googletagmanager.com/'];
+const ALLOWED = [
+  'https://connect.facebook.net/',
+  'https://www.googletagmanager.com/',
+  'https://tally.so/',
+];
 
-/** Routes vendor scripts to stubs; returns the list of other non-file requests the page made. */
+/** Routes vendor scripts (and the fixture's Tally form) to stubs; returns any other requests made. */
 export async function stubVendors(page: Page): Promise<string[]> {
   const unexpected: string[] = [];
   await page.route('https://connect.facebook.net/**', (route) =>
@@ -20,6 +24,10 @@ export async function stubVendors(page: Page): Promise<string[]> {
   );
   await page.route('https://www.googletagmanager.com/**', (route) =>
     route.fulfill({ contentType: 'text/javascript', body: '' }),
+  );
+  // The fixture's order form; specs that submit it route tally.so again (the newest route wins).
+  await page.route('https://tally.so/**', (route) =>
+    route.fulfill({ contentType: 'text/html', body: '<!doctype html><title>Tally</title>' }),
   );
   page.on('request', (request) => {
     const url = request.url();
