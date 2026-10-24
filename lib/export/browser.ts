@@ -11,18 +11,35 @@ export const VERSION_BUCKET = 'page-versions';
 
 const FAVICON_PX = 64;
 
-async function fetchImage(url: string): Promise<FetchedImage> {
-  try {
-    const response = await fetch(url, { mode: 'cors', credentials: 'omit' });
-    if (!response.ok) return { ok: false, reason: `HTTP ${response.status}` };
-    return {
-      ok: true,
-      mime: response.headers.get('content-type') ?? '',
-      bytes: new Uint8Array(await response.arrayBuffer()),
-    };
-  } catch (error) {
-    return { ok: false, reason: error instanceof Error ? error.message : String(error) };
-  }
+/** A host that accepts the connection but never answers must not hang the export (D-046). */
+export const IMAGE_TIMEOUT_MS = 10_000;
+
+/** Downloads an image without credentials; gives up after 10 s. */
+export function createFetchImage(
+  fetchImpl: typeof fetch = (input, init) => fetch(input, init),
+): (url: string) => Promise<FetchedImage> {
+  return async (url) => {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), IMAGE_TIMEOUT_MS);
+    try {
+      const response = await fetchImpl(url, {
+        mode: 'cors',
+        credentials: 'omit',
+        signal: controller.signal,
+      });
+      if (!response.ok) return { ok: false, reason: `HTTP ${response.status}` };
+      return {
+        ok: true,
+        mime: response.headers.get('content-type') ?? '',
+        bytes: new Uint8Array(await response.arrayBuffer()),
+      };
+    } catch (error) {
+      if (controller.signal.aborted) return { ok: false, reason: 'No answer within 10 s' };
+      return { ok: false, reason: error instanceof Error ? error.message : String(error) };
+    } finally {
+      clearTimeout(timer);
+    }
+  };
 }
 
 /** Draws the image centered in a 64×64 square (contain) and returns a PNG data URI. */
@@ -47,7 +64,7 @@ async function rasterizeFavicon(image: FetchedImage & { ok: true }): Promise<str
   }
 }
 
-export const browserExportDeps: BuildDeps = { fetchImage, rasterizeFavicon };
+export const browserExportDeps: BuildDeps = { fetchImage: createFetchImage(), rasterizeFavicon };
 
 /** Recording through the signed-in user's Supabase client (D-049 policies apply). */
 export function supabaseRecordDeps(supabase: SupabaseClient<Database>): RecordDeps {

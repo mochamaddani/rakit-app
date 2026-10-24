@@ -143,4 +143,28 @@ describe('inlineImages', () => {
     });
     expect(result.large.map((ref) => ref.path)).toEqual([['items', 0, 'image']]);
   });
+
+  it('requests every image before waiting for any', async () => {
+    const doc = withImages([
+      'https://a.example/1.webp',
+      'https://a.example/2.webp',
+      'https://a.example/3.webp',
+    ]);
+    const requested: string[] = [];
+    let release!: () => void;
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const done = inlineImages(doc, {
+      fetchImage: async (url) => {
+        requested.push(url);
+        await gate;
+        return { ok: true, mime: 'image/webp', bytes: new Uint8Array([1]) };
+      },
+    });
+    await Promise.resolve();
+    expect(requested).toHaveLength(3);
+    release();
+    expect((await done).failed).toEqual([]);
+  });
 });

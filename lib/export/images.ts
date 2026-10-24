@@ -124,18 +124,23 @@ export async function inlineImages(
   const refs = collectImages(doc).filter(
     (ref) => ref.blockId !== null && /^https?:\/\//i.test(ref.src.trim()),
   );
+  // Every download starts before any is awaited, so a long carousel isn't fetched one by one.
   const fetches = new Map<string, Promise<FetchedImage>>();
-  const failed: ImageRef[] = [];
-  const large: ImageRef[] = [];
   for (const ref of refs) {
     const url = portableVariant(ref.src.trim());
     if (!fetches.has(url)) {
       fetches.set(
         url,
-        deps.fetchImage(url).catch((error: unknown) => ({ ok: false, reason: String(error) })),
+        deps
+          .fetchImage(url)
+          .catch((error: unknown): FetchedImage => ({ ok: false, reason: String(error) })),
       );
     }
-    const image = await fetches.get(url)!;
+  }
+  const failed: ImageRef[] = [];
+  const large: ImageRef[] = [];
+  for (const ref of refs) {
+    const image = await fetches.get(portableVariant(ref.src.trim()))!;
     const mime = imageType(image);
     if (!mime || !image.ok) {
       failed.push(ref);

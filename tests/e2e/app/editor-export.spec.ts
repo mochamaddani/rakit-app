@@ -214,3 +214,20 @@ test('editing keys inside the export dialog never change the page behind it', as
   await expect(canvas(page).locator('[data-lp-block]')).toHaveCount(3);
   await expect(page.getByRole('button', { name: 'Undo' })).toBeDisabled();
 });
+
+test('an image host that never answers still lets the export finish', async ({ page }) => {
+  test.setTimeout(60_000);
+  await page.route('https://img.test/**', () => {
+    // Never answered.
+  });
+  const pageId = await seedPage({
+    name: 'Teh',
+    document: shopDocument('https://img.test/slow.webp'),
+  });
+  await openEditor(page, pageId);
+  await exportButton(page).click();
+  await expect(downloadButton(page)).toBeEnabled({ timeout: 20_000 });
+  await expect(exportDialog(page).getByTestId('export-checklist')).toContainText(
+    "1 image couldn't be inlined and stay links.",
+  );
+});

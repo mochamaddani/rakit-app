@@ -72,6 +72,7 @@ function ExportPanel() {
   const [options, setOptions] = useState<ExportOptions>(DEFAULT_EXPORT_OPTIONS);
   const [built, setBuilt] = useState<Built | null>(null);
   const [building, setBuilding] = useState(false);
+  const [buildError, setBuildError] = useState<string | null>(null);
   const [recording, setRecording] = useState<Recording>({ kind: 'idle' });
   const [fileName, setFileName] = useState(slug);
   const [fileError, setFileError] = useState<string | null>(null);
@@ -127,11 +128,20 @@ function ExportPanel() {
       setBuilding(true);
       const doc = store.getState().doc;
       const draftRevision = autosave.store.getState().revision;
-      void buildExport(doc, options, deps).then((build) => {
-        if (cancelled) return;
-        setBuilt({ build, doc, options, draftRevision });
-        setBuilding(false);
-      });
+      buildExport(doc, options, deps).then(
+        (build) => {
+          if (cancelled) return;
+          setBuilt({ build, doc, options, draftRevision });
+          setBuildError(null);
+          setBuilding(false);
+        },
+        (error: unknown) => {
+          if (cancelled) return;
+          setBuilt(null);
+          setBuildError(error instanceof Error ? error.message : String(error));
+          setBuilding(false);
+        },
+      );
     }, REBUILD_MS);
     return () => {
       cancelled = true;
@@ -308,6 +318,10 @@ function ExportPanel() {
             )}
           </section>
         </div>
+      ) : buildError ? (
+        <p role="alert" className="text-destructive">
+          The file couldn&apos;t be built: {buildError}
+        </p>
       ) : phase.kind === 'ready' ? (
         <p className="text-muted-foreground">Building the file…</p>
       ) : null}
