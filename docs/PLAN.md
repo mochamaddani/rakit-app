@@ -2,7 +2,7 @@
 
 **Status:** proposed for owner review · 2026-10-21
 **Spec:** [`docs/PRD.md`](PRD.md) · **Decisions:** [`docs/DECISIONS.md`](DECISIONS.md) (D-xxx below)
-**Detailed task plans:** [M0 Foundation](superpowers/plans/2026-10-21-m0-foundation.md) · [M1 Renderer](superpowers/plans/2026-10-21-m1-renderer.md) · [M2a Editor core](superpowers/plans/2026-10-22-m2a-editor-core.md) · [M2b Direct manipulation](superpowers/plans/2026-10-22-m2b-direct-manipulation.md). Plans for M3–M7 are written when each milestone starts, because each one depends on interfaces the previous milestone settles.
+**Detailed task plans:** [M0 Foundation](superpowers/plans/2026-10-21-m0-foundation.md) · [M1 Renderer](superpowers/plans/2026-10-21-m1-renderer.md) · [M2a Editor core](superpowers/plans/2026-10-22-m2a-editor-core.md) · [M2b Direct manipulation](superpowers/plans/2026-10-22-m2b-direct-manipulation.md) · [M3 Export + tracking](superpowers/plans/2026-10-24-m3-export-tracking.md). Plans for M4–M7 are written when each milestone starts, because each one depends on interfaces the previous milestone settles.
 
 ---
 
@@ -103,7 +103,7 @@ Split into two plans: **M2a** (state, canvas, inspector; [detailed plan](superpo
 - Uploads (D-008): Storage bucket and RLS migration, sharp processing route, `assets` rows.
 - **Exit (e2e):** create page → add Hero/Carousel by drag → edit inline and in the inspector → reorder items and blocks → undo/redo every step → reload, and the draft persists; 40-block perf fixture stays interactive.
 
-### M3 — Export + tracking
+### M3 — Export + tracking · [detailed plan](superpowers/plans/2026-10-24-m3-export-tracking.md)
 - Settings additions (SEO: OG image, favicon; tracking IDs validated by format; custom head/body snippets; default CTA target); tracking generators and an event dispatcher with `event_id` (D-019, D-021); UTM/click-ID passthrough to CTAs and form URLs.
 - Form Embed block (iframe/snippet/presets, lazy, responsive, submit detection, thank-you redirect; D-020).
 - Export pipeline in the browser (D-007): Portable/Hosted images, minify toggle, tracking toggle, size report per block, sha256, Download `<slug>.html`, Copy HTML.
@@ -189,5 +189,5 @@ Base UI primitives (dialogs, popovers) are UI building blocks, not builders or D
 | M1 Renderer | [`superpowers/plans/2026-10-21-m1-renderer.md`](superpowers/plans/2026-10-21-m1-renderer.md) | Ready for review |
 | M2a Editor core | [`superpowers/plans/2026-10-22-m2a-editor-core.md`](superpowers/plans/2026-10-22-m2a-editor-core.md) | Done |
 | M2b Direct manipulation | [`superpowers/plans/2026-10-22-m2b-direct-manipulation.md`](superpowers/plans/2026-10-22-m2b-direct-manipulation.md) | Done |
-| M3 Export + tracking | Written at the start of the milestone | Next |
+| M3 Export + tracking | [`superpowers/plans/2026-10-24-m3-export-tracking.md`](superpowers/plans/2026-10-24-m3-export-tracking.md) | In progress |
 | M4–M7 | Written at the start of each milestone | — |
