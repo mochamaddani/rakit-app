@@ -20,22 +20,40 @@ export interface PageSummary {
   slug: string;
   status: PageStatus;
   updatedAt: string;
+  lastExportedAt: string | null;
+  /** The latest export's stored file, for "Download HTML". */
+  latestHtmlPath: string | null;
 }
 
 /** Newest edit first. */
 export async function listPages(supabase: Supabase): Promise<PageSummary[]> {
   const { data, error } = await supabase
     .from('pages')
-    .select('id, name, slug, status, updated_at')
+    .select('id, name, slug, status, updated_at, latest_version_id')
     .order('updated_at', { ascending: false });
   if (error) throw error;
-  return data.map((row) => ({
-    id: row.id,
-    name: row.name,
-    slug: row.slug,
-    status: STATUSES.has(row.status) ? (row.status as PageStatus) : 'draft',
-    updatedAt: row.updated_at,
-  }));
+  const versionIds = data.flatMap((row) => (row.latest_version_id ? [row.latest_version_id] : []));
+  const latest = new Map<string, { created_at: string; html_path: string }>();
+  if (versionIds.length > 0) {
+    const { data: versions, error: versionError } = await supabase
+      .from('page_versions')
+      .select('id, created_at, html_path')
+      .in('id', versionIds);
+    if (versionError) throw versionError;
+    for (const version of versions) latest.set(version.id, version);
+  }
+  return data.map((row) => {
+    const version = row.latest_version_id ? latest.get(row.latest_version_id) : undefined;
+    return {
+      id: row.id,
+      name: row.name,
+      slug: row.slug,
+      status: STATUSES.has(row.status) ? (row.status as PageStatus) : 'draft',
+      updatedAt: row.updated_at,
+      lastExportedAt: version?.created_at ?? null,
+      latestHtmlPath: version?.html_path ?? null,
+    };
+  });
 }
 
 export interface EditorPageRecord {

@@ -1,6 +1,6 @@
 'use client';
 
-import { ChevronLeft, Download, Redo2, Settings2, Undo2 } from 'lucide-react';
+import { ChevronLeft, Download, History, Redo2, Settings2, Undo2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useRef, useState, type KeyboardEvent, type MouseEvent } from 'react';
@@ -20,6 +20,7 @@ import { cn } from '@/lib/utils';
 import { useEditor } from './editor-context';
 import { ExportDialog } from './export/export-dialog';
 import { ExportStatus } from './export/export-status';
+import { VersionsDialog } from './export/versions-dialog';
 import { SaveStatus } from './save-status';
 import { useAutosaveApi } from './use-autosave';
 
@@ -38,6 +39,7 @@ export function TopBar({ name }: { name: string }) {
   const router = useRouter();
   const [confirmLeave, setConfirmLeave] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [versions, setVersions] = useState(false);
 
   // Save what is pending before leaving (at most 3 s), so the dashboard shows the latest edit,
   // and ask first when it could not be saved (offline, failed or conflicting).
@@ -70,12 +72,17 @@ export function TopBar({ name }: { name: string }) {
           <Settings2 aria-hidden="true" />
           Page settings
         </Button>
+        <Button variant="outline" size="sm" onClick={() => setVersions(true)}>
+          <History aria-hidden="true" />
+          Versions
+        </Button>
         <Button size="sm" onClick={() => setExporting(true)}>
           <Download aria-hidden="true" />
           Export
         </Button>
       </div>
       <ExportDialog open={exporting} onOpenChange={setExporting} />
+      <VersionsDialog open={versions} onOpenChange={setVersions} />
       <LeaveDialog
         open={confirmLeave}
         onOpenChange={setConfirmLeave}

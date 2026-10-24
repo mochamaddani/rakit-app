@@ -113,6 +113,12 @@ export async function deletePage(_prev: ActionState, formData: FormData): Promis
   if (!pageId.success) return { error: GONE };
 
   const supabase = await createSupabaseServerClient();
+  // Stored exports go first: once the row is gone nothing points at them. A storage error does
+  // not block the delete; it only leaves orphaned files in the private bucket.
+  const folder = `${await getWorkspaceId(supabase)}/${pageId.data}`;
+  const versions = supabase.storage.from('page-versions');
+  const { data: files } = await versions.list(folder);
+  if (files?.length) await versions.remove(files.map((file) => `${folder}/${file.name}`));
   const { error } = await supabase.from('pages').delete().eq('id', pageId.data);
   if (error) return { error: FAILED };
   revalidatePath('/dashboard');

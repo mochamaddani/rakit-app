@@ -222,3 +222,17 @@ export async function storedDraft(pageId: string): Promise<Record<string, unknow
   if (error) throw error;
   return data.current_draft as Record<string, unknown>;
 }
+
+/** Exports the open page with the default options and waits until the version is recorded. */
+export async function exportPage(page: Page, savePath: string): Promise<string> {
+  await page.getByRole('banner').getByRole('button', { name: 'Export', exact: true }).click();
+  const dialog = page.getByRole('dialog', { name: 'Export page' });
+  const button = dialog.getByRole('button', { name: 'Download HTML' });
+  await expect(button).toBeEnabled();
+  const [file] = await Promise.all([page.waitForEvent('download'), button.click()]);
+  await file.saveAs(savePath);
+  await expect(dialog.getByText(/^Recorded · sha256/)).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(dialog).toBeHidden();
+  return file.suggestedFilename();
+}

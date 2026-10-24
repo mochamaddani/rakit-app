@@ -9,7 +9,7 @@ import {
   type CommandSuccess,
   type EditorCommand,
 } from './commands';
-import { deps, editorDoc, everyCommand, order } from './test-fixtures';
+import { deps, editorDoc, everyCommand, order, restoredDoc } from './test-fixtures';
 
 const run = (
   command: EditorCommand,
@@ -428,4 +428,29 @@ it('never mutates the input document', () => {
   const before = structuredClone(doc);
   for (const command of everyCommand()) applyCommand(doc, command, null, deps());
   expect(doc).toEqual(before);
+});
+
+describe('restoreDocument', () => {
+  it('restoreDocument replaces the document as one undo step', () => {
+    const doc = editorDoc();
+    const r = ok(
+      run({ type: 'restoreDocument', doc: restoredDoc(), when: 'Oct 1, 2026, 10:00' }, doc, {
+        kind: 'block',
+        blockId: 'b1',
+      }),
+    );
+    expect(r.doc).toEqual(restoredDoc());
+    expect(r.label).toBe('Restore version from Oct 1, 2026, 10:00');
+    expect(r.announcement).toBe('Restored the version from Oct 1, 2026, 10:00');
+    expect(r.selection).toBeNull();
+    expect(applyPatches(r.doc, r.inversePatches)).toEqual(doc);
+  });
+  it('an invalid document is refused and changes nothing', () => {
+    const broken = {
+      ...restoredDoc(),
+      sections: [{ id: 'x', blocks: [{ id: 'y', type: 'hero', props: {} }] }],
+    };
+    const failure = fail({ type: 'restoreDocument', doc: broken as never, when: 'now' });
+    expect(failure.code).toBe('invalid');
+  });
 });

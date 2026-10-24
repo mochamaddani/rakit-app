@@ -5,6 +5,7 @@ import type { AnyBlockDefinition } from '@/lib/blocks/types';
 import { footerStart } from '@/lib/renderer/page';
 import {
   LIMITS,
+  safeParseDocument,
   SECTION_ANCHOR_PATTERN,
   type BlockInstance,
   type PageDocument,
@@ -55,7 +56,9 @@ export type EditorCommand =
   | { type: 'listInsert'; blockId: string; path: PropPath; index: number; item: unknown }
   | { type: 'listMove'; blockId: string; path: PropPath; from: number; to: number }
   | { type: 'listRemove'; blockId: string; path: PropPath; index: number }
-  | { type: 'listDuplicate'; blockId: string; path: PropPath; index: number };
+  | { type: 'listDuplicate'; blockId: string; path: PropPath; index: number }
+  /** Versions → Restore: the whole document from an export; `when` names it ("Oct 1, 2026, 10:00"). */
+  | { type: 'restoreDocument'; doc: PageDocument; when: string };
 
 export interface CommandDeps {
   newId: IdFactory;
@@ -287,6 +290,8 @@ function runCommand(
     }
     case 'setSectionAnchor':
       return setSectionAnchor(doc, command.sectionId, command.anchor, selection);
+    case 'restoreDocument':
+      return restoreDocument(doc, command.doc, command.when);
     case 'setSetting': {
       const edit = planEdit(PageSettingsSchema, doc.settings, command.path, command.value);
       if (typeof edit !== 'function') return edit;
@@ -601,6 +606,24 @@ function moveBlock(
     },
     meta(`Moved ${label} ${direction} into its own section`),
   );
+}
+
+/** Replaces the whole document (one undo step); a stored copy that no longer validates is refused. */
+function restoreDocument(doc: PageDocument, restored: PageDocument, when: string): CommandResult {
+  const parsed = safeParseDocument(restored);
+  if (!parsed.ok) {
+    return fail('invalid', parsed.error.issues[0]?.message ?? 'This version is not a valid page');
+  }
+  const [next, patches, inversePatches] = produceWithPatches(doc, () => parsed.doc);
+  return {
+    ok: true,
+    doc: next,
+    patches,
+    inversePatches,
+    label: `Restore version from ${when}`,
+    selection: null,
+    announcement: `Restored the version from ${when}`,
+  };
 }
 
 function duplicateBlock(doc: PageDocument, blockId: string, deps: CommandDeps): CommandResult {

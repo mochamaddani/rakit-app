@@ -1,7 +1,7 @@
 import Link from 'next/link';
+import { RelativeTime } from '@/components/relative-time';
 import { Badge } from '@/components/ui/badge';
 import { requireUser } from '@/lib/auth/require-user';
-import { formatEdited } from '@/lib/pages/format';
 import { listPages, type PageStatus } from '@/lib/pages/queries';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { NewPageDialog } from './new-page-dialog';
@@ -17,8 +17,8 @@ const STATUS_LABELS: Record<PageStatus, string> = {
 export default async function DashboardPage() {
   await requireUser();
   const pages = await listPages(await createSupabaseServerClient());
-  // Rendered on the server only, so the relative times never hydrate differently.
-  const now = new Date();
+  // One reference time for the server render and hydration, so relative times match.
+  const now = new Date().toISOString();
 
   return (
     <main className="mx-auto w-full max-w-5xl">
@@ -37,11 +37,22 @@ export default async function DashboardPage() {
                   {page.name}
                 </Link>
                 <p className="text-sm text-muted-foreground">
-                  Edited {formatEdited(page.updatedAt, now)}
+                  Edited <RelativeTime iso={page.updatedAt} now={now} />
+                  {page.lastExportedAt ? (
+                    <>
+                      {' '}
+                      · Exported <RelativeTime iso={page.lastExportedAt} now={now} />
+                    </>
+                  ) : null}
                 </p>
               </div>
               <Badge variant="secondary">{STATUS_LABELS[page.status]}</Badge>
-              <PageActions pageId={page.id} name={page.name} />
+              <PageActions
+                pageId={page.id}
+                name={page.name}
+                slug={page.slug}
+                latestHtmlPath={page.latestHtmlPath}
+              />
             </li>
           ))}
         </ul>

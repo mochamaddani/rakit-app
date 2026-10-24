@@ -28,6 +28,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { downloadVersion } from '@/lib/export/versions';
+import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 import { deletePage, renamePage, type ActionState } from './actions';
 
 const initialState: ActionState = { error: null };
@@ -40,7 +42,17 @@ interface PageDialogProps {
 }
 
 /** The row menu; its dialogs live outside the menu so they stay open after it closes. */
-export function PageActions({ pageId, name }: { pageId: string; name: string }) {
+export function PageActions({
+  pageId,
+  name,
+  slug,
+  latestHtmlPath,
+}: {
+  pageId: string;
+  name: string;
+  slug: string;
+  latestHtmlPath: string | null;
+}) {
   const [open, setOpen] = useState<'rename' | 'delete' | null>(null);
   const close = () => setOpen(null);
 
@@ -54,6 +66,15 @@ export function PageActions({ pageId, name }: { pageId: string; name: string }) 
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem onClick={() => setOpen('rename')}>Rename</DropdownMenuItem>
+          <DropdownMenuItem
+            disabled={latestHtmlPath === null}
+            onClick={() => {
+              if (latestHtmlPath)
+                void downloadVersion(createSupabaseBrowserClient(), latestHtmlPath, `${slug}.html`);
+            }}
+          >
+            Download HTML
+          </DropdownMenuItem>
           <DropdownMenuItem variant="destructive" onClick={() => setOpen('delete')}>
             Delete
           </DropdownMenuItem>

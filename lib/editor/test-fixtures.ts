@@ -34,6 +34,15 @@ export const order = (doc: PageDocument) =>
   doc.sections.map((s) => `${s.id}:${s.blocks.map((b) => b.id).join(',')}`);
 
 /** One valid command of every type, applicable in sequence to editorDoc() with deps(). */
+/** An older version of the page, as Versions → Restore brings it back. */
+export const restoredDoc = (): PageDocument =>
+  parseDocument({
+    schemaVersion: 1,
+    sections: [
+      { id: 'r1', blocks: [{ id: 'rb1', type: 'hero', props: { headline: 'Versi lama' } }] },
+    ],
+  });
+
 export function everyCommand(): EditorCommand[] {
   return [
     { type: 'addBlock', blockType: 'testimonials' },
@@ -74,5 +83,7 @@ export function everyCommand(): EditorCommand[] {
     { type: 'moveBlockTo', blockId: 'n6', target: { kind: 'into', sectionId: 's3', index: 0 } },
     { type: 'moveBlockTo', blockId: 'n2', target: { kind: 'between', index: 0 } },
     { type: 'removeBlock', blockId: 'n2' }, // empties its section
+    // Last: the restored document has none of the ids above.
+    { type: 'restoreDocument', doc: restoredDoc(), when: 'Oct 1, 2026, 10:00' },
   ];
 }

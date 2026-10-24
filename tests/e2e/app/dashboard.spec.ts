@@ -1,5 +1,18 @@
+import { readFile } from 'node:fs/promises';
 import { expect, test, type Page } from '@playwright/test';
-import { adminClient, EMPTY_DOC, ensureOwner, resetOwnerPages, seedPage, signIn } from './helpers';
+import {
+  adminClient,
+  EMPTY_DOC,
+  ensureOwner,
+  exportPage,
+  openEditor,
+  ownerWorkspaceId,
+  resetOwnerPages,
+  seedPage,
+  signIn,
+  storedExport,
+  versionsOf,
+} from './helpers';
 
 test.beforeAll(ensureOwner);
 test.beforeEach(async ({ page }) => {
@@ -67,4 +80,57 @@ test('unknown or malformed page ids show the not-found page', async ({ page }) =
     const response = await page.goto(`/editor/${id}`);
     expect(response?.status()).toBe(404);
   }
+});
+
+const HERO = {
+  schemaVersion: 1,
+  sections: [{ id: 's1', blocks: [{ id: 'b1', type: 'hero', props: { headline: 'Teh' } }] }],
+};
+
+test('an exported page shows its export time and downloads its latest HTML', async ({
+  page,
+}, info) => {
+  const pageId = await seedPage({ name: 'Teh', document: HERO, slug: 'teh' });
+  await openEditor(page, pageId);
+  await exportPage(page, info.outputPath('teh.html'));
+  await page.goto('/dashboard');
+  const row = page.getByRole('listitem').filter({ hasText: 'Teh' });
+  await expect(row).toContainText('Exported just now');
+  await expect(row).toContainText('Exported', { useInnerText: true });
+  await page.getByRole('button', { name: 'Actions for Teh' }).click();
+  const [file] = await Promise.all([
+    page.waitForEvent('download'),
+    page.getByRole('menuitem', { name: 'Download HTML' }).click(),
+  ]);
+  expect(file.suggestedFilename()).toBe('teh.html');
+  const path = info.outputPath('downloaded.html');
+  await file.saveAs(path);
+  const [version] = await versionsOf(pageId);
+  expect(await readFile(path, 'utf8')).toBe(await storedExport(version!.html_path));
+});
+
+test('a page that was never exported cannot be downloaded', async ({ page }) => {
+  await seedPage({ name: 'Draft only', document: HERO });
+  await page.reload();
+  await page.getByRole('button', { name: 'Actions for Draft only' }).click();
+  await expect(page.getByRole('menuitem', { name: 'Download HTML' })).toHaveAttribute(
+    'aria-disabled',
+    'true',
+  );
+});
+
+test('deleting a page removes its stored exports', async ({ page }, info) => {
+  const pageId = await seedPage({ name: 'Doomed export', document: HERO });
+  await openEditor(page, pageId);
+  await exportPage(page, info.outputPath('doomed.html'));
+  const folder = `${await ownerWorkspaceId()}/${pageId}`;
+  const listed = async () =>
+    (await adminClient().storage.from('page-versions').list(folder)).data?.length ?? 0;
+  expect(await listed()).toBe(1);
+  await page.goto('/dashboard');
+  await page.getByRole('button', { name: 'Actions for Doomed export' }).click();
+  await page.getByRole('menuitem', { name: 'Delete' }).click();
+  await page.getByRole('button', { name: 'Delete page' }).click();
+  await expect(page.getByRole('link', { name: 'Doomed export' })).toHaveCount(0);
+  await expect.poll(listed).toBe(0);
 });
