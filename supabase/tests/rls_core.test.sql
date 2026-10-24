@@ -32,8 +32,10 @@ select lives_ok(
   'A can create a page in their workspace');
 select results_eq($$ select count(*)::int from public.pages $$, $$ values (1) $$, 'A sees their page');
 select lives_ok(
-  $$ insert into public.page_versions (page_id, document, html_path, byte_size, html_sha256, kind)
-     select id, current_draft, 'v/a-page/1.html', 10, repeat('0', 64), 'export' from public.pages where slug = 'a-page' $$,
+  $$ insert into public.page_versions (id, page_id, document, html_path, byte_size, html_sha256, kind)
+     select v.id, p.id, p.current_draft, p.workspace_id || '/' || p.id || '/' || v.id || '.html', 10,
+       repeat('0', 64), 'export'
+     from public.pages p, (select gen_random_uuid() as id) v where p.slug = 'a-page' $$,
   'A can record a version of their page');
 select lives_ok(
   $$ insert into public.assets (workspace_id, path, mime, size)

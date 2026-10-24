@@ -27,7 +27,7 @@ Next.js 16 renamed the middleware file convention to `proxy.ts` (exported functi
 - A trigger creates one workspace for each new user.
 - Every RLS policy calls `public.is_workspace_member(workspace_id)`. Today that function checks `workspaces.owner_id`. To add multi-user later, add a `workspace_members` table and change only that function.
 
-## D-006 Version HTML lives in Storage, not in `page_versions.html` — Proposed (deviates from PRD §7)
+## D-006 Version HTML lives in Storage, not in `page_versions.html` — Accepted (deviates from PRD §7)
 `page_versions` keeps `html_path` (private bucket `page-versions`), `byte_size` and `html_sha256`. A Portable export is 0.3–3 MB, and base64 compresses poorly, so a few hundred exports would fill the free plan's 500 MB database and bloat backups. Storage is cheaper, and downloads come straight from it. Revisit if you prefer the HTML in Postgres; that is a single-column migration.
 
 ## D-007 Export runs in the browser — Proposed (M3)
@@ -252,3 +252,7 @@ Consequences:
 - **Processing** (`POST /api/assets`): `sharp` reads at most 40 megapixels, applies EXIF orientation, keeps the first frame of an animation and drops metadata, then writes WebP at 1600 and 800 px wide (never enlarged, quality 80). The `assets` row records `<workspaceId>/<assetId>` with the 1600 variant's size and dimensions. The original is deleted whatever the outcome.
 - **Unsupported:** HEIC (iOS converts photos to JPEG when a page asks only for these types), SVG, and anything sharp can't decode.
 
+## D-049 Versions: storage, recording and rollback — Accepted (M3)
+- **Storage:** each export's HTML goes to the private `page-versions` bucket (20 MiB per object, `text/html` only) at `<workspaceId>/<pageId>/<versionId>.html`. Members of the workspace may insert, read and delete there; nobody may update, so a stored export never changes (D-006).
+- **Recording:** the browser uploads the file, then calls `record_page_version` (security invoker, so RLS applies). In one transaction it inserts the `page_versions` row (`kind 'export'`, hash, size, export settings and the draft revision the export was built from) and points the page at it. A `draft` page becomes `exported`; `live` and `archived` pages keep their status. A trigger rejects any `html_path` other than the row's own `<workspace>/<page>/<version>.html`.
+- **Own versions only:** `pages (latest_version_id, id)` references `page_versions (id, page_id)`, so a page can only point at one of its own versions (M0/M1 review m-6).

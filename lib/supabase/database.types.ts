@@ -45,14 +45,14 @@ isOneToOne: false
                   ]
                 },"page_versions": {
                   Row: {
-                    "byte_size": number,"created_at": string,"document": NonNullable<Json>,"export_settings": NonNullable<Json>,"html_path": string,"html_sha256": string,"id": string,"kind": string,"note": string | null,"page_id": string
+                    "byte_size": number,"created_at": string,"document": NonNullable<Json>,"draft_revision": number | null,"export_settings": NonNullable<Json>,"html_path": string,"html_sha256": string,"id": string,"kind": string,"note": string | null,"page_id": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "byte_size": number,"created_at"?: string,"document": NonNullable<Json>,"export_settings"?: NonNullable<Json>,"html_path": string,"html_sha256": string,"id"?: string,"kind": string,"note"?: string | null,"page_id": string
+                    "byte_size": number,"created_at"?: string,"document": NonNullable<Json>,"draft_revision"?: number | null,"export_settings"?: NonNullable<Json>,"html_path": string,"html_sha256": string,"id"?: string,"kind": string,"note"?: string | null,"page_id": string
                   }
                   Update: {
-                    "byte_size"?: number,"created_at"?: string,"document"?: NonNullable<Json>,"export_settings"?: NonNullable<Json>,"html_path"?: string,"html_sha256"?: string,"id"?: string,"kind"?: string,"note"?: string | null,"page_id"?: string
+                    "byte_size"?: number,"created_at"?: string,"document"?: NonNullable<Json>,"draft_revision"?: number | null,"export_settings"?: NonNullable<Json>,"html_path"?: string,"html_sha256"?: string,"id"?: string,"kind"?: string,"note"?: string | null,"page_id"?: string
                   }
                   Relationships: [
                     {
@@ -76,11 +76,11 @@ isOneToOne: false
                   }
                   Relationships: [
                     {
-      foreignKeyName: "pages_latest_version_id_fkey"
-      columns: ["latest_version_id"]
+      foreignKeyName: "pages_latest_version_fkey"
+      columns: ["latest_version_id","id"]
 isOneToOne: false
       referencedRelation: "page_versions"
-      referencedColumns: ["id"]
+      referencedColumns: ["id","page_id"]
     },{
       foreignKeyName: "pages_workspace_id_fkey"
       columns: ["workspace_id"]
@@ -131,6 +131,9 @@ isOneToOne: false
           Functions: {
             "is_workspace_member":
 { Args: { "ws": string }; Returns: boolean
+                           },
+"record_page_version":
+{ Args: { "p_byte_size": number,"p_document": Json,"p_draft_revision": number,"p_export_settings": Json,"p_html_path": string,"p_html_sha256": string,"p_id": string,"p_page_id": string }; Returns: string
                            },
 "workspace_from_path":
 { Args: { "name": string }; Returns: string
