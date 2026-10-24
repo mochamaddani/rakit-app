@@ -58,6 +58,7 @@ describe('fragments', () => {
             label: 'Pesan Sekarang',
             link: { kind: 'url', url: 'https://wa.me/62', newTab: true },
             variant: 'primary',
+            event: 'none',
           },
           ctx,
         ),
@@ -67,10 +68,14 @@ describe('fragments', () => {
     );
     expect(
       String(
-        renderCta({ label: 'Beli', link: { kind: 'default' }, variant: 'secondary' }, ctx, {
-          className: 'lp-btn--block',
-          dataAttrs: { 'lp-item': 'p1' },
-        }),
+        renderCta(
+          { label: 'Beli', link: { kind: 'default' }, variant: 'secondary', event: 'none' },
+          ctx,
+          {
+            className: 'lp-btn--block',
+            dataAttrs: { 'lp-item': 'p1' },
+          },
+        ),
       ),
     ).toBe(
       '<a class="lp-btn lp-btn--secondary lp-btn--block" href="#" data-lp-cta data-lp-item="p1">Beli</a>',

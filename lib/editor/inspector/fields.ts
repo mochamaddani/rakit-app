@@ -27,6 +27,11 @@ export interface RichSpec extends BaseSpec {
   min: number;
   max: number;
 }
+/** Raw code (monospace textarea); never edited in the canvas. */
+export interface CodeSpec extends BaseSpec {
+  kind: 'code';
+  max: number;
+}
 export interface NumberSpec extends BaseSpec {
   kind: 'number';
   min: number | null;
@@ -62,6 +67,7 @@ export interface ListSpec extends BaseSpec {
 export type FieldSpec =
   | TextSpec
   | RichSpec
+  | CodeSpec
   | NumberSpec
   | BooleanSpec
   | ChoiceSpec
@@ -133,6 +139,7 @@ function describeField(key: string, declared: z.ZodType): FieldSpec {
     const min = schema.minLength ?? 0;
     const max = schema.maxLength ?? Number.POSITIVE_INFINITY;
     if (control === 'rich') return { ...base, kind: 'rich', min, max };
+    if (control === 'code') return { ...base, kind: 'code', max };
     if (control === 'color') return { ...base, kind: 'color' };
     return {
       ...base,

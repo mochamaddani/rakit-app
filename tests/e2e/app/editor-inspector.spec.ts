@@ -12,6 +12,7 @@ import {
   saveStatus,
   seedPage,
   signIn,
+  storedDraft,
 } from './helpers';
 
 test.beforeAll(ensureOwner);
@@ -136,6 +137,27 @@ test('a theme color change restyles the canvas and shows a contrast warning', as
     'background-color',
     'rgb(253, 224, 71)',
   );
+});
+
+test("an invalid Pixel ID shows its format and isn't stored", async ({ page }) => {
+  const pageId = await seedPage({ name: 'Tracking', document: EMPTY_DOC });
+  await openEditor(page, pageId);
+  await page.getByRole('banner').getByRole('button', { name: 'Page settings' }).click();
+  const pixel = page.getByLabel('Meta Pixel ID');
+  await pixel.fill('abc');
+  await expect(page.getByText('Meta Pixel IDs are 10–20 digits')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Undo' })).toBeDisabled();
+  await pixel.fill('1234567890');
+  await expect(page.getByText('Meta Pixel IDs are 10–20 digits')).toHaveCount(0);
+  await expect(saveStatus(page)).toHaveText('Saved');
+  await expect
+    .poll(async () => {
+      const settings = (await storedDraft(pageId)).settings as {
+        tracking?: { metaPixelId?: string };
+      };
+      return settings?.tracking?.metaPixelId;
+    })
+    .toBe('1234567890');
 });
 
 test('the hero button can target a section, and UTM parameters are appended to web links', async ({

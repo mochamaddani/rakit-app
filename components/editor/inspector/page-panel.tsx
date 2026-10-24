@@ -107,6 +107,19 @@ export function PagePanel() {
         actions={actions}
         context={context}
       />
+      <div className="grid gap-2">
+        <p className="text-xs text-muted-foreground">
+          IDs are checked for their format. Tracking runs only in the exported page, never in the
+          editor.
+        </p>
+        <FieldList
+          fields={pick('tracking')}
+          value={value}
+          path={[]}
+          actions={actions}
+          context={context}
+        />
+      </div>
     </div>
   );
 }

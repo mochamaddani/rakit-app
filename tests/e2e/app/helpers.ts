@@ -187,3 +187,14 @@ export async function touchDrag(page: Page, from: Point, to: Point): Promise<voi
   }
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
 }
+
+/** The draft as the server stores it. */
+export async function storedDraft(pageId: string): Promise<Record<string, unknown>> {
+  const { data, error } = await adminClient()
+    .from('pages')
+    .select('current_draft')
+    .eq('id', pageId)
+    .single();
+  if (error) throw error;
+  return data.current_draft as Record<string, unknown>;
+}

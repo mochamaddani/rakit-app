@@ -14,6 +14,11 @@ export function rich(max: number, min = 0) {
   return z.string().min(min).max(max).meta({ control: 'rich' });
 }
 
+/** Raw code the owner pastes (custom snippets, form embeds). Emitted verbatim in export only. */
+export function code(max: number) {
+  return z.string().max(max).meta({ control: 'code' });
+}
+
 export const HexColorSchema = z
   .string()
   .regex(/^#[0-9A-Fa-f]{6}$/)
@@ -46,10 +51,15 @@ export const ImageSchema = z
   .meta({ control: 'image' });
 export type Image = z.output<typeof ImageSchema>;
 
+/** Tracking event a CTA click fires in the exported page (docs/DECISIONS.md D-019). */
+export const CTA_EVENTS = ['none', 'Lead', 'Contact', 'InitiateCheckout'] as const;
+export type CtaEvent = (typeof CTA_EVENTS)[number];
+
 export const CtaSchema = z.object({
   label: text(80, 1),
   link: LinkSchema,
   variant: z.enum(['primary', 'secondary']).default('primary'),
+  event: z.enum(CTA_EVENTS).default('none'),
 });
 export type Cta = z.output<typeof CtaSchema>;
 

@@ -60,11 +60,15 @@ function renderSlide(
     discount === null ? '' : html`<span class="lp-badge lp-badge--discount">-${discount}%</span>`
   }</div>`;
   const cta = item.cta.label
-    ? renderCta({ label: item.cta.label, link: item.cta.link, variant: 'primary' }, ctx, {
-        className: 'lp-btn--block',
-        dataAttrs: { 'lp-item': item.id },
-        field: `items.${index}.cta.label`,
-      })
+    ? renderCta(
+        { label: item.cta.label, link: item.cta.link, variant: 'primary', event: 'none' },
+        ctx,
+        {
+          className: 'lp-btn--block',
+          dataAttrs: { 'lp-item': item.id },
+          field: `items.${index}.cta.label`,
+        },
+      )
     : '';
   const body = html`<div class="lp-card__body"><h3 class="lp-card__title"${ctx.field(
     `items.${index}.title`,

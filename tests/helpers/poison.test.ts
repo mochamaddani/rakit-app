@@ -24,7 +24,12 @@ const probe = defineBlock({
   }),
   defaultProps: () => ({
     title: 'Hi',
-    primary: { label: 'Go', link: { kind: 'default' as const }, variant: 'primary' as const },
+    primary: {
+      label: 'Go',
+      link: { kind: 'default' as const },
+      variant: 'primary' as const,
+      event: 'none' as const,
+    },
     items: [],
     layout: 'a' as const,
   }),

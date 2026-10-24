@@ -33,6 +33,17 @@ const FIELD_LABELS: Readonly<Record<string, string>> = {
   noindex: 'Hide from search engines',
   defaultCta: 'Default button target',
   lang: 'Language',
+  tracking: 'Tracking',
+  metaPixelId: 'Meta Pixel ID',
+  ga4Id: 'GA4 measurement ID',
+  googleAdsId: 'Google Ads ID',
+  googleAdsLeadLabel: 'Google Ads lead conversion label',
+  gtmId: 'GTM container ID',
+  headCode: 'Custom code in <head>',
+  bodyCode: 'Custom code at the end of <body>',
+  ogImage: 'Social share image',
+  favicon: 'Favicon',
+  event: 'Tracking event',
 };
 
 const OPTION_LABELS: Readonly<Record<string, Readonly<Record<string, string>>>> = {
@@ -41,6 +52,7 @@ const OPTION_LABELS: Readonly<Record<string, Readonly<Record<string, string>>>> 
   navigation: { both: 'Arrows and dots' },
   icon: { none: 'No icon' },
   tone: { base: 'Page', primary: 'Primary color' },
+  event: { none: 'No event', InitiateCheckout: 'Initiate checkout' },
 };
 
 /** "compareAt" → "Compare at"; "neo-grotesque" → "Neo-grotesque". */

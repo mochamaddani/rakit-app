@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest';
+import { z } from 'zod';
 import { HeroPropsSchema } from '@/lib/blocks/hero/schema';
 import { listBlockDefinitions } from '@/lib/blocks/registry';
 import { productCarousel } from '@/lib/blocks/special/product-carousel';
 import { ProductItemSchema } from '@/lib/blocks/special/product-carousel/schema';
 import { sequentialIds } from '@/lib/schema/ids';
-import { BlockStyleSchema, SectionStyleSchema } from '@/lib/schema/primitives';
+import { BlockStyleSchema, code, SectionStyleSchema } from '@/lib/schema/primitives';
 import { PageSettingsSchema } from '@/lib/schema/settings';
 import {
   describeFields,
@@ -38,6 +39,7 @@ describe('describeFields', () => {
           ['label', 'text', false],
           ['link', 'link', false],
           ['variant', 'choice', false],
+          ['event', 'choice', false],
         ],
       ],
       [
@@ -47,6 +49,7 @@ describe('describeFields', () => {
           ['label', 'text', false],
           ['link', 'link', false],
           ['variant', 'choice', false],
+          ['event', 'choice', false],
         ],
       ],
       ['trustLine', 'text', false],
@@ -61,6 +64,26 @@ describe('describeFields', () => {
     const items = describeFields(productCarousel.schema).find((f) => f.key === 'items') as ListSpec;
     expect(items).toMatchObject({ kind: 'list', max: 50, label: 'Items' });
     expect(items.item.fields.map((f) => f.key)).not.toContain('id');
+  });
+  it('code fields describe as code', () => {
+    const [field] = describeFields(z.object({ snippet: code(500) }));
+    expect(field).toMatchObject({ kind: 'code', max: 500, label: 'Snippet' });
+  });
+  it('the settings walker covers tracking', () => {
+    const tracking = describeFields(PageSettingsSchema).find((f) => f.key === 'tracking');
+    expect(tracking?.kind).toBe('group');
+    const fields = tracking?.kind === 'group' ? tracking.fields : [];
+    expect(fields.map((f) => [f.key, f.kind])).toEqual([
+      ['metaPixelId', 'text'],
+      ['ga4Id', 'text'],
+      ['googleAdsId', 'text'],
+      ['googleAdsLeadLabel', 'text'],
+      ['gtmId', 'text'],
+      ['headCode', 'code'],
+      ['bodyCode', 'code'],
+    ]);
+    expect(fields[0]!.label).toBe('Meta Pixel ID');
+    expect(fieldError(fields[0]!, 'abc')).toBe('Meta Pixel IDs are 10–20 digits');
   });
   it('describes every registered block, the style schemas and the page settings without throwing', () => {
     for (const d of listBlockDefinitions())

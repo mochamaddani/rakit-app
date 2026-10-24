@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
   BlockStyleSchema,
+  code,
+  CtaSchema,
   HexColorSchema,
   ImageSchema,
   LinkSchema,
@@ -38,5 +40,15 @@ describe('primitives', () => {
   it('style schemas fill their defaults', () => {
     expect(BlockStyleSchema.parse({})).toEqual({ hideOn: 'none', spaceAbove: 'none' });
     expect(SectionStyleSchema.parse({})).toEqual({ tone: 'base', padY: 'md', width: 'normal' });
+  });
+  it('CTA events default to none and accept only the listed events', () => {
+    const cta = { label: 'Pesan', link: { kind: 'default' } };
+    expect(CtaSchema.parse(cta).event).toBe('none');
+    expect(CtaSchema.parse({ ...cta, event: 'Lead' }).event).toBe('Lead');
+    expect(CtaSchema.safeParse({ ...cta, event: 'Purchase' }).success).toBe(false);
+  });
+  it('code() limits length and is marked as code', () => {
+    expect(code(5).safeParse('<b>ok</b>').success).toBe(false);
+    expect(code(10).meta()).toMatchObject({ control: 'code' });
   });
 });

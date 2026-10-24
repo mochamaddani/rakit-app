@@ -3,6 +3,7 @@
 import type { FieldSpec } from '@/lib/editor/inspector/fields';
 import type { PropPath } from '@/lib/editor/structure';
 import { BooleanControl } from './controls/boolean-control';
+import { CodeControl } from './controls/code-control';
 import { ChoiceControl } from './controls/choice-control';
 import { ColorControl } from './controls/color-control';
 import { GroupControl } from './controls/group-control';
@@ -37,6 +38,8 @@ export function FieldList({
             return <TextControl key={spec.key} spec={spec} {...props} />;
           case 'rich':
             return <RichControl key={spec.key} spec={spec} {...props} />;
+          case 'code':
+            return <CodeControl key={spec.key} spec={spec} {...props} />;
           case 'number':
             return <NumberControl key={spec.key} spec={spec} {...props} />;
           case 'boolean':
