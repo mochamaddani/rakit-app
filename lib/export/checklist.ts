@@ -1,0 +1,158 @@
+import { detectFormProvider } from '@/lib/blocks/form-embed/providers';
+import type { FormEmbedProps } from '@/lib/blocks/form-embed/schema';
+import type { FooterProps } from '@/lib/blocks/footer/schema';
+import type { BlockInstance, PageDocument } from '@/lib/schema/document';
+import { hasTrackingIds } from '@/lib/schema/settings';
+import { collectImages } from './images';
+import { formatBytes, SIZE_HARD_BYTES, SIZE_WARN_BYTES } from './size';
+
+// The pre-export checklist (PRD §6.7, §6.11): warnings only, never a blocker.
+
+export type ChecklistLevel = 'warn' | 'hard';
+
+export interface ChecklistItem {
+  id: string;
+  level: ChecklistLevel;
+  message: string;
+  blockIds?: string[];
+}
+
+export interface ChecklistInput {
+  doc: PageDocument;
+  /** "Include tracking" in the export dialog. */
+  tracking: boolean;
+  bytes: number;
+  /** From the image step: images that stayed links, and inlined images over 300 KB. */
+  images: { failed: number; large: number };
+}
+
+const PRIVACY = /privacy|privasi/i;
+const PLACEHOLDER = /\[REPLACE:/g;
+
+const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
+
+function strings(value: unknown, out: string[] = []): string[] {
+  if (typeof value === 'string') out.push(value);
+  else if (Array.isArray(value)) value.forEach((item) => strings(item, out));
+  else if (value && typeof value === 'object') Object.values(value).forEach((v) => strings(v, out));
+  return out;
+}
+
+function hasDefaultLink(value: unknown): boolean {
+  if (Array.isArray(value)) return value.some(hasDefaultLink);
+  if (!value || typeof value !== 'object') return false;
+  if ((value as { kind?: unknown }).kind === 'default') return true;
+  return Object.values(value).some(hasDefaultLink);
+}
+
+export function preExportChecklist(input: ChecklistInput): ChecklistItem[] {
+  const { doc } = input;
+  const { seo, tracking } = doc.settings;
+  const blocks: BlockInstance[] = doc.sections.flatMap((section) => section.blocks);
+  const items: ChecklistItem[] = [];
+  const warn = (id: string, message: string, blockIds?: string[]) =>
+    items.push(
+      blockIds ? { id, level: 'warn', message, blockIds } : { id, level: 'warn', message },
+    );
+
+  if (!seo.title.trim()) warn('title', 'Add a page title (Page settings → Search engines).');
+  if (!seo.description.trim()) warn('description', 'Add a page description.');
+
+  const footerLinks = blocks
+    .filter((block) => block.type === 'footer')
+    .flatMap((block) => (block.props as FooterProps).links);
+  if (!footerLinks.some((link) => PRIVACY.test(link.label))) {
+    warn('privacy', 'Add a privacy policy link to the footer.');
+  }
+
+  const forms = blocks
+    .filter((block) => block.type === 'form-embed')
+    .map((block) => ({ block, provider: detectFormProvider(block.props as FormEmbedProps) }));
+  if (forms.length === 0) warn('form', 'The page has no form.');
+  for (const { provider } of forms.filter((form) => form.provider?.conversions === 'self')) {
+    warn(
+      'formSelf',
+      `${provider!.label} sends its own conversion events: check that its Meta Pixel ID matches this page's.`,
+    );
+    break;
+  }
+  const silent = forms.filter((form) => !form.provider || form.provider.conversions === 'none');
+  if (silent.length > 0) {
+    const labels = new Set(silent.map((form) => form.provider?.label ?? 'the provider'));
+    const name = labels.size === 1 ? [...labels][0]! : 'the provider';
+    warn(
+      'formSignal',
+      `Lead can't be tracked for this form: ${name} doesn't report submits.`,
+      silent.map((form) => form.block.id),
+    );
+  }
+  const storelink = forms.filter((form) => form.provider?.id === 'storelink');
+  if (storelink.length > 1) {
+    warn(
+      'formTwice',
+      'Only one Storelink form works per page.',
+      storelink.map((form) => form.block.id),
+    );
+  }
+
+  if (input.tracking && !hasTrackingIds(tracking)) warn('tracking', 'No tracking IDs are set.');
+  if (!doc.settings.defaultCta && blocks.some((block) => hasDefaultLink(block.props))) {
+    warn('defaultCta', 'Buttons set to the page default go nowhere. Set a default button target.');
+  }
+
+  const noAlt = collectImages(doc).filter(
+    (image) => image.blockId !== null && image.src.trim() && !image.alt.trim(),
+  );
+  if (noAlt.length > 0) {
+    warn('alt', `${plural(noAlt.length, 'image has', 'images have')} no alt text.`, [
+      ...new Set(noAlt.map((image) => image.blockId!)),
+    ]);
+  }
+
+  const count = (value: unknown) =>
+    strings(value).reduce((sum, text) => sum + (text.match(PLACEHOLDER)?.length ?? 0), 0);
+  const placeholders = count(doc.settings) + blocks.reduce((sum, b) => sum + count(b.props), 0);
+  if (placeholders > 0) {
+    warn(
+      'placeholder',
+      `${plural(placeholders, '[REPLACE: …] placeholder remains', '[REPLACE: …] placeholders remain')}.`,
+      blocks.filter((block) => count(block.props) > 0).map((block) => block.id),
+    );
+  }
+
+  const code = [
+    input.tracking && tracking.headCode.trim() ? 'head code' : '',
+    input.tracking && tracking.bodyCode.trim() ? 'body code' : '',
+    forms.some(
+      ({ block }) =>
+        (block.props as FormEmbedProps).mode === 'snippet' &&
+        (block.props as FormEmbedProps).code.trim(),
+    )
+      ? 'form embed code'
+      : '',
+  ].filter(Boolean);
+  if (code.length > 0) warn('customCode', `Custom code runs on this page: ${code.join(', ')}.`);
+
+  const { failed, large } = input.images;
+  if (failed > 0) {
+    warn(
+      'imagesFailed',
+      `${plural(failed, 'image', 'images')} couldn't be inlined and stay links.`,
+    );
+  }
+  if (large > 0) warn('largeImages', `${plural(large, 'image is', 'images are')} over 300 KB.`);
+
+  if (input.bytes > SIZE_HARD_BYTES) {
+    items.push({
+      id: 'size',
+      level: 'hard',
+      message: `The file is ${formatBytes(input.bytes)}, over 3 MB. Use Hosted images.`,
+    });
+  } else if (input.bytes > SIZE_WARN_BYTES) {
+    warn(
+      'size',
+      `The file is ${formatBytes(input.bytes)}, over 1 MB. Hosted images make it lighter.`,
+    );
+  }
+  return items;
+}
