@@ -22,10 +22,10 @@ export const productCarousel = defineBlock({
       })),
     }),
   css,
-  // Without controls (navigation 'none' or a single card) the page ships no JavaScript at all.
+  // Without controls or autoplay (or with a single card) the page ships no JavaScript at all.
   snippet: {
     asset: script,
-    isNeeded: (props) => props.navigation !== 'none' && props.items.length > 1,
+    isNeeded: (props) => (props.navigation !== 'none' || props.autoplay) && props.items.length > 1,
   },
   render: renderProductCarousel,
 });

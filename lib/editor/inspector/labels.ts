@@ -35,6 +35,8 @@ const FIELD_LABELS: Readonly<Record<string, string>> = {
   html: 'HTML',
   runScripts: 'Run scripts in the exported page',
   blockName: 'Name (for the checklist)',
+  autoplay: 'Play automatically',
+  autoplaySeconds: 'Seconds per card',
   openFirst: 'Open the first question',
   exclusive: 'Only one answer open at a time',
   hideOn: 'Hide on',

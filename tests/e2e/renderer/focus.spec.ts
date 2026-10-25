@@ -88,8 +88,9 @@ for (const tone of TONES) {
   }, info) => {
     await page.goto(renderToFile(info.outputPath('page.html'), documentInTone(tone)));
     const rings = await tabThrough(page);
-    // Hero CTA, 2 card links, track, 8 product CTAs, 2 arrows, 8 dots, 4 FAQ, CTA, 3 footer links.
-    expect(rings.length).toBeGreaterThanOrEqual(30);
+    // Hero CTA, 2 card links, track, 8 product CTAs, 2 arrows, 5 dots (one per scroll position at
+    // 4 cards per view, D-054), 4 FAQ, CTA, 3 footer links.
+    expect(rings.length).toBeGreaterThanOrEqual(27);
     expect(rings.filter((r) => r.element.includes('"Info"'))).toHaveLength(2);
     expect(rings.filter((r) => !r.focusVisible || !r.solid || r.ratio < 3)).toEqual([]);
   });

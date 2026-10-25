@@ -17,6 +17,7 @@
   overscroll-behavior-x: contain;
   scroll-snap-type: x mandatory;
   scroll-padding-inline: 16px;
+  scroll-behavior: smooth;
 }
 .lp-carousel__slide {
   flex: 0 0 calc((100% - (var(--lp-spv-m) - 1) * var(--lp-gap)) / var(--lp-spv-m));
@@ -122,7 +123,8 @@
 .lp-carousel__nav[hidden] {
   display: none;
 }
-.lp-carousel__arrow {
+.lp-carousel__arrow,
+.lp-carousel__play {
   display: inline-flex;
   flex: none;
   align-items: center;
@@ -135,6 +137,21 @@
   background: var(--lp-background);
   color: var(--lp-text);
   cursor: pointer;
+}
+/* The pause button shows "pause" while playing and "play" once paused. */
+.lp-carousel__play .lp-icon {
+  width: 20px;
+  height: 20px;
+}
+.lp-carousel__play .lp-icon--play,
+.lp-carousel__play[data-paused] .lp-icon--pause {
+  display: none;
+}
+.lp-carousel__play[data-paused] .lp-icon--play {
+  display: block;
+}
+.lp-carousel__dot[hidden] {
+  display: none;
 }
 .lp-carousel__arrow[aria-disabled='true'] {
   opacity: 0.4;

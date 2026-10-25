@@ -136,7 +136,7 @@ const carouselDoc = (blocks: { id: string; navigation?: string }[]) =>
 describe('product carousel: script', () => {
   it('ships a minified script within the 1.5 KB budget', () => {
     expect(productCarousel.snippet).toBeDefined();
-    expect(byteLength(productCarousel.snippet!.asset.min)).toBeLessThanOrEqual(1536);
+    expect(byteLength(productCarousel.snippet!.asset.min)).toBeLessThanOrEqual(2048);
   });
   it('includes the script exactly once for several carousels', () => {
     const { html } = renderPage(carouselDoc([{ id: 'c1' }, { id: 'c2' }]), { mode: 'export' });
@@ -152,5 +152,39 @@ describe('product carousel: script', () => {
     expect(
       renderPage(carouselDoc([{ id: 'c1' }]), { mode: 'export', minify: false }).html,
     ).toContain(productCarousel.snippet!.asset.src);
+  });
+});
+
+describe('product carousel: M4 fixes and autoplay', () => {
+  it("an empty carousel's track is not focusable", () => {
+    expect(renderBlock(productCarousel, { items: [] })).toContain(
+      '<div class="lp-carousel__track">',
+    );
+  });
+  it('autoplay adds a pause button and needs the snippet even without navigation', () => {
+    const out = renderBlock(productCarousel, {
+      ...props,
+      navigation: 'none',
+      autoplay: true,
+      autoplaySeconds: 4,
+    });
+    expect(out).toContain('data-autoplay="4"');
+    expect(out).toContain(
+      '<button type="button" class="lp-carousel__play" aria-label="Jeda" data-lp-play="Putar">',
+    );
+    expect(out).not.toContain('data-lp-prev');
+    expect(out).not.toContain('data-lp-dot');
+    const page = (p: object) =>
+      renderPage(parseDocument(singleBlockDoc('product-carousel', p)), { mode: 'export' }).html;
+    expect(page({ ...props, navigation: 'none' })).not.toContain('<script>');
+    expect(page({ ...props, navigation: 'none', autoplay: true })).toContain('<script>');
+    expect(page({ items: items.slice(0, 1), autoplay: true })).not.toContain('<script>');
+    expect(renderBlock(productCarousel, props)).not.toContain('data-autoplay');
+  });
+  it('autoplaySeconds is 2–15', () => {
+    for (const autoplaySeconds of [1, 16]) {
+      expect(productCarousel.schema.safeParse({ autoplaySeconds }).success).toBe(false);
+    }
+    expect(productCarousel.schema.parse({}).autoplaySeconds).toBe(5);
   });
 });

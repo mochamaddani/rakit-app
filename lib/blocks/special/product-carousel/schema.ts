@@ -1,6 +1,13 @@
 import { z } from 'zod';
 import { IdSchema } from '@/lib/schema/ids';
-import { AspectRatioSchema, ImageSchema, LinkSchema, rich, text } from '@/lib/schema/primitives';
+import {
+  AspectRatioSchema,
+  ImageSchema,
+  LinkSchema,
+  rich,
+  text,
+  when,
+} from '@/lib/schema/primitives';
 
 export const ProductItemSchema = z.object({
   id: IdSchema,
@@ -41,5 +48,8 @@ export const ProductCarouselPropsSchema = z.object({
   navigation: z.enum(['arrows', 'dots', 'both', 'none']).default('both'),
   arrowsOnTouch: z.boolean().default(false),
   loop: z.boolean().default(false),
+  /** Exported pages only; never with reduced motion; stops once the visitor takes over (D-054). */
+  autoplay: z.boolean().default(false),
+  autoplaySeconds: when(z.number().min(2).max(15).default(5), 'autoplay', [true]),
 });
 export type ProductCarouselProps = z.output<typeof ProductCarouselPropsSchema>;

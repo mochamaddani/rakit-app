@@ -26,7 +26,9 @@ export type MessageKey =
   | 'cookieOk'
   | 'cookieRegion'
   | 'privacy'
-  | 'customHtml';
+  | 'customHtml'
+  | 'pauseSlides'
+  | 'playSlides';
 
 const MESSAGES: Record<Lang, Record<MessageKey, string>> = {
   id: {
@@ -56,6 +58,8 @@ const MESSAGES: Record<Lang, Record<MessageKey, string>> = {
     cookieRegion: 'Pemberitahuan cookie',
     privacy: 'Kebijakan privasi',
     customHtml: 'HTML khusus',
+    pauseSlides: 'Jeda',
+    playSlides: 'Putar',
   },
   en: {
     products: 'Products',
@@ -84,6 +88,8 @@ const MESSAGES: Record<Lang, Record<MessageKey, string>> = {
     cookieRegion: 'Cookie notice',
     privacy: 'Privacy policy',
     customHtml: 'Custom HTML',
+    pauseSlides: 'Pause',
+    playSlides: 'Play',
   },
 };
 

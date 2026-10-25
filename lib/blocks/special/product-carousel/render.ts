@@ -87,7 +87,16 @@ function renderSlide(
 }
 
 function renderNav(props: ProductCarouselProps, ctx: RenderContext): SafeHtml | '' {
-  if (props.navigation === 'none' || props.items.length < 2) return '';
+  if ((props.navigation === 'none' && !props.autoplay) || props.items.length < 2) return '';
+  // Moving content needs a way to stop it (WCAG 2.2.2); the label swaps when it is pressed.
+  const play = props.autoplay
+    ? html`<button type="button" class="lp-carousel__play" aria-label="${ctx.t(
+        'pauseSlides',
+      )}" data-lp-play="${ctx.t('playSlides')}">${renderIcon('pause', 'lp-icon lp-icon--pause')}${renderIcon(
+        'play',
+        'lp-icon lp-icon--play',
+      )}</button>`
+    : '';
   const arrows = props.navigation === 'arrows' || props.navigation === 'both';
   const dots = props.navigation === 'dots' || props.navigation === 'both';
   const prev = arrows
@@ -109,7 +118,7 @@ function renderNav(props: ProductCarouselProps, ctx: RenderContext): SafeHtml | 
       )}</div>`
     : '';
   // Hidden until the script runs: without JavaScript the track still swipes and scrolls.
-  return html`<div class="lp-carousel__nav" hidden>${prev}${dotList}${next}</div>`;
+  return html`<div class="lp-carousel__nav" hidden>${play}${prev}${dotList}${next}</div>`;
 }
 
 export function renderProductCarousel(props: ProductCarouselProps, ctx: RenderContext): SafeHtml {
@@ -137,9 +146,15 @@ export function renderProductCarousel(props: ProductCarouselProps, ctx: RenderCo
         }</div>`
       : '';
   const slides = props.items.map((item, i) => renderSlide(item, i, props, ctx));
+  const autoplay =
+    props.autoplay && props.items.length > 1
+      ? html` data-autoplay="${String(props.autoplaySeconds)}"`
+      : '';
+  // An empty track has nothing to scroll, so it takes no keyboard focus (M0/M1 review m-4).
+  const focusable = props.items.length > 0 ? html` tabindex="0"` : '';
   return html`<section class="${classes}" aria-roledescription="carousel" aria-label="${label}" data-lp-carousel data-loop="${
     props.loop ? '1' : '0'
-  }" style="${style}">${head}<div class="lp-carousel__track" tabindex="0">${slides}</div>${renderNav(
+  }"${autoplay} style="${style}">${head}<div class="lp-carousel__track"${focusable}>${slides}</div>${renderNav(
     props,
     ctx,
   )}</section>`;
