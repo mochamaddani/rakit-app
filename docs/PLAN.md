@@ -148,7 +148,7 @@ Full Playwright journeys (template → export; wizard → export; import → edi
 ## 7. Dependencies
 
 **Expected direct dependencies** (anything else needs a note in DECISIONS):
-- **Runtime:** `next`, `react`, `react-dom`, `@supabase/supabase-js`, `@supabase/ssr`, `zod`, `server-only`; the shadcn/ui output (`@base-ui/react`, `class-variance-authority`, `cn`, `shadcn` (CSS), `lucide-react`, `tw-animate-css`; D-031); `zustand@5.0.15`, `immer@11.1.21` (exact pins, M2a), `sharp` (M2b); `@anthropic-ai/sdk` (M5); `parse5`, `postcss`, `postcss-selector-parser` (M6).
+- **Runtime:** `next`, `react`, `react-dom`, `@supabase/supabase-js`, `@supabase/ssr`, `zod`, `server-only`; the shadcn/ui output (`@base-ui/react`, `class-variance-authority`, `cn`, `shadcn` (CSS), `lucide-react`, `tw-animate-css`; D-031); `zustand@5.0.15`, `immer@11.1.21` (exact pins, M2a), `sharp` (M2b); `@anthropic-ai/sdk` (M5); `parse5@8.0.1` (exact pin; M4: Custom HTML sanitizer, then M6 import), `postcss`, `postcss-selector-parser` (M6).
 - **Dev:** `typescript`, `eslint`, `eslint-config-next`, `eslint-config-prettier`, `prettier`, `tailwindcss`, `@tailwindcss/turbopack`, `vitest`, `happy-dom`, `@playwright/test`, `tsx`, `esbuild`, `html-validate`, `supabase` (CLI), `@types/*`; `@axe-core/playwright`, `lighthouse` (M7).
 
 **Banned** (enforced by test):
