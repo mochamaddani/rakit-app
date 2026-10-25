@@ -58,6 +58,41 @@ describe('page runtime: events', () => {
     expect(page.layer).toEqual([]);
   });
 
+  it('a carousel click sends Meta and GA params to their vendors with one event id', () => {
+    const meta = { content_ids: ['p1'], content_name: 'Botol', value: 149000, currency: 'IDR' };
+    const ga = { item_list_id: 'c1', items: [{ item_id: 'p1', item_name: 'Botol', index: 0 }] };
+    const page = load(
+      `<a data-lp-cta data-lp-event="ViewContent" data-lp-params='${JSON.stringify(meta)}' data-lp-ga='${JSON.stringify(ga)}' href="#x">Beli</a>`,
+      { attrs: { 'data-lp-gtm': '' } },
+    );
+    (page.win.document.querySelector('a') as unknown as HTMLElement).click();
+    const [, name, params, options] = page.fb[0] as [string, string, unknown, { eventID: string }];
+    expect([name, params]).toEqual(['ViewContent', meta]);
+    expect(page.gtag).toEqual([['event', 'select_item', { ...ga, event_id: options.eventID }]]);
+    expect(page.layer).toEqual([{ event: 'select_item', event_id: options.eventID, ...ga }]);
+  });
+
+  it('AddToCart maps to add_to_cart, and lp:track may carry GA params', () => {
+    const page = load('');
+    page.win.document.dispatchEvent(
+      new page.win.CustomEvent('lp:track', {
+        detail: { name: 'AddToCart', params: { value: 1 }, ga: { items: [] } },
+      }),
+    );
+    expect(page.fb[0]!.slice(0, 3)).toEqual(['track', 'AddToCart', { value: 1 }]);
+    expect(page.gtag[0]!.slice(0, 2)).toEqual(['event', 'add_to_cart']);
+    expect(page.gtag[0]![2]).toMatchObject({ items: [] });
+  });
+
+  it('an unparseable data-lp-params sends the event without params', () => {
+    const page = load(
+      `<a data-lp-cta data-lp-event="ViewContent" data-lp-params="{oops" data-lp-ga="[1" href="#x">Beli</a>`,
+    );
+    (page.win.document.querySelector('a') as unknown as HTMLElement).click();
+    expect(page.fb[0]!.slice(0, 3)).toEqual(['track', 'ViewContent', {}]);
+    expect(Object.keys(page.gtag[0]![2] as object)).toEqual(['event_id']);
+  });
+
   it('a click on a CTA with data-lp-event dispatches it', () => {
     const page = load(
       '<a data-lp-cta data-lp-event="Contact" href="#pesan"><span>Tanya</span></a><a data-lp-cta href="#x">No</a>',
@@ -128,7 +163,7 @@ describe('page runtime: passthrough', () => {
     expect(hrefs(broken)[0]).toBe('https://b.example/?gbraid=g');
   });
 
-  it('stays within 2048 bytes minified', () => {
-    expect(byteLength(asset.min)).toBeLessThanOrEqual(2048);
+  it('stays within 2304 bytes minified', () => {
+    expect(byteLength(asset.min)).toBeLessThanOrEqual(2304);
   });
 });

@@ -46,3 +46,62 @@ test('UTM and click ids reach outbound CTAs', async ({ page }, info) => {
   );
   await expect(page.getByRole('link', { name: 'Pesan' })).toHaveAttribute('href', '#pesan');
 });
+
+test('a carousel card CTA fires ViewContent and select_item with the item and keeps UTM passthrough', async ({
+  page,
+}, info) => {
+  await stubVendors(page);
+  const doc = structuredClone(trackingDocument) as unknown as {
+    sections: { id: string; blocks: unknown[] }[];
+  };
+  doc.sections.splice(1, 0, {
+    id: 'sCards',
+    blocks: [
+      {
+        id: 'cCards',
+        type: 'product-carousel',
+        props: {
+          heading: 'Pilih paket',
+          items: [
+            {
+              id: 'p1',
+              title: 'Paket Hemat',
+              price: 149000,
+              cta: {
+                label: 'Ambil paket',
+                link: { kind: 'url', url: 'https://shop.example/hemat' },
+              },
+            },
+          ],
+        },
+      },
+    ],
+  });
+  const url = renderToFile(info.outputPath('cards.html'), doc);
+  await page.goto(`${url}?utm_source=meta&fbclid=f1`);
+  await expect.poll(() => fbCalls(page)).toContainEqual(['init', '1234567890']);
+  const cta = page.getByRole('link', { name: 'Ambil paket' });
+  await expect(cta).toHaveAttribute('href', 'https://shop.example/hemat?utm_source=meta&fbclid=f1');
+  await stayOnClick(page);
+  await cta.click();
+  const view = (await fbCalls(page)).find((call) => call[1] === 'ViewContent');
+  expect(view).toEqual([
+    'track',
+    'ViewContent',
+    {
+      content_ids: ['p1'],
+      content_name: 'Paket Hemat',
+      content_type: 'product',
+      value: 149000,
+      currency: 'IDR',
+    },
+    { eventID: expect.any(String) },
+  ]);
+  const id = (view![3] as { eventID: string }).eventID;
+  const items = [{ item_id: 'p1', item_name: 'Paket Hemat', price: 149000, index: 0 }];
+  expect(await dataLayer(page)).toContainEqual([
+    'event',
+    'select_item',
+    { item_list_id: 'cCards', item_list_name: 'Pilih paket', items, event_id: id },
+  ]);
+});

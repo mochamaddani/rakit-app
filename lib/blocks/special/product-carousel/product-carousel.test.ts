@@ -1,3 +1,4 @@
+// @vitest-environment happy-dom
 import { describe, expect, it } from 'vitest';
 import { productCarousel } from '@/lib/blocks/special/product-carousel';
 import { renderBlock, singleBlockDoc } from '@/lib/blocks/test-utils';
@@ -186,5 +187,124 @@ describe('product carousel: M4 fixes and autoplay', () => {
       expect(productCarousel.schema.safeParse({ autoplaySeconds }).success).toBe(false);
     }
     expect(productCarousel.schema.parse({}).autoplaySeconds).toBe(5);
+  });
+});
+
+describe('product carousel: tracking and JSON-LD', () => {
+  const tracked = { settings: { tracking: { metaPixelId: '1234567890' } } } as const;
+  const two = { heading: 'Pilihan **Warna**', items: items.slice(0, 2) };
+  const card = (out: string, i: number) => out.split('data-lp-cta')[i + 1]!.split('>')[0]!;
+  const attr = (fragment: string, name: string) =>
+    JSON.parse(
+      new DOMParser()
+        .parseFromString(`<a data-lp-cta${fragment}></a>`, 'text/html')
+        .querySelector('a')!
+        .getAttribute(name)!,
+    );
+
+  it('card CTAs carry the event and both parameter sets', () => {
+    const out = renderBlock(productCarousel, two, tracked);
+    const first = card(out, 0);
+    expect(first).toContain('data-lp-event="ViewContent"');
+    expect(attr(first, 'data-lp-params')).toEqual({
+      content_ids: ['p1'],
+      content_name: 'Botol 1',
+      content_type: 'product',
+      value: 149000,
+      currency: 'IDR',
+    });
+    expect(attr(card(out, 1), 'data-lp-ga')).toEqual({
+      item_list_id: 'b1',
+      item_list_name: 'Pilihan Warna',
+      items: [{ item_id: 'p2', item_name: 'Botol 2', price: 149000, index: 1 }],
+    });
+    const cart = card(renderBlock(productCarousel, { ...two, event: 'AddToCart' }, tracked), 0);
+    expect(cart).toContain('data-lp-event="AddToCart"');
+    expect(attr(cart, 'data-lp-ga')).toMatchObject({ value: 149000, currency: 'IDR' });
+    const noPrice = renderBlock(
+      productCarousel,
+      { items: [{ id: 'q', title: 'Q', cta: { label: 'Beli', link: { kind: 'default' } } }] },
+      tracked,
+    );
+    expect(attr(card(noPrice, 0), 'data-lp-params')).toEqual({
+      content_ids: ['q'],
+      content_name: 'Q',
+      content_type: 'product',
+    });
+  });
+  it('event none adds no tracking attributes', () => {
+    expect(renderBlock(productCarousel, { ...two, event: 'none' }, tracked)).not.toMatch(
+      /data-lp-(event|params|ga)/,
+    );
+  });
+  it('a page without tracking ids carries no card events and ships no runtime for them', () => {
+    expect(renderBlock(productCarousel, two)).not.toMatch(/data-lp-(event|params|ga)/);
+  });
+
+  const ld = (out: string) => {
+    const scripts = new DOMParser()
+      .parseFromString(`<body>${out}</body>`, 'text/html')
+      .querySelectorAll('script[type="application/ld+json"]');
+    expect(scripts).toHaveLength(1);
+    return JSON.parse(scripts[0]!.textContent!);
+  };
+  it('JSON-LD lists products with prices and only absolute images', () => {
+    const data = ld(
+      renderBlock(productCarousel, {
+        ...two,
+        jsonLd: true,
+        items: [
+          items[0],
+          { ...items[1], image: { src: 'data:image/webp;base64,AAAA', alt: 'x' }, price: 12.5 },
+        ],
+      }),
+    );
+    expect(data).toEqual({
+      '@context': 'https://schema.org',
+      '@type': 'ItemList',
+      itemListElement: [
+        {
+          '@type': 'ListItem',
+          position: 1,
+          item: {
+            '@type': 'Product',
+            name: 'Botol 1',
+            image: 'https://cdn.x/1.webp',
+            offers: { '@type': 'Offer', price: '149000', priceCurrency: 'IDR' },
+          },
+        },
+        {
+          '@type': 'ListItem',
+          position: 2,
+          item: {
+            '@type': 'Product',
+            name: 'Botol 2',
+            offers: { '@type': 'Offer', price: '12.5', priceCurrency: 'IDR' },
+          },
+        },
+      ],
+    });
+  });
+  it('JSON-LD survives a hostile title', () => {
+    const title = '</script><script>alert(1)</script><!--';
+    const out = renderBlock(productCarousel, {
+      jsonLd: true,
+      items: [{ id: 'h', title, cta: { label: 'Beli', link: { kind: 'default' } } }],
+    });
+    expect(ld(out).itemListElement[0].item.name).toBe(title);
+  });
+  it('preview has no JSON-LD', () => {
+    expect(
+      renderBlock(productCarousel, { ...two, jsonLd: true }, { mode: 'preview' }),
+    ).not.toContain('ld+json');
+  });
+  it('JSON-LD pages stay valid HTML', async () => {
+    expect(
+      await validateHtml(
+        renderPage(parseDocument(singleBlockDoc('product-carousel', { ...two, jsonLd: true })), {
+          mode: 'export',
+        }).html,
+      ),
+    ).toEqual([]);
   });
 });

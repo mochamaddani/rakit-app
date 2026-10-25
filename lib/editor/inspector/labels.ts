@@ -37,6 +37,7 @@ const FIELD_LABELS: Readonly<Record<string, string>> = {
   blockName: 'Name (for the checklist)',
   autoplay: 'Play automatically',
   autoplaySeconds: 'Seconds per card',
+  jsonLd: 'Product structured data (JSON-LD)',
   openFirst: 'Open the first question',
   exclusive: 'Only one answer open at a time',
   hideOn: 'Hide on',

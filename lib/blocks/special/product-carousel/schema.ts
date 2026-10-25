@@ -51,5 +51,9 @@ export const ProductCarouselPropsSchema = z.object({
   /** Exported pages only; never with reduced motion; stops once the visitor takes over (D-054). */
   autoplay: z.boolean().default(false),
   autoplaySeconds: when(z.number().min(2).max(15).default(5), 'autoplay', [true]),
+  /** Fired by each card's button, with the item as parameters (D-019). */
+  event: z.enum(['ViewContent', 'AddToCart', 'none']).default('ViewContent'),
+  /** Product/ItemList structured data in exported pages; off for ad pages by default. */
+  jsonLd: z.boolean().default(false),
 });
 export type ProductCarouselProps = z.output<typeof ProductCarouselPropsSchema>;

@@ -1,8 +1,10 @@
 import type { RenderContext } from '@/lib/renderer/context';
 import { discountPercent, formatPrice } from '@/lib/renderer/format';
 import { renderCta, renderIcon, renderImage, renderStars } from '@/lib/renderer/fragments';
-import { html, type SafeHtml } from '@/lib/renderer/html';
+import { html, unsafeRaw, type SafeHtml } from '@/lib/renderer/html';
 import { toPlainText } from '@/lib/renderer/inline';
+import { sanitizeUrl } from '@/lib/renderer/url';
+import { hasTrackingIds } from '@/lib/schema/settings';
 import { ASPECT_RATIOS } from '@/lib/schema/primitives';
 import type { ProductCarouselProps, ProductItem } from './schema';
 
@@ -32,6 +34,74 @@ function renderRating(item: ProductItem, ctx: RenderContext): SafeHtml | '' {
       ? ''
       : html`<span class="lp-rating__count">(${ctx.t('reviews', { count: item.reviewCount })})</span>`;
   return html`<div class="lp-rating">${renderStars(item.rating, ctx)}${count}</div>`;
+}
+
+/**
+ * The card button's event attributes (D-019): Meta gets content_* parameters, GA4 and GTM an
+ * item list. Only on pages with tracking ids, so a page with nobody to send to ships no runtime.
+ */
+function trackingAttrs(
+  item: ProductItem,
+  index: number,
+  props: ProductCarouselProps,
+  ctx: RenderContext,
+): Record<string, string> {
+  if (props.event === 'none' || !hasTrackingIds(ctx.settings.tracking)) return {};
+  const currency = ctx.settings.price.currency;
+  const priced = item.price === undefined ? {} : { value: item.price, currency };
+  const meta = {
+    content_ids: [item.id],
+    content_name: item.title,
+    content_type: 'product',
+    ...priced,
+  };
+  const ga = {
+    item_list_id: ctx.block.blockId,
+    item_list_name: props.heading ? toPlainText(props.heading) : ctx.t('products'),
+    items: [
+      {
+        item_id: item.id,
+        item_name: item.title,
+        ...(item.price !== undefined && { price: item.price }),
+        index,
+      },
+    ],
+    ...(props.event === 'AddToCart' && priced),
+  };
+  return {
+    'lp-event': props.event,
+    'lp-params': JSON.stringify(meta),
+    'lp-ga': JSON.stringify(ga),
+  };
+}
+
+/** Product/ItemList JSON-LD (export only): names, absolute images and prices; never ratings. */
+function renderJsonLd(props: ProductCarouselProps, ctx: RenderContext): SafeHtml | '' {
+  if (!props.jsonLd || ctx.mode !== 'export' || props.items.length === 0) return '';
+  const currency = ctx.settings.price.currency;
+  const data = {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    itemListElement: props.items.map((item, i) => {
+      const image = sanitizeUrl(item.image.src, 'image');
+      return {
+        '@type': 'ListItem',
+        position: i + 1,
+        item: {
+          '@type': 'Product',
+          name: item.title,
+          ...(image && /^https?:\/\//i.test(image) && { image }),
+          ...(item.price !== undefined && {
+            offers: { '@type': 'Offer', price: String(item.price), priceCurrency: currency },
+          }),
+        },
+      };
+    }),
+  };
+  // Every "<" as \u003c: still valid JSON, and nothing can close the script or open a comment.
+  return html`<script type="application/ld+json">${unsafeRaw(
+    JSON.stringify(data).replace(/</g, '\\u003c'),
+  )}</script>`;
 }
 
 function renderSlide(
@@ -65,7 +135,7 @@ function renderSlide(
         ctx,
         {
           className: 'lp-btn--block',
-          dataAttrs: { 'lp-item': item.id },
+          dataAttrs: { 'lp-item': item.id, ...trackingAttrs(item, index, props, ctx) },
           field: `items.${index}.cta.label`,
         },
       )
@@ -157,5 +227,5 @@ export function renderProductCarousel(props: ProductCarouselProps, ctx: RenderCo
   }"${autoplay} style="${style}">${head}<div class="lp-carousel__track"${focusable}>${slides}</div>${renderNav(
     props,
     ctx,
-  )}</section>`;
+  )}${renderJsonLd(props, ctx)}</section>`;
 }
