@@ -192,6 +192,6 @@ Base UI primitives (dialogs, popovers) are UI building blocks, not builders or D
 | M2a Editor core | [`superpowers/plans/2026-10-22-m2a-editor-core.md`](superpowers/plans/2026-10-22-m2a-editor-core.md) | Done |
 | M2b Direct manipulation | [`superpowers/plans/2026-10-22-m2b-direct-manipulation.md`](superpowers/plans/2026-10-22-m2b-direct-manipulation.md) | Done |
 | M3 Export + tracking | [`superpowers/plans/2026-10-24-m3-export-tracking.md`](superpowers/plans/2026-10-24-m3-export-tracking.md) | Done |
-| M4a Blocks + carousel | [`superpowers/plans/2026-10-25-m4a-blocks-carousel.md`](superpowers/plans/2026-10-25-m4a-blocks-carousel.md) | In progress |
-| M4b Workflow + acceptance | Written when M4a merges | — |
+| M4a Blocks + carousel | [`superpowers/plans/2026-10-25-m4a-blocks-carousel.md`](superpowers/plans/2026-10-25-m4a-blocks-carousel.md) | Done |
+| M4b Workflow + acceptance | Written next | Next |
 | M5–M7 | Written at the start of each milestone | — |
