@@ -5,7 +5,7 @@ import type { FormEmbedProps } from '@/lib/blocks/form-embed/schema';
 import type { FooterProps } from '@/lib/blocks/footer/schema';
 import type { BlockInstance, PageDocument } from '@/lib/schema/document';
 import { hasTrackingIds } from '@/lib/schema/settings';
-import { hasScripts } from '@/lib/sanitize/html';
+import { sanitizeHtml } from '@/lib/sanitize/html';
 import { collectImages } from './images';
 import { formatBytes, SIZE_HARD_BYTES, SIZE_WARN_BYTES } from './size';
 
@@ -172,13 +172,27 @@ export function preExportChecklist(input: ChecklistInput): ChecklistItem[] {
       running.map(({ block }) => block.id),
     );
   }
-  const removed = customs.filter(({ props }) => !props.runScripts && hasScripts(props.html));
+  // What "Run scripts" off takes out, by block: embeds, forms, scripts, handlers, unsafe links.
+  const removed = customs.flatMap(({ block, props, name }) => {
+    if (props.runScripts) return [];
+    const { report } = sanitizeHtml(props.html);
+    const parts = [
+      ...report.removedTags,
+      ...(report.hadScripts && !report.removedTags.includes('script') ? ['event handlers'] : []),
+      ...(report.removedUrls > 0 ? ['unsafe links'] : []),
+    ];
+    return parts.length > 0
+      ? [{ block, name, parts, iframe: report.removedTags.includes('iframe') }]
+      : [];
+  });
   if (removed.length > 0) {
+    const list = removed.map(({ name, parts }) => `${name} (${parts.join(', ')})`).join(', ');
+    const video = removed.some(({ iframe }) => iframe)
+      ? ' For YouTube or Vimeo, use a Video block.'
+      : '';
     warn(
       'customHtmlRemoved',
-      `Scripts in Custom HTML were removed (turn on Run scripts to keep them): ${removed
-        .map(({ name }) => name)
-        .join(', ')}.`,
+      `Parts of Custom HTML were removed (turn on Run scripts to keep them): ${list}.${video}`,
       removed.map(({ block }) => block.id),
     );
   }

@@ -49,15 +49,20 @@ describe('sanitizeHtml', () => {
   it('reports what it removed', () => {
     const { report } = sanitizeHtml('<p onclick="x()">a</p><script>1</script><marquee>m</marquee>');
     expect(report).toEqual({
-      removedTags: ['script', 'marquee'],
+      removedTags: ['script'],
+      unwrappedTags: ['marquee'],
       removedAttributes: 1,
+      removedUrls: 0,
       hadScripts: true,
     });
     expect(sanitizeHtml('<p>a</p>').report).toEqual({
       removedTags: [],
+      unwrappedTags: [],
       removedAttributes: 0,
+      removedUrls: 0,
       hadScripts: false,
     });
+    expect(sanitizeHtml('<a href="javascript:x()">a</a>').report.removedUrls).toBe(1);
   });
 
   it('keeps ordinary markup byte-stable', () => {
@@ -122,5 +127,23 @@ describe('hasScripts', () => {
     expect(hasScripts('<svg><a onclick="x"></a></svg>')).toBe(true);
     expect(hasScripts('<p>This script is a description</p>')).toBe(false);
     expect(hasScripts('<p data-onx="1">ok</p>')).toBe(false);
+  });
+});
+
+describe('sanitizeHtml on large styles', () => {
+  it('cleans a 40 KB data-URI style and a long run without separators quickly', () => {
+    const data = `<style>.promo{background:url(data:image/png;base64,${'A'.repeat(40_000)})}</style>`;
+    const run = `<style>.a{${'b'.repeat(49_000)}url(</style>`;
+    for (const input of [data, run]) {
+      const started = performance.now();
+      sanitizeHtml(input);
+      expect(performance.now() - started).toBeLessThan(200);
+    }
+    expect(sanitizeHtml(data).html).toContain('url(data:image/png;base64,AAAA');
+  });
+  it('an @import split around another one stays removed', () => {
+    expect(
+      sanitizeHtml('<style>@im@import x;port "https://evil.test/x.css";</style>').html,
+    ).not.toMatch(/@import/);
   });
 });

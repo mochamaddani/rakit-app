@@ -310,7 +310,7 @@ Consequences:
 
 ## D-053 Custom HTML and the canvas channel — Accepted (M4a)
 - **Sanitizer** (`lib/sanitize/html.ts`, parse5 8.0.1, moved forward from M6): parses and never executes; keeps listed tags and attributes; removes scripts, frames, forms, SVG/MathML, `on*` handlers, unsafe URLs, `data-lp-*` and ids starting `b-`/`s-`; keeps `<style>` minus `@import`, external `url()` and `expression()`.
-- **Export:** sanitized code, or the code verbatim when the owner turns on "Run scripts in the exported page". The checklist names each block that runs scripts and each whose scripts were removed.
+- **Export:** sanitized code, or the code verbatim when the owner turns on "Run scripts in the exported page". The checklist names each block that runs scripts, and each block that loses parts with scripts off, with what it loses (iframe, form, script, event handlers, unsafe links); a removed iframe points to the Video block. The CSS cleaner works chunk by chunk between `;`, `{` and `}`, so it stays linear on a 40 KB data URI.
 - **Canvas:** the code never enters the canvas document. It renders in a nested `<iframe sandbox="allow-scripts" srcdoc>`, a second opaque origin that can't read the canvas DOM or its channel id; the frame reports its height (clamped 20–4000 px) and takes no pointer events, so a click selects the block.
 - **Channel hardening** (closes M2a review M4 and M2b review M3/M13):
   - An inline edit counts only for the selected block or the block whose edit session the editor already accepted.
@@ -321,10 +321,10 @@ Consequences:
 - **No flash after Escape:** the editor never sends patches for the block being edited, so a sync in flight can't show an older value when editing ends; `editEnd` resends the block from the document.
 
 ## D-054 Product Carousel, M4 — Accepted (M4a)
-- **Autoplay** (off by default, 2–15 s per card): exported pages only, never with reduced motion. It skips its turn while the carousel is hovered, focused (except its pause button), off-screen or in a hidden tab, wraps to the first card, and stops for good once the visitor swipes, clicks, scrolls or types in it. A pause button (WCAG 2.2.2) toggles it and its label.
+- **Autoplay** (off by default, 2–15 s per card): exported pages only, never with reduced motion. It skips its turn while the carousel is hovered, focused (except its pause button), off-screen or in a hidden tab, and wraps to the first card. A swipe, click, scroll or key in the carousel pauses it; the pause button (WCAG 2.2.2) then reads "Play" and starts it again. With reduced motion and in the canvas the button is hidden.
 - **Fixes:** two fast clicks advance two cards; there is one dot per scroll position (5 dots for 8 cards at 4 per view); an empty track isn't focusable (M0/M1 review m-3, m-4).
 - **Card events** (D-019): `ViewContent` by default, `AddToCart` or none. Card buttons carry `data-lp-event`, `data-lp-params` (Meta) and `data-lp-ga` (GA4/GTM), only on pages with tracking ids, so a page with nobody to send to ships no runtime.
 - **JSON-LD** (off by default): an `ItemList` of `Product` with name, absolute image and `Offer` price, in export only. No ratings: review markup must come from real reviews, and the owner's ratings are self-reported.
-- **Bulk paste:** "Paste rows" takes spreadsheet rows (title, price, compare-at price, image URL, link), tab-, comma- or semicolon-separated with CSV quoting and an optional header. Prices parse by the page currency (`Rp149.000`, `1,234.50`), bad rows are named by row number and skipped, rows past the 50-card limit are reported, and the paste is one undo step (`listInsertMany`).
+- **Bulk paste:** "Paste rows" takes spreadsheet rows (title, price, compare-at price, image URL, link), tab-, comma- or semicolon-separated with CSV quoting and an optional header. Prices parse by the page currency (`Rp149.000`, `Rp 1.250.000,00`, `1,234.50`); a cell with anything but a currency sign, digits and separators (`149rb`, `250 g`) is an error, never a guess. Bad rows are named by row number and skipped, rows past the 50-card limit are reported, and the paste is one undo step (`listInsertMany`).
 - **Budgets:** carousel snippet ≤ 2048 bytes (from 1536), page runtime ≤ 2304 (from 2048). A page using every snippet ships ≤ 10,240 bytes of inline JS (the example: 6,342).
 

@@ -11,9 +11,13 @@ type Element = DefaultTreeAdapterTypes.Element;
 type ParentNode = DefaultTreeAdapterTypes.ParentNode;
 
 export interface SanitizeReport {
-  /** Tags removed (with their content) or unwrapped (keeping it), in first-seen order. */
+  /** Tags removed with their content (script, iframe, form, svg…), in first-seen order. */
   removedTags: string[];
+  /** Unknown tags dropped while their content was kept (marquee, center…). */
+  unwrappedTags: string[];
   removedAttributes: number;
+  /** href/src/srcset values dropped as unsafe (javascript:, …). */
+  removedUrls: number;
   hadScripts: boolean;
 }
 
@@ -55,16 +59,20 @@ function cleanSrcset(value: string): string | null {
   return parts.map((part) => part.join(' ')).join(', ');
 }
 
-/** Drops @import rules and declarations that load URLs (except data images) or use expression(). */
+/**
+ * Drops @import rules and declarations that load URLs (except data images), use expression() or
+ * hide anything behind an escape. Works chunk by chunk between `;`, `{` and `}`, so it stays linear
+ * on long values (a 40 KB data URI) and a rule split around another one can't rejoin.
+ */
 function cleanCss(css: string): string {
   return css
-    .replace(/@import[^;]*;?/gi, '')
-    .replace(/[^;{}]*(?:url\s*\(|expression\s*\(|\\)[^;{}]*/gi, (declaration) =>
-      /expression\s*\(|\\/i.test(declaration) ||
-      /url\s*\(\s*(?!['"]?data:image\/)/i.test(declaration)
+    .split(/([;{}])/)
+    .map((chunk) =>
+      /@import|expression\s*\(|\\/i.test(chunk) || /url\s*\(\s*(?!['"]?data:image\/)/i.test(chunk)
         ? ''
-        : declaration,
-    );
+        : chunk,
+    )
+    .join('');
 }
 
 function cleanAttributes(el: Element, report: SanitizeReport): void {
@@ -90,8 +98,10 @@ function cleanAttributes(el: Element, report: SanitizeReport): void {
     } else {
       value = null;
     }
-    if (value === null) report.removedAttributes += 1;
-    else kept.push({ name, value });
+    if (value === null) {
+      report.removedAttributes += 1;
+      if (name === 'href' || name === 'src' || name === 'srcset') report.removedUrls += 1;
+    } else kept.push({ name, value });
   }
   // A new tab never gets a handle on this page.
   if (tag === 'a' && kept.some((attr) => attr.name === 'target')) {
@@ -100,8 +110,8 @@ function cleanAttributes(el: Element, report: SanitizeReport): void {
   el.attrs = kept;
 }
 
-function noteRemoved(tag: string, report: SanitizeReport): void {
-  if (!report.removedTags.includes(tag)) report.removedTags.push(tag);
+function note(list: string[], tag: string): void {
+  if (!list.includes(tag)) list.push(tag);
 }
 
 /** The sanitized replacement for `node`: itself, its children (unwrapped), or nothing. */
@@ -113,11 +123,11 @@ function sanitizeNode(node: Node, report: SanitizeReport): Node[] {
   const foreign = el.namespaceURI !== parse5Html.NS.HTML;
   if (foreign || DROPPED.has(tag)) {
     report.hadScripts ||= hasHandlers(el);
-    noteRemoved(tag, report);
+    note(report.removedTags, tag);
     return [];
   }
   if (!ALLOWED.has(tag)) {
-    noteRemoved(tag, report);
+    note(report.unwrappedTags, tag);
     return sanitizeChildren(el, report);
   }
   cleanAttributes(el, report);
@@ -154,7 +164,13 @@ function hasHandlers(node: Node): boolean {
 
 /** Parses with parse5 (never executes), keeps only allowed tags/attributes, serializes. Pure. */
 export function sanitizeHtml(input: string): { html: string; report: SanitizeReport } {
-  const report: SanitizeReport = { removedTags: [], removedAttributes: 0, hadScripts: false };
+  const report: SanitizeReport = {
+    removedTags: [],
+    unwrappedTags: [],
+    removedAttributes: 0,
+    removedUrls: 0,
+    hadScripts: false,
+  };
   const fragment = parseFragment(input);
   fragment.childNodes = sanitizeChildren(fragment, report);
   return { html: serialize(fragment), report };

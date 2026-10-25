@@ -69,18 +69,26 @@ function records(text: string, delimiter: string): string[][] {
   return out;
 }
 
+/** A currency sign or code before or after the number ("Rp", "IDR", "US$", "RM", "S$", "₱"). */
+const CURRENCY = /^(?:rp|idr|us\$|usd|\$|rm|myr|s\$|sgd|php|₱)\s*|\s*(?:rp|idr|usd|myr|sgd|php)$/gi;
+
 /**
- * A price as the owner typed it, for the page currency: "Rp149.000", "1,234.50", "12,99".
- * In a currency without decimals (IDR) every separator groups thousands. Otherwise the last
- * separator is the decimal point when 1–2 digits follow it, and groups thousands when 3 do.
- * null when there is no number.
+ * A price as the owner typed it, for the page currency: "Rp149.000", "Rp 1.250.000,00",
+ * "1,234.50", "12,99". In a currency without decimals (IDR) a trailing decimal part (",00") is
+ * dropped and every other separator groups thousands. Otherwise the last separator is the decimal
+ * point when 1–2 digits follow it, and groups thousands when 3 do. Anything but a currency sign,
+ * digits and separators ("149rb", "250 g") is null, never a guess.
  */
 export function parsePrice(text: string, format: PriceFormat): number | null {
-  const kept = text.replace(/[^\d.,]/g, '');
-  if (!/\d/.test(kept)) return null;
+  const kept = text
+    .trim()
+    .replace(CURRENCY, '')
+    .replace(/[.,]-$/, '')
+    .replace(/(\d)\s+(?=\d)/g, '$1');
+  if (!/^\d[\d.,]*$/.test(kept)) return null;
   let normalized: string;
   if (format.decimals === 0) {
-    normalized = kept.replace(/[.,]/g, '');
+    normalized = kept.replace(/[.,]\d{1,2}$/, '').replace(/[.,]/g, '');
   } else {
     const at = Math.max(kept.lastIndexOf('.'), kept.lastIndexOf(','));
     const after = at < 0 ? 0 : kept.length - at - 1;

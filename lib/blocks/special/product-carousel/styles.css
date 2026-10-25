@@ -150,7 +150,8 @@
 .lp-carousel__play[data-paused] .lp-icon--play {
   display: block;
 }
-.lp-carousel__dot[hidden] {
+.lp-carousel__dot[hidden],
+.lp-carousel__play[hidden] {
   display: none;
 }
 .lp-carousel__arrow[aria-disabled='true'] {

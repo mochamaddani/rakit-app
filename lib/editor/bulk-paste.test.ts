@@ -79,6 +79,13 @@ describe('parsePrice', () => {
       ['1,234.50', USD, 1234.5],
       ['12,99', USD, 12.99],
       ['12', USD, 12],
+      ['Rp1.250.000,00', IDR, 1250000],
+      ['Rp 1.250.000,00', IDR, 1250000],
+      ['149.000 IDR', IDR, 149000],
+      ['149rb', IDR, null],
+      ['Rp 149 ribu', IDR, null],
+      ['1jt', IDR, null],
+      ['US$ 12.99', USD, 12.99],
       ['', IDR, null],
       ['abc', IDR, null],
       ['-', IDR, null],
@@ -118,5 +125,12 @@ describe('rowsToCarouselItems', () => {
       cta: { label: 'Buy now', link: { kind: 'default' } },
     });
     expect(items[1]!.price).toBeUndefined();
+  });
+});
+
+it('a one-column paste with a unit in it is reported, not read as a price', () => {
+  expect(parseRows('Kopi, 250 g', IDR)).toEqual({
+    rows: [],
+    errors: [{ line: 1, message: 'Row 1: "250 g" isn\'t a price' }],
   });
 });

@@ -252,12 +252,22 @@ test.describe('carousel autoplay', () => {
     const after = await current(page);
     await page.clock.runFor(16_000);
     expect(await current(page)).toBe(after);
+    // Stopped by the visitor: the button says so, and Play starts it again.
+    const c = carouselIn(page, 'cAuto');
+    await expect(c.getByRole('button', { name: 'Jeda' })).toHaveCount(0);
+    await c.getByRole('button', { name: 'Putar' }).click();
+    await page.mouse.move(380, 770);
+    await page.locator('body').focus();
+    await page.clock.runFor(5000);
+    await expect.poll(async () => (await page.clock.runFor(50), current(page))).not.toBe(after);
 
     await page.emulateMedia({ reducedMotion: 'reduce' });
     await page.reload();
     await page.mouse.move(380, 770);
     await page.clock.runFor(16_000);
     expect(await current(page)).toBe('Ke slide 1');
+    // Nothing to pause: no dead button.
+    await expect(c.locator('[data-lp-play]')).toBeHidden();
   });
 
   test('the pause button toggles autoplay and its label', async ({ page }, info) => {
@@ -280,5 +290,6 @@ test.describe('carousel autoplay', () => {
     await open(page, pathToFileURL(path).href);
     await page.clock.runFor(16_000);
     expect(await current(page)).toBe('Ke slide 1');
+    await expect(carouselIn(page, 'cAuto').locator('[data-lp-play]')).toBeHidden();
   });
 });

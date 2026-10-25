@@ -1015,7 +1015,8 @@ body:has(.lp-sticky--all) .lp-cookie {
 .lp-carousel__play[data-paused] .lp-icon--play {
   display: block;
 }
-.lp-carousel__dot[hidden] {
+.lp-carousel__dot[hidden],
+.lp-carousel__play[hidden] {
   display: none;
 }
 .lp-carousel__arrow[aria-disabled='true'] {
@@ -1375,26 +1376,30 @@ body:has(.lp-sticky--all) {
     addEventListener("resize", update);
     update();
     const seconds = Number(data.autoplay);
-    if (!seconds || reduceMotion || root.closest("[data-lp-block]")) return;
-    let stopped = false;
+    if (!play) return;
+    if (!seconds || reduceMotion || root.closest("[data-lp-block]")) {
+      play.hidden = true;
+      return;
+    }
     let paused = false;
+    const pause = (value) => {
+      if (value === paused) return;
+      paused = value;
+      const label = play.dataset.lpPlay;
+      play.dataset.lpPlay = play.ariaLabel;
+      play.ariaLabel = label;
+      play.toggleAttribute("data-paused", paused);
+    };
     ["pointerdown", "wheel", "keydown"].forEach(
       (type) => root.addEventListener(type, (event) => {
-        if (!event.target.closest("[data-lp-play]")) stopped = true;
+        if (!play.contains(event.target)) pause(true);
       })
     );
-    if (play) {
-      play.onclick = () => {
-        const label = play.dataset.lpPlay;
-        play.dataset.lpPlay = play.ariaLabel;
-        play.ariaLabel = label;
-        play.toggleAttribute("data-paused", paused = !paused);
-      };
-    }
+    play.onclick = () => pause(!paused);
     const timer = setInterval(() => {
       if (!root.isConnected) return clearInterval(timer);
       const box = root.getBoundingClientRect();
-      if (!stopped && !paused && !root.matches(":hover") && !$(":focus:not([data-lp-play])") && box.bottom > 0 && box.top < innerHeight && !document.hidden)
+      if (!paused && !root.matches(":hover") && !$(":focus:not([data-lp-play])") && box.bottom > 0 && box.top < innerHeight && !document.hidden)
         step(1, true);
     }, seconds * 1e3);
   });

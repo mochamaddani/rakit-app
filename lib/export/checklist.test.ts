@@ -236,8 +236,38 @@ describe('pre-export checklist', () => {
       id: 'customHtmlRemoved',
       level: 'warn',
       message:
-        'Scripts in Custom HTML were removed (turn on Run scripts to keep them): Custom HTML 3.',
+        'Parts of Custom HTML were removed (turn on Run scripts to keep them): Custom HTML 3 (event handlers).',
       blockIds: ['hOff'],
+    });
+  });
+
+  it('names embeds and forms Custom HTML loses, and points YouTube iframes to the Video block', () => {
+    const doc = variant((raw) => {
+      raw.sections.unshift({
+        id: 'sCode',
+        blocks: [
+          {
+            id: 'hMap',
+            type: 'custom-html',
+            props: {
+              html: '<iframe src="https://www.google.com/maps/embed?pb=1"></iframe><form><input></form>',
+              blockName: 'Peta',
+            },
+          },
+          {
+            id: 'hLink',
+            type: 'custom-html',
+            props: { html: '<a href="javascript:x()">a</a><center>c</center>' },
+          },
+        ],
+      } as never);
+    });
+    expect(item(input(doc), 'customHtmlRemoved')).toEqual({
+      id: 'customHtmlRemoved',
+      level: 'warn',
+      message:
+        'Parts of Custom HTML were removed (turn on Run scripts to keep them): Peta (iframe, form), Custom HTML 2 (unsafe links). For YouTube or Vimeo, use a Video block.',
+      blockIds: ['hMap', 'hLink'],
     });
   });
 });
