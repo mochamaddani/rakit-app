@@ -47,10 +47,13 @@ const textLength = (
       sum + ('v' in node ? node.v.length : 'href' in node ? textLength(node.label) : 0),
     0,
   );
+/** Top-level nodes plus every link's label nodes: a cap on the whole field (M2b review M13). */
+const nodeCount = (nodes: readonly (InlineLeaf | { label: InlineLeaf[] })[]): number =>
+  nodes.reduce((sum, node) => sum + 1 + ('label' in node ? node.label.length : 0), 0);
 const InlineNodesSchema = z
   .array(InlineNodeSchema)
   .max(2000)
-  .refine((nodes) => textLength(nodes) <= 20_000);
+  .refine((nodes) => nodeCount(nodes) <= 2000 && textLength(nodes) <= 20_000);
 const FieldPath = z.string().max(200);
 
 const CanvasEventSchema = z.discriminatedUnion('type', [

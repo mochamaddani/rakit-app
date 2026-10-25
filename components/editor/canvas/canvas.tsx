@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type RefObject } from 'react';
-import type { KeyInput } from '@/lib/editor/canvas/constants';
+import { REBUILD_LIMIT, type KeyInput } from '@/lib/editor/canvas/constants';
 import {
   envelope,
   parseCanvasEvent,
@@ -50,6 +50,10 @@ interface SyncState {
   pendingScroll: string | null;
   selectedFromCanvas: string | null;
   startedAt: number;
+  /** `load` events for this frame; a second one means it navigated away (D-053). */
+  loads: number;
+  /** The block whose inline edit the editor accepted, until editEnd. */
+  editingBlock: string | null;
 }
 
 const newSyncState = (): SyncState => ({
@@ -64,6 +68,8 @@ const newSyncState = (): SyncState => ({
   pendingScroll: null,
   selectedFromCanvas: null,
   startedAt: 0,
+  loads: 0,
+  editingBlock: null,
 });
 
 function metrics() {
@@ -104,9 +110,14 @@ export function Canvas({
   const scaleRef = useRef(1);
   const geometryListeners = useRef(new Set<() => void>());
 
+  /** When `error` rebuilds happened recently; cleared by a successful ready. */
+  const errorRebuilds = useRef<number[]>([]);
+
   const post = useCallback((command: CanvasCommand) => {
     const target = iframeRef.current?.contentWindow;
-    const { channel } = sync.current;
+    const { channel, ready } = sync.current;
+    // Until the runtime on this channel says ready, the frame gets nothing but the greeting.
+    if (command.type !== 'hello' && !ready) return;
     // The iframe's origin is opaque, so it cannot be named as the target origin.
     if (target && channel) target.postMessage(envelope(channel, command), '*');
   }, []);
@@ -142,6 +153,8 @@ export function Canvas({
       pending: [],
       changedAt: null,
       startedAt: performance.now(),
+      loads: 0,
+      editingBlock: null,
     });
     geometryRef.current = null;
     setReady(false);
@@ -200,6 +213,7 @@ export function Canvas({
           const m = metrics();
           if (m && !s.ready) m.readyMs = performance.now() - s.startedAt;
           s.ready = true;
+          errorRebuilds.current = [];
           setReady(true);
           flushSync();
           return;
@@ -247,9 +261,10 @@ export function Canvas({
           return;
         }
         case 'edit':
-          applyInlineEdit(store, message);
+          if (applyInlineEdit(store, message, s.editingBlock)) s.editingBlock = message.blockId;
           return;
         case 'editEnd': {
+          s.editingBlock = null;
           finishInlineEdit(store);
           // The canvas showed what was typed; re-render the block from the document, which also
           // restores a field whose last edit could not be stored.
@@ -261,9 +276,22 @@ export function Canvas({
           if (!s.raf) s.raf = requestAnimationFrame(flushSync);
           return;
         }
-        case 'error':
+        case 'error': {
+          // A page that keeps failing must not rebuild the canvas in a loop.
+          const now = performance.now();
+          const recent = errorRebuilds.current.filter((at) => now - at < REBUILD_LIMIT.windowMs);
+          errorRebuilds.current = recent;
+          if (recent.length >= REBUILD_LIMIT.count) {
+            s.ready = false;
+            store
+              .getState()
+              .notify('The preview stopped responding. Reload the editor to try again.');
+            return;
+          }
+          errorRebuilds.current.push(now);
           buildFrame();
           return;
+        }
       }
     };
     // Every message is untrusted: it must come from the current iframe, on its channel, and
@@ -346,7 +374,12 @@ export function Canvas({
             sandbox="allow-scripts"
             srcDoc={frame.srcdoc}
             data-ready={ready ? 'true' : undefined}
-            onLoad={() => post({ type: 'hello' })}
+            onLoad={() => {
+              // srcdoc loads once; another load means the frame navigated away: start over.
+              sync.current.loads += 1;
+              if (sync.current.loads > 1) buildFrame();
+              else post({ type: 'hello' });
+            }}
             className="block origin-top-left border-0 bg-white shadow-sm"
             style={{ width: deviceWidth, height: frameHeight, transform: `scale(${scale})` }}
           />

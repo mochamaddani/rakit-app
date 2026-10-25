@@ -282,6 +282,19 @@ describe('preview runtime', () => {
       expect.objectContaining({ input: { key: 'z', mod: true, shift: false, alt: false } }),
     ]);
   });
+  it("ignores commands that don't come from the parent window", async () => {
+    load();
+    const before = posts.length;
+    window.dispatchEvent(
+      new MessageEvent('message', {
+        data: { source: CANVAS_SOURCE, channel: CH, type: 'hello' },
+        source: { name: 'child' } as unknown as Window,
+      }),
+    );
+    expect(posts.slice(before).filter((p) => p.type === 'ready')).toHaveLength(0);
+    send({ type: 'hello' });
+    expect(posts.slice(before).filter((p) => p.type === 'ready')).toHaveLength(1);
+  });
   it('ignores messages from another channel or with an unknown type', () => {
     load();
     window.dispatchEvent(

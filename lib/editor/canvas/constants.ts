@@ -4,6 +4,9 @@
 /** Tag on every canvas message, so unrelated postMessage traffic is ignored. */
 export const CANVAS_SOURCE = 'launchpad-canvas';
 
+/** More `error` rebuilds than `count` within `windowMs` stop rebuilding (D-053). */
+export const REBUILD_LIMIT = { count: 3, windowMs: 10_000 } as const;
+
 /** Per-load channel id, in createId() format. */
 export const CHANNEL_PATTERN = /^[a-z0-9]{10}$/;
 

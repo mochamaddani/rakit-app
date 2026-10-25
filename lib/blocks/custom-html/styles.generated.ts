@@ -2,6 +2,6 @@
 import type { GeneratedAsset } from '@/lib/renderer/generated-asset';
 
 export const asset: GeneratedAsset = {
-  min: ".lp-custom__frame{display:block;width:100%;height:120px;border:0}",
-  src: "/* The canvas shows owner code in a nested frame; the canvas runtime sizes it to its content. */\n.lp-custom__frame {\n  display: block;\n  width: 100%;\n  height: 120px;\n  border: 0;\n}\n",
+  min: ".lp-custom__frame{display:block;width:100%;height:120px;border:0;pointer-events:none}",
+  src: "/* The canvas shows owner code in a nested frame; the canvas runtime sizes it to its content. */\n.lp-custom__frame {\n  display: block;\n  width: 100%;\n  height: 120px;\n  border: 0;\n  /* Clicks select the block in the canvas instead of reaching the owner's code. */\n  pointer-events: none;\n}\n",
 };

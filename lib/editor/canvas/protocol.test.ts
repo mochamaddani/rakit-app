@@ -119,3 +119,17 @@ it('forwards only editor shortcuts', () => {
     Array(6).fill(false),
   );
 });
+
+it('rejects an edit whose link labels exceed 2000 nodes in total', () => {
+  const label = Array.from({ length: 1000 }, () => ({ t: 'br' }));
+  const edit = (links: number) => ({
+    source: CANVAS_SOURCE,
+    channel: CH,
+    type: 'edit',
+    blockId: 'b1',
+    path: 'headline',
+    nodes: Array.from({ length: links }, () => ({ t: 'link', href: 'https://x.test', label })),
+  });
+  expect(parseCanvasEvent(edit(1), CH)).not.toBeNull();
+  expect(parseCanvasEvent(edit(2), CH)).toBeNull();
+});

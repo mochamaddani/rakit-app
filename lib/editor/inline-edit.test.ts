@@ -10,6 +10,8 @@ const setup = () => {
     { pageId: 'p1', doc: editorDoc() },
     { newId: sequentialIds('n'), now: () => (time += 100) },
   );
+  // An inline edit always starts with a double-click, which selects the block first.
+  store.getState().select({ kind: 'block', blockId: 'b1' });
   return store;
 };
 const headline = (store: ReturnType<typeof setup>) =>
@@ -73,5 +75,34 @@ describe('inline edits', () => {
       store.getState().doc.sections[0]!.blocks[0]!.props as { primaryCta: { label: string } }
     ).primaryCta;
     expect(cta.label).toBe('Pesan sekarang');
+  });
+
+  it("an edit for a block that isn't selected changes nothing", () => {
+    const store = setup();
+    store.getState().select({ kind: 'block', blockId: 'b2' });
+    const accepted = applyInlineEdit(store, {
+      blockId: 'b1',
+      path: 'headline',
+      nodes: [{ t: 'text', v: 'Forged' }],
+    });
+    expect(accepted).toBe(false);
+    expect(store.getState().version).toBe(0);
+    store.getState().select(null);
+    applyInlineEdit(store, { blockId: 'b1', path: 'headline', nodes: [{ t: 'text', v: 'X' }] });
+    expect(store.getState().version).toBe(0);
+  });
+
+  it('the block being edited still takes its last edit after the selection moved', () => {
+    const store = setup();
+    expect(
+      applyInlineEdit(store, { blockId: 'b1', path: 'headline', nodes: [{ t: 'text', v: 'A' }] }),
+    ).toBe(true);
+    store.getState().select({ kind: 'block', blockId: 'b2' });
+    applyInlineEdit(
+      store,
+      { blockId: 'b1', path: 'headline', nodes: [{ t: 'text', v: 'AB' }] },
+      'b1',
+    );
+    expect(headline(store)).toBe('AB');
   });
 });
