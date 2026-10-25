@@ -102,7 +102,9 @@ export function startPreviewRuntime(options: RuntimeOptions): () => void {
     ID.test(id) ? doc.querySelector(`[data-lp-block="${id}"]`) : null;
 
   const rectOf = (el: Element, id: string): CanvasRect => {
-    const r = el.getBoundingClientRect();
+    let r = el.getBoundingClientRect();
+    // A fixed bar (Sticky CTA, cookie banner) leaves its wrapper with no height; use the bar.
+    if (r.height === 0 && el.firstElementChild) r = el.firstElementChild.getBoundingClientRect();
     return { id, top: r.top, left: r.left, width: r.width, height: r.height };
   };
 

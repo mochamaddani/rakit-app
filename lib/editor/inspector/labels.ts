@@ -28,6 +28,8 @@ const FIELD_LABELS: Readonly<Record<string, string>> = {
   'video.title': 'Video title',
   poster: 'Poster image',
   ratio: 'Shape',
+  showOn: 'Show on',
+  reveal: 'Appears',
   openFirst: 'Open the first question',
   exclusive: 'Only one answer open at a time',
   hideOn: 'Hide on',
@@ -74,6 +76,8 @@ const OPTION_LABELS: Readonly<Record<string, Readonly<Record<string, string>>>> 
   tone: { base: 'Page', primary: 'Primary color' },
   event: { none: 'No event', InitiateCheckout: 'Initiate checkout' },
   mode: { snippet: 'Embed code', iframe: 'Form address (iframe)' },
+  showOn: { mobile: 'Phones only', all: 'All screens' },
+  reveal: { always: 'Always', afterFirstSection: 'After the first section' },
 };
 
 /** "compareAt" → "Compare at"; "neo-grotesque" → "Neo-grotesque". */

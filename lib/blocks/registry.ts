@@ -10,6 +10,7 @@ import { logos } from './logos';
 import { pricing } from './pricing';
 import { spacer } from './spacer';
 import { productCarousel } from './special/product-carousel';
+import { stickyCta } from './sticky-cta';
 import { testimonials } from './testimonials';
 import type { AnyBlockDefinition } from './types';
 import { video } from './video';
@@ -30,6 +31,7 @@ export const BLOCKS = [
   pricing,
   countdown,
   video,
+  stickyCta,
 ] as const;
 
 export type RegisteredBlock = (typeof BLOCKS)[number];

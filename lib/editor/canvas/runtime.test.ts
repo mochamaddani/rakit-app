@@ -118,6 +118,29 @@ describe('preview runtime', () => {
     await frame();
     expect(posts.filter((p) => p.type === 'rects')).toHaveLength(1);
   });
+  it("a block whose wrapper has no height (a fixed bar) reports its content's rect", async () => {
+    load();
+    const wrapper = document.querySelector<HTMLElement>('[data-lp-block="b1"]')!;
+    const rect = (top: number, height: number) =>
+      ({
+        top,
+        left: 0,
+        width: 390,
+        height,
+        right: 390,
+        bottom: top + height,
+        x: 0,
+        y: top,
+      }) as DOMRect;
+    wrapper.getBoundingClientRect = () => rect(100, 0);
+    (wrapper.firstElementChild as HTMLElement).getBoundingClientRect = () => rect(700, 64);
+    send({ type: 'scrollBy', dy: 0 });
+    await frame();
+    const last = posts.filter((p) => p.type === 'rects').at(-1) as {
+      blocks: { id: string; top: number; height: number }[];
+    };
+    expect(last.blocks.find((b) => b.id === 'b1')).toMatchObject({ top: 700, height: 64 });
+  });
   it('posts ready and rects on start, and ready again on hello', async () => {
     load();
     await frame();

@@ -1,0 +1,57 @@
+/* Floating bar (D-050). It paints its own background, so it resets the tone colors it uses (D-033). */
+.lp-sticky {
+  --lp-fg: var(--lp-on-dark);
+  --lp-btn-bg: var(--lp-accent);
+  --lp-btn-fg: var(--lp-on-accent);
+  position: fixed;
+  inset: auto 0 0;
+  z-index: 50;
+  padding: 8px 16px calc(8px + env(safe-area-inset-bottom));
+  background: var(--lp-dark);
+  color: var(--lp-fg);
+  box-shadow: 0 -4px 16px rgb(0 0 0 / 0.15);
+  transition: transform 0.2s;
+}
+.lp-sticky__inner {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  max-width: 1040px;
+  margin-inline: auto;
+}
+.lp-sticky__text {
+  flex: 1;
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+.lp-sticky .lp-btn {
+  flex: 1;
+}
+.lp-sticky__text + .lp-btn {
+  flex: none;
+}
+/* Hidden until the first section scrolls away; only with JavaScript, which sets html.lp-js. */
+.lp-js .lp-sticky[data-reveal]:not(.lp-sticky--on) {
+  visibility: hidden;
+  transform: translateY(110%);
+}
+/* The band holding only the bar takes no room. */
+.lp-s:has(> .lp-c > .lp-b > .lp-sticky:only-child) {
+  padding-block: 0;
+}
+/* Room at the bottom of the page, so the bar never covers the footer. */
+body:has(.lp-sticky--all) {
+  padding-bottom: 72px;
+}
+@media (max-width: 1023.98px) {
+  body:has(.lp-sticky--mobile) {
+    padding-bottom: 72px;
+  }
+}
+@media (min-width: 1024px) {
+  .lp-sticky--mobile {
+    display: none;
+  }
+}

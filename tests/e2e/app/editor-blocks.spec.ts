@@ -170,3 +170,23 @@ test('a save whose response is lost does not turn into a conflict', async ({ pag
   await page.reload();
   await expect.poll(() => blockTypes(canvas(page)), { timeout: 20_000 }).toEqual(['hero', 'faq']);
 });
+
+test('a sticky CTA can be added, selected and edited in the canvas', async ({ page }) => {
+  const frame = await fresh(page);
+  await addBlock(page, 'Hero');
+  await addBlock(page, 'Sticky CTA bar');
+  const bar = frame.locator('.lp-sticky');
+  await expect(bar).toBeVisible();
+  // Select something else first, then pick the bar from the canvas itself.
+  await frame.locator('h1').click();
+  await expect(page.getByTestId('canvas-selection')).toContainText('Hero');
+  await bar.click({ position: { x: 4, y: 4 } });
+  await expect(page.getByTestId('canvas-selection')).toContainText('Sticky CTA bar');
+  const label = frame.locator('.lp-sticky [data-lp-field="cta.label"]');
+  await label.dblclick();
+  await page.keyboard.press('ControlOrMeta+A');
+  await page.keyboard.type('Beli sekarang');
+  await page.keyboard.press('Escape');
+  await expect(label).toHaveText('Beli sekarang');
+  await expect(page.getByLabel('Label', { exact: true })).toHaveValue('Beli sekarang');
+});
