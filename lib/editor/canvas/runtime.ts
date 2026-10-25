@@ -200,7 +200,31 @@ export function startPreviewRuntime(options: RuntimeOptions): () => void {
     if ((typeof message.js === 'string' || changed) && latestJs) options.runScript(latestJs);
   }
 
+  // Custom HTML frames (D-053) report their content height; nothing else from a child frame counts.
+  const frameHeights = new Map<HTMLElement, number>();
+  let heightFrame = 0;
+  const resizeCustomFrame = (event: MessageEvent): boolean => {
+    const data: unknown = event.data;
+    if (!event.source || !isRecord(data) || typeof data.lpHeight !== 'number') return false;
+    if (!Number.isFinite(data.lpHeight)) return true;
+    const frameEl = Array.from(doc.querySelectorAll('iframe[data-lp-custom-frame]')).find(
+      (el) => (el as HTMLIFrameElement).contentWindow === event.source,
+    ) as HTMLIFrameElement | undefined;
+    if (!frameEl) return false;
+    frameHeights.set(frameEl, Math.max(20, Math.min(4000, Math.ceil(data.lpHeight))));
+    if (!heightFrame) {
+      heightFrame = win.requestAnimationFrame(() => {
+        heightFrame = 0;
+        frameHeights.forEach((height, el) => (el.style.height = `${height}px`));
+        frameHeights.clear();
+        scheduleRects();
+      });
+    }
+    return true;
+  };
+
   const onMessage = (event: MessageEvent) => {
+    if (resizeCustomFrame(event)) return;
     if (!options.isFromParent(event)) return;
     const message: unknown = event.data;
     if (!isRecord(message) || message.source !== CANVAS_SOURCE || message.channel !== channel) {

@@ -25,7 +25,8 @@ export type MessageKey =
   | 'cookieNotice'
   | 'cookieOk'
   | 'cookieRegion'
-  | 'privacy';
+  | 'privacy'
+  | 'customHtml';
 
 const MESSAGES: Record<Lang, Record<MessageKey, string>> = {
   id: {
@@ -54,6 +55,7 @@ const MESSAGES: Record<Lang, Record<MessageKey, string>> = {
     cookieOk: 'Oke',
     cookieRegion: 'Pemberitahuan cookie',
     privacy: 'Kebijakan privasi',
+    customHtml: 'HTML khusus',
   },
   en: {
     products: 'Products',
@@ -81,6 +83,7 @@ const MESSAGES: Record<Lang, Record<MessageKey, string>> = {
     cookieOk: 'OK',
     cookieRegion: 'Cookie notice',
     privacy: 'Privacy policy',
+    customHtml: 'Custom HTML',
   },
 };
 

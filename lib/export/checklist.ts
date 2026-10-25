@@ -1,9 +1,11 @@
 import { countdownEndMs, type CountdownProps } from '@/lib/blocks/countdown/schema';
+import type { CustomHtmlProps } from '@/lib/blocks/custom-html/schema';
 import { detectFormProvider, formIsMissing } from '@/lib/blocks/form-embed/providers';
 import type { FormEmbedProps } from '@/lib/blocks/form-embed/schema';
 import type { FooterProps } from '@/lib/blocks/footer/schema';
 import type { BlockInstance, PageDocument } from '@/lib/schema/document';
 import { hasTrackingIds } from '@/lib/schema/settings';
+import { hasScripts } from '@/lib/sanitize/html';
 import { collectImages } from './images';
 import { formatBytes, SIZE_HARD_BYTES, SIZE_WARN_BYTES } from './size';
 
@@ -152,6 +154,32 @@ export function preExportChecklist(input: ChecklistInput): ChecklistItem[] {
       'countdownUnset',
       'A countdown has no end date.',
       unset.map(({ id }) => id),
+    );
+  }
+
+  // Custom HTML is named by its own name, else by its position among Custom HTML blocks.
+  const customs = blocks
+    .filter((block) => block.type === 'custom-html')
+    .map((block, i) => {
+      const props = block.props as CustomHtmlProps;
+      return { block, props, name: props.blockName.trim() || `Custom HTML ${i + 1}` };
+    });
+  const running = customs.filter(({ props }) => props.runScripts);
+  if (running.length > 0) {
+    warn(
+      'customHtmlScripts',
+      `Custom HTML runs scripts on this page: ${running.map(({ name }) => name).join(', ')}.`,
+      running.map(({ block }) => block.id),
+    );
+  }
+  const removed = customs.filter(({ props }) => !props.runScripts && hasScripts(props.html));
+  if (removed.length > 0) {
+    warn(
+      'customHtmlRemoved',
+      `Scripts in Custom HTML were removed (turn on Run scripts to keep them): ${removed
+        .map(({ name }) => name)
+        .join(', ')}.`,
+      removed.map(({ block }) => block.id),
     );
   }
 

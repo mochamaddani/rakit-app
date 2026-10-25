@@ -18,6 +18,7 @@ describe.each(listBlockDefinitions().map((d) => [d.type, d] as const))(
   '%s (registry-wide)',
   (_type, def) => {
     it('escapes hostile text and neutralizes hostile URLs in every field', () => {
+      let echoed = false;
       for (const mode of ['export', 'preview'] as const) {
         const fragment = String(def.render(poisonProps(def) as never, testContext({ mode })));
         const doc = new DOMParser().parseFromString(
@@ -33,9 +34,11 @@ describe.each(listBlockDefinitions().map((d) => [d.type, d] as const))(
               expect(attr.value.toLowerCase()).not.toContain('javascript:');
           }
         }
-        // Blocks without user text (Spacer) have nothing to echo back.
-        if (hasUserText(def)) expect(fragment).toContain('&lt;script&gt;');
+        if (fragment.includes('&lt;script&gt;')) echoed = true;
       }
+      // Blocks without user text (Spacer) have nothing to echo back; Custom HTML echoes its name
+      // only in preview, so one of the two modes must show it escaped.
+      if (hasUserText(def)) expect(echoed).toBe(true);
     });
 
     it('resolves default links safely when the page default CTA is hostile', () => {

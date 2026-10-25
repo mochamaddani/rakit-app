@@ -1,6 +1,7 @@
 import { benefits } from './benefits';
 import { cookieBanner } from './cookie-banner';
 import { countdown } from './countdown';
+import { customHtml } from './custom-html';
 import { faq } from './faq';
 import { footer } from './footer';
 import { formEmbed } from './form-embed';
@@ -34,6 +35,7 @@ export const BLOCKS = [
   video,
   stickyCta,
   cookieBanner,
+  customHtml,
 ] as const;
 
 export type RegisteredBlock = (typeof BLOCKS)[number];

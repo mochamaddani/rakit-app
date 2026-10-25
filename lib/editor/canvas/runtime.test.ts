@@ -23,7 +23,7 @@ function load(doc = editorDoc()) {
     win: window,
     channel: CH,
     post: (m) => posts.push(m),
-    isFromParent: () => true,
+    isFromParent: (event) => !(event.source as { name?: string } | null)?.name,
     runScript: (code) => scripts.push(code),
   });
   return s;
@@ -140,6 +140,45 @@ describe('preview runtime', () => {
       blocks: { id: string; top: number; height: number }[];
     };
     expect(last.blocks.find((b) => b.id === 'b1')).toMatchObject({ top: 700, height: 64 });
+  });
+  describe('Custom HTML frames', () => {
+    const addFrame = () => {
+      const iframe = document.createElement('iframe');
+      iframe.setAttribute('data-lp-custom-frame', '');
+      const source = { name: 'child' } as unknown as Window;
+      Object.defineProperty(iframe, 'contentWindow', { value: source });
+      document.querySelector('[data-lp-block="b1"]')!.append(iframe);
+      return { iframe, source };
+    };
+    const fromChild = (source: Window, data: unknown) =>
+      window.dispatchEvent(new MessageEvent('message', { data, source }));
+
+    it("a custom frame's height message resizes only that frame, clamped", async () => {
+      load();
+      const a = addFrame();
+      const b = addFrame();
+      fromChild(a.source, { lpHeight: 321.4 });
+      await frame();
+      expect(a.iframe.style.height).toBe('322px');
+      expect(b.iframe.style.height).toBe('');
+      fromChild(b.source, { lpHeight: 999_999 });
+      fromChild(a.source, { lpHeight: 2 });
+      await frame();
+      expect(b.iframe.style.height).toBe('4000px');
+      expect(a.iframe.style.height).toBe('20px');
+    });
+
+    it('other child-frame messages are ignored', async () => {
+      load();
+      const a = addFrame();
+      const before = posts.length;
+      fromChild(a.source, { source: CANVAS_SOURCE, channel: CH, type: 'hello' });
+      fromChild(a.source, { lpHeight: 'tall' });
+      fromChild({ name: 'stranger' } as unknown as Window, { lpHeight: 300 });
+      await frame();
+      expect(a.iframe.style.height).toBe('');
+      expect(posts.slice(before).filter((p) => p.type === 'ready')).toHaveLength(0);
+    });
   });
   it('posts ready and rects on start, and ready again on hello', async () => {
     load();

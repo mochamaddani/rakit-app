@@ -209,4 +209,35 @@ describe('pre-export checklist', () => {
     expect(item(input(doc), 'countdownUnset')?.blockIds).toEqual(['cUnset']);
     expect(item(input(doc), 'countdownUnset')?.message).toBe('A countdown has no end date.');
   });
+
+  it('names Custom HTML that runs scripts and Custom HTML whose scripts were removed', () => {
+    const doc = variant((raw) => {
+      raw.sections.unshift({
+        id: 'sCode',
+        blocks: [
+          {
+            id: 'hRun',
+            type: 'custom-html',
+            props: { html: '<script>x()</script>', runScripts: true, blockName: 'Chat widget' },
+          },
+          { id: 'hRun2', type: 'custom-html', props: { html: '<p>x</p>', runScripts: true } },
+          { id: 'hOff', type: 'custom-html', props: { html: '<img src=x onerror=y()>' } },
+          { id: 'hPlain', type: 'custom-html', props: { html: '<p>plain</p>' } },
+        ],
+      } as never);
+    });
+    expect(item(input(doc), 'customHtmlScripts')).toEqual({
+      id: 'customHtmlScripts',
+      level: 'warn',
+      message: 'Custom HTML runs scripts on this page: Chat widget, Custom HTML 2.',
+      blockIds: ['hRun', 'hRun2'],
+    });
+    expect(item(input(doc), 'customHtmlRemoved')).toEqual({
+      id: 'customHtmlRemoved',
+      level: 'warn',
+      message:
+        'Scripts in Custom HTML were removed (turn on Run scripts to keep them): Custom HTML 3.',
+      blockIds: ['hOff'],
+    });
+  });
 });
