@@ -30,6 +30,8 @@ const FIELD_LABELS: Readonly<Record<string, string>> = {
   ratio: 'Shape',
   showOn: 'Show on',
   reveal: 'Appears',
+  privacyLink: 'Privacy policy link',
+  buttonLabel: 'Button label',
   openFirst: 'Open the first question',
   exclusive: 'Only one answer open at a time',
   hideOn: 'Hide on',

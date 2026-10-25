@@ -82,3 +82,49 @@ test('the bar is hidden from 1024 px when set to phones only', async ({ page: ta
   await tab.evaluate(() => window.scrollTo(0, 2000));
   await expect(bar(tab)).toBeHidden();
 });
+
+const cookie = {
+  id: 'bCookie',
+  type: 'cookie-banner',
+  props: { privacyLink: { kind: 'url', url: 'https://x.test/privasi' } },
+};
+const banner = (p: Page) => p.getByRole('region', { name: 'Pemberitahuan cookie' });
+
+test('the cookie banner sits above the sticky bar and stays dismissed after reload', async ({
+  page: tab,
+}) => {
+  const url = page('cookie', [sticky, cookie]);
+  await tab.goto(url);
+  await tab.evaluate(() => localStorage.removeItem('lp-cookie-ok'));
+  await tab.reload();
+  await expect(banner(tab)).toBeVisible();
+  await tab.evaluate(() => window.scrollTo(0, 1500));
+  await expect(bar(tab)).toBeVisible();
+  const [cookieBox, barBox] = await Promise.all([
+    banner(tab).boundingBox(),
+    bar(tab).boundingBox(),
+  ]);
+  expect(cookieBox!.y + cookieBox!.height).toBeLessThanOrEqual(barBox!.y);
+  await banner(tab).getByRole('button', { name: 'Oke' }).click();
+  await expect(banner(tab)).toBeHidden();
+  await tab.reload();
+  await expect(banner(tab)).toBeHidden();
+  await tab.evaluate(() => localStorage.removeItem('lp-cookie-ok'));
+});
+
+test("the banner's button is reachable by keyboard and focus moves to main", async ({
+  page: tab,
+}) => {
+  await tab.goto(page('cookie-keys', [cookie]));
+  await tab.evaluate(() => localStorage.removeItem('lp-cookie-ok'));
+  await tab.reload();
+  const button = banner(tab).getByRole('button', { name: 'Oke' });
+  for (let i = 0; i < 20 && !(await button.evaluate((el) => el === document.activeElement)); i++) {
+    await tab.keyboard.press('Tab');
+  }
+  await expect(button).toBeFocused();
+  await tab.keyboard.press('Enter');
+  await expect(banner(tab)).toBeHidden();
+  await expect(tab.locator('main')).toBeFocused();
+  await tab.evaluate(() => localStorage.removeItem('lp-cookie-ok'));
+});
