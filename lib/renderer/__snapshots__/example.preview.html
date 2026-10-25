@@ -5,6 +5,10 @@
 *::after {
   box-sizing: border-box;
 }
+/* Buttons that link to a section glide there; the reduced-motion rule below turns it off. */
+html {
+  scroll-behavior: smooth;
+}
 body {
   margin: 0;
   font-family: var(--lp-font);
@@ -253,6 +257,11 @@ a {
   color: #111827;
   outline: 2px dashed #ca8a04;
   border-radius: 0.2em;
+}
+
+/* The canvas scrolls itself (drag auto-scroll, scroll restore after a patch): keep that instant. */
+html {
+  scroll-behavior: auto;
 }
 
 /* Inline editing (docs/DECISIONS.md D-044). */

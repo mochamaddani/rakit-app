@@ -2,6 +2,6 @@
 import type { GeneratedAsset } from '@/lib/renderer/generated-asset';
 
 export const asset: GeneratedAsset = {
-  min: ".lp-replace{background:#fde047;color:#111827;outline:2px dashed #ca8a04;border-radius:.2em}[data-lp-field]:hover{cursor:text}[data-lp-editing]{outline:2px solid #0284c7;outline-offset:2px}",
-  src: "/* Editor preview only: highlights [REPLACE: …] placeholders that still need real content. */\n.lp-replace {\n  background: #fde047;\n  color: #111827;\n  outline: 2px dashed #ca8a04;\n  border-radius: 0.2em;\n}\n\n/* Inline editing (docs/DECISIONS.md D-044). */\n[data-lp-field]:hover {\n  cursor: text;\n}\n[data-lp-editing] {\n  outline: 2px solid #0284c7;\n  outline-offset: 2px;\n}\n",
+  min: ".lp-replace{background:#fde047;color:#111827;outline:2px dashed #ca8a04;border-radius:.2em}html{scroll-behavior:auto}[data-lp-field]:hover{cursor:text}[data-lp-editing]{outline:2px solid #0284c7;outline-offset:2px}",
+  src: "/* Editor preview only: highlights [REPLACE: …] placeholders that still need real content. */\n.lp-replace {\n  background: #fde047;\n  color: #111827;\n  outline: 2px dashed #ca8a04;\n  border-radius: 0.2em;\n}\n\n/* The canvas scrolls itself (drag auto-scroll, scroll restore after a patch): keep that instant. */\nhtml {\n  scroll-behavior: auto;\n}\n\n/* Inline editing (docs/DECISIONS.md D-044). */\n[data-lp-field]:hover {\n  cursor: text;\n}\n[data-lp-editing] {\n  outline: 2px solid #0284c7;\n  outline-offset: 2px;\n}\n",
 };

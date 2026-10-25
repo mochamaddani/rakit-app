@@ -4,6 +4,10 @@
 *::after {
   box-sizing: border-box;
 }
+/* Buttons that link to a section glide there; the reduced-motion rule below turns it off. */
+html {
+  scroll-behavior: smooth;
+}
 body {
   margin: 0;
   font-family: var(--lp-font);

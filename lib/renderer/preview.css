@@ -6,6 +6,11 @@
   border-radius: 0.2em;
 }
 
+/* The canvas scrolls itself (drag auto-scroll, scroll restore after a patch): keep that instant. */
+html {
+  scroll-behavior: auto;
+}
+
 /* Inline editing (docs/DECISIONS.md D-044). */
 [data-lp-field]:hover {
   cursor: text;
