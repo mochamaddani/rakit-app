@@ -12,7 +12,7 @@ const props = {
     { id: 'l1', image: { src: 'https://x.test/a.png', alt: 'Kompas', width: 300, height: 100 } },
     { id: 'l2', image: { src: 'https://x.test/b.png', alt: 'Detik' } },
   ],
-  height: 'lg',
+  size: 'lg',
 };
 
 describe('logos block', () => {

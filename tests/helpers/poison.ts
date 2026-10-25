@@ -64,6 +64,8 @@ function hostile(
   if (node.type === 'string') {
     if (key === 'url' || key === 'src') return HOSTILE_URL;
     if (node.control === 'text' || node.control === 'rich') return HOSTILE_TEXT;
+    // A real deadline, so blocks that render nothing without one (Countdown) are exercised.
+    if (node.control === 'datetime') return '2030-01-01T00:00';
     if (typeof value === 'string') return value;
     if (node.enum) return node.enum[0];
     return key === 'id' ? ids() : (node.default ?? 'x');

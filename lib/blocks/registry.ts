@@ -1,4 +1,5 @@
 import { benefits } from './benefits';
+import { countdown } from './countdown';
 import { faq } from './faq';
 import { footer } from './footer';
 import { formEmbed } from './form-embed';
@@ -26,6 +27,7 @@ export const BLOCKS = [
   logos,
   gallery,
   pricing,
+  countdown,
 ] as const;
 
 export type RegisteredBlock = (typeof BLOCKS)[number];

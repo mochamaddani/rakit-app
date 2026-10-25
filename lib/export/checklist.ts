@@ -1,3 +1,4 @@
+import { countdownEndMs, type CountdownProps } from '@/lib/blocks/countdown/schema';
 import { detectFormProvider, formIsMissing } from '@/lib/blocks/form-embed/providers';
 import type { FormEmbedProps } from '@/lib/blocks/form-embed/schema';
 import type { FooterProps } from '@/lib/blocks/footer/schema';
@@ -24,6 +25,8 @@ export interface ChecklistInput {
   bytes: number;
   /** From the image step: images that stayed links, and inlined images over 300 KB. */
   images: { failed: number; large: number };
+  /** When the export is built, for countdown deadlines. */
+  now: Date;
 }
 
 const PRIVACY = /privacy|privasi/i;
@@ -127,6 +130,28 @@ export function preExportChecklist(input: ChecklistInput): ChecklistItem[] {
       'placeholder',
       `${plural(placeholders, '[REPLACE: …] placeholder remains', '[REPLACE: …] placeholders remain')}.`,
       blocks.filter((block) => count(block.props) > 0).map((block) => block.id),
+    );
+  }
+
+  const countdowns = blocks.filter((block) => block.type === 'countdown');
+  const ends = countdowns.map((block) => ({
+    id: block.id,
+    end: countdownEndMs(block.props as CountdownProps),
+  }));
+  const ended = ends.filter(({ end }) => end !== null && end <= input.now.getTime());
+  if (ended.length > 0) {
+    warn(
+      'countdownEnded',
+      'A countdown has already ended.',
+      ended.map(({ id }) => id),
+    );
+  }
+  const unset = ends.filter(({ end }) => end === null);
+  if (unset.length > 0) {
+    warn(
+      'countdownUnset',
+      'A countdown has no end date.',
+      unset.map(({ id }) => id),
     );
   }
 

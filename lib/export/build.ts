@@ -85,6 +85,7 @@ export async function buildExport(
         failed: inlined.failed.length + (faviconOk ? 0 : 1),
         large: inlined.large.length,
       },
+      now: new Date(),
     }),
   };
 }

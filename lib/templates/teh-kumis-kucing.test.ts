@@ -54,6 +54,7 @@ describe('Teh Kumis Kucing page', () => {
       tracking: true,
       bytes: html.length,
       images: { failed: 0, large: 0 },
+      now: new Date('2026-10-25T00:00:00Z'),
     });
     expect(items.map((item) => item.id)).toEqual(['privacy', 'formSelf', 'customCode']);
   });

@@ -19,6 +19,7 @@ const input = (doc: PageDocument, extra: Partial<ChecklistInput> = {}): Checklis
   tracking: true,
   bytes: 120_000,
   images: { failed: 0, large: 0 },
+  now: new Date('2026-10-25T00:00:00Z'),
   ...extra,
 });
 const ids = (i: ChecklistInput) => preExportChecklist(i).map((item) => item.id);
@@ -186,5 +187,26 @@ describe('pre-export checklist', () => {
       });
       expect(ids(input(doc))).not.toContain('formSignal');
     }
+  });
+
+  it('warns about an ended and an unset countdown', () => {
+    const doc = variant((raw) => {
+      raw.sections.push({
+        id: 'sTimer',
+        blocks: [
+          { id: 'cEnded', type: 'countdown', props: { endsAt: '2026-10-24T10:00' } },
+          { id: 'cUnset', type: 'countdown', props: {} },
+          { id: 'cLater', type: 'countdown', props: { endsAt: '2026-12-01T10:00' } },
+        ],
+      } as never);
+    });
+    expect(item(input(doc), 'countdownEnded')).toEqual({
+      id: 'countdownEnded',
+      level: 'warn',
+      message: 'A countdown has already ended.',
+      blockIds: ['cEnded'],
+    });
+    expect(item(input(doc), 'countdownUnset')?.blockIds).toEqual(['cUnset']);
+    expect(item(input(doc), 'countdownUnset')?.message).toBe('A countdown has no end date.');
   });
 });

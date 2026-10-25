@@ -6,7 +6,14 @@ import { formEmbed } from '@/lib/blocks/form-embed';
 import { productCarousel } from '@/lib/blocks/special/product-carousel';
 import { ProductItemSchema } from '@/lib/blocks/special/product-carousel/schema';
 import { sequentialIds } from '@/lib/schema/ids';
-import { BlockStyleSchema, code, SectionStyleSchema, text, when } from '@/lib/schema/primitives';
+import {
+  BlockStyleSchema,
+  code,
+  datetime,
+  SectionStyleSchema,
+  text,
+  when,
+} from '@/lib/schema/primitives';
 import { PageSettingsSchema } from '@/lib/schema/settings';
 import {
   describeFields,
@@ -198,4 +205,9 @@ describe('conditional fields', () => {
     expect(showWhen('code')).toEqual({ key: 'mode', in: ['snippet'] });
     expect(showWhen('thankYouUrl')).toBeUndefined();
   });
+});
+
+it('datetime fields describe as datetime', () => {
+  const [field] = describeFields(z.object({ endsAt: datetime().default('') }));
+  expect(field).toMatchObject({ key: 'endsAt', kind: 'datetime', optional: false });
 });

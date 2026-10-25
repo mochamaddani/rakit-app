@@ -35,6 +35,10 @@ export interface CodeSpec extends BaseSpec {
   kind: 'code';
   max: number;
 }
+/** A wall-clock deadline ('YYYY-MM-DDTHH:MM' or ''), edited with datetime-local. */
+export interface DateTimeSpec extends BaseSpec {
+  kind: 'datetime';
+}
 export interface NumberSpec extends BaseSpec {
   kind: 'number';
   min: number | null;
@@ -71,6 +75,7 @@ export type FieldSpec =
   | TextSpec
   | RichSpec
   | CodeSpec
+  | DateTimeSpec
   | NumberSpec
   | BooleanSpec
   | ChoiceSpec
@@ -161,6 +166,7 @@ function describeField(key: string, declared: z.ZodType): FieldSpec {
     if (control === 'rich') return { ...base, kind: 'rich', min, max };
     if (control === 'code') return { ...base, kind: 'code', max };
     if (control === 'color') return { ...base, kind: 'color' };
+    if (control === 'datetime') return { ...base, kind: 'datetime' };
     return {
       ...base,
       kind: 'text',

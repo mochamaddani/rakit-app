@@ -6,6 +6,7 @@ import { BooleanControl } from './controls/boolean-control';
 import { CodeControl } from './controls/code-control';
 import { ChoiceControl } from './controls/choice-control';
 import { ColorControl } from './controls/color-control';
+import { DateTimeControl } from './controls/datetime-control';
 import { GroupControl } from './controls/group-control';
 import { ImageControl } from './controls/image-control';
 import { LinkControl } from './controls/link-control';
@@ -42,6 +43,8 @@ export function FieldList({
               return <RichControl key={spec.key} spec={spec} {...props} />;
             case 'code':
               return <CodeControl key={spec.key} spec={spec} {...props} />;
+            case 'datetime':
+              return <DateTimeControl key={spec.key} spec={spec} {...props} />;
             case 'number':
               return <NumberControl key={spec.key} spec={spec} {...props} />;
             case 'boolean':

@@ -13,7 +13,12 @@ export type MessageKey =
   | 'untitled'
   | 'orderForm'
   | 'formMissing'
-  | 'logos';
+  | 'logos'
+  | 'days'
+  | 'hours'
+  | 'minutes'
+  | 'seconds'
+  | 'offerEnded';
 
 const MESSAGES: Record<Lang, Record<MessageKey, string>> = {
   id: {
@@ -30,6 +35,11 @@ const MESSAGES: Record<Lang, Record<MessageKey, string>> = {
     orderForm: 'Formulir pemesanan',
     formMissing: 'Alamat formulir belum diisi.',
     logos: 'Logo',
+    days: 'Hari',
+    hours: 'Jam',
+    minutes: 'Menit',
+    seconds: 'Detik',
+    offerEnded: 'Promo telah berakhir',
   },
   en: {
     products: 'Products',
@@ -45,6 +55,11 @@ const MESSAGES: Record<Lang, Record<MessageKey, string>> = {
     orderForm: 'Order form',
     formMissing: 'Form address missing.',
     logos: 'Logos',
+    days: 'Days',
+    hours: 'Hours',
+    minutes: 'Minutes',
+    seconds: 'Seconds',
+    offerEnded: 'This offer has ended',
   },
 };
 

@@ -34,6 +34,54 @@ export function when<T extends z.ZodType>(
   return schema.meta({ ...schema.meta(), showWhen: { key, in: values } }) as T;
 }
 
+const WALL_CLOCK = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/;
+
+export interface WallClock {
+  year: number;
+  month: number;
+  day: number;
+  hour: number;
+  minute: number;
+}
+
+const daysInMonth = (year: number, month: number) =>
+  month === 2
+    ? year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0)
+      ? 29
+      : 28
+    : [4, 6, 9, 11].includes(month)
+      ? 30
+      : 31;
+
+/** 'YYYY-MM-DDTHH:MM' as numbers; null for anything else or an impossible date. No Date (D-011). */
+export function parseWallClock(value: string): WallClock | null {
+  const match = WALL_CLOCK.exec(value);
+  if (!match) return null;
+  const [year, month, day, hour, minute] = match.slice(1).map(Number) as [
+    number,
+    number,
+    number,
+    number,
+    number,
+  ];
+  if (month < 1 || month > 12 || day < 1 || day > daysInMonth(year, month)) return null;
+  if (hour > 23 || minute > 59) return null;
+  return { year, month, day, hour, minute };
+}
+
+/** 'YYYY-MM-DDTHH:MM' wall-clock time, '' for unset; rejects impossible dates. Inspector: datetime-local. */
+export function datetime() {
+  return z
+    .string()
+    .refine((value) => value === '' || parseWallClock(value) !== null, {
+      message: 'Enter a real date and time',
+    })
+    .meta({ control: 'datetime' });
+}
+
+/** Indonesian time zones plus UTC, for deadlines (WIB, WITA, WIT). */
+export const UTC_OFFSETS = ['+07:00', '+08:00', '+09:00', '+00:00'] as const;
+
 export const HexColorSchema = z
   .string()
   .regex(/^#[0-9A-Fa-f]{6}$/)

@@ -9,7 +9,7 @@ export const LogosPropsSchema = z.object({
     .max(24)
     .default([]),
   /** Logo height: 24 / 32 / 48 px. */
-  height: z.enum(['sm', 'md', 'lg']).default('md'),
+  size: z.enum(['sm', 'md', 'lg']).default('md'),
   grayscale: z.boolean().default(true),
 });
 export type LogosProps = z.output<typeof LogosPropsSchema>;

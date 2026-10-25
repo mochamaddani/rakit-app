@@ -4,7 +4,7 @@ import { html, type SafeHtml } from '@/lib/renderer/html';
 import type { LogosProps } from './schema';
 
 export function renderLogos(props: LogosProps, ctx: RenderContext): SafeHtml {
-  const classes = ['lp-logos', `lp-logos--${props.height}`, props.grayscale ? 'lp-logos--grey' : '']
+  const classes = ['lp-logos', `lp-logos--${props.size}`, props.grayscale ? 'lp-logos--grey' : '']
     .filter(Boolean)
     .join(' ');
   const items = props.items.map(
