@@ -12,6 +12,7 @@ import { spacer } from './spacer';
 import { productCarousel } from './special/product-carousel';
 import { testimonials } from './testimonials';
 import type { AnyBlockDefinition } from './types';
+import { video } from './video';
 
 // Every block type, one line each. Adding a block = its own folder + one line here (PRD §9).
 export const BLOCKS = [
@@ -28,6 +29,7 @@ export const BLOCKS = [
   gallery,
   pricing,
   countdown,
+  video,
 ] as const;
 
 export type RegisteredBlock = (typeof BLOCKS)[number];

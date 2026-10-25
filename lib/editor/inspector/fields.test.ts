@@ -63,6 +63,16 @@ describe('describeFields', () => {
       ],
       ['trustLine', 'text', false],
       ['image', 'image', true],
+      [
+        'video',
+        'group',
+        [
+          ['url', 'text', false],
+          ['title', 'text', false],
+          ['poster', 'image', false],
+          ['ratio', 'choice', false],
+        ],
+      ],
       ['layout', 'choice', false],
       ['align', 'choice', false],
     ]);
@@ -210,4 +220,14 @@ describe('conditional fields', () => {
 it('datetime fields describe as datetime', () => {
   const [field] = describeFields(z.object({ endsAt: datetime().default('') }));
   expect(field).toMatchObject({ key: 'endsAt', kind: 'datetime', optional: false });
+});
+
+it('labels a field by its parent first (video.url), then by its own key', () => {
+  const schema = z.object({
+    url: z.string().default(''),
+    video: z.object({ url: z.string().default('') }).prefault({}),
+  });
+  const [url, group] = describeFields(schema);
+  expect(url!.label).toBe('Form address');
+  expect(group!.kind === 'group' && group.fields[0]!.label).toBe('Video address');
 });

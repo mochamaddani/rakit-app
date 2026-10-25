@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { hero } from '@/lib/blocks/hero';
 import { renderBlock } from '@/lib/blocks/test-utils';
+import { renderPage } from '@/lib/renderer/page';
+import { parseDocument } from '@/lib/schema/document';
 import { sequentialIds } from '@/lib/schema/ids';
 
 const base = {
@@ -57,5 +59,42 @@ describe('hero block', () => {
       { sectionAnchors: { s2: 'detail' } },
     );
     await expect(out).toMatchFileSnapshot('./__snapshots__/hero.split.html');
+  });
+});
+
+describe('hero video', () => {
+  const YT = 'dQw4w9WgXcQ';
+  const withVideo = {
+    headline: 'H',
+    image: { src: 'https://x.test/hero.webp', alt: 'Teh' },
+    video: { url: `https://youtu.be/${YT}`, title: 'Cara seduh' },
+  };
+  it('renders a video facade in the media slot with the hero image as poster', () => {
+    const out = renderBlock(hero, withVideo);
+    expect(out).toContain('<div class="lp-hero__media"><div class="lp-video"');
+    expect(out).toContain('src="https://x.test/hero.webp" alt=""');
+    expect(out).not.toContain('i.ytimg.com');
+    expect(out).toContain('fetchpriority="high"');
+  });
+  it('an unparseable video falls back to the image', () => {
+    const out = renderBlock(hero, { ...withVideo, video: { url: 'nope' } });
+    expect(out).not.toContain('lp-video');
+    expect(out).toContain('class="lp-hero__img"');
+  });
+  it('hero and a video block ship the video snippet once', () => {
+    const doc = parseDocument({
+      schemaVersion: 1,
+      sections: [
+        {
+          id: 's1',
+          blocks: [
+            { id: 'h', type: 'hero', props: withVideo },
+            { id: 'v', type: 'video', props: { video: { url: `https://youtu.be/${YT}` } } },
+          ],
+        },
+      ],
+    });
+    const html = renderPage(doc, { mode: 'export' }).html;
+    expect(html.split('[data-lp-video]').length - 1).toBe(1);
   });
 });

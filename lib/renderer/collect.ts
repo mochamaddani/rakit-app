@@ -27,13 +27,19 @@ export function collectCss(doc: PageDocument, opts: { mode: RenderMode; minify: 
 
 export function collectJs(doc: PageDocument, opts: { mode: RenderMode; minify: boolean }): string {
   const scripts: string[] = [];
+  // Two block types may share one script (Hero and Video); it ships once.
+  const shipped = new Set<GeneratedAsset>();
   for (const type of presentBlockTypes(doc)) {
     const snippet = getBlockDefinition(type)?.snippet;
     if (!snippet || (snippet.exportOnly && opts.mode === 'preview')) continue;
+    if (shipped.has(snippet.asset)) continue;
     const needed = doc.sections.some((section) =>
       section.blocks.some((b) => b.type === type && snippet.isNeeded?.(b.props) !== false),
     );
-    if (needed) scripts.push(pick(snippet.asset, opts.minify));
+    if (needed) {
+      shipped.add(snippet.asset);
+      scripts.push(pick(snippet.asset, opts.minify));
+    }
   }
   return scripts.join('\n');
 }

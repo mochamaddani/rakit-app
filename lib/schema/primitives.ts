@@ -114,6 +114,17 @@ export const ImageSchema = z
   .meta({ control: 'image' });
 export type Image = z.output<typeof ImageSchema>;
 
+/** A YouTube or Vimeo video shown behind a click-to-play facade (docs/DECISIONS.md D-052). */
+export const VideoSchema = z.object({
+  url: z.string().max(2048).default(''),
+  /** The player's accessible name; '' uses "Video" in the page language. */
+  title: text(120).default(''),
+  /** Overrides the YouTube thumbnail; Vimeo videos need one to show a picture. */
+  poster: ImageSchema.prefault({}),
+  ratio: z.enum(['16:9', '9:16', '1:1', '4:5']).default('16:9'),
+});
+export type Video = z.output<typeof VideoSchema>;
+
 /** Tracking event a CTA click fires in the exported page (docs/DECISIONS.md D-019). */
 export const CTA_EVENTS = ['none', 'Lead', 'Contact', 'InitiateCheckout'] as const;
 export type CtaEvent = (typeof CTA_EVENTS)[number];

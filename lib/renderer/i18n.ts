@@ -18,7 +18,10 @@ export type MessageKey =
   | 'hours'
   | 'minutes'
   | 'seconds'
-  | 'offerEnded';
+  | 'offerEnded'
+  | 'video'
+  | 'playVideo'
+  | 'videoMissing';
 
 const MESSAGES: Record<Lang, Record<MessageKey, string>> = {
   id: {
@@ -40,6 +43,9 @@ const MESSAGES: Record<Lang, Record<MessageKey, string>> = {
     minutes: 'Menit',
     seconds: 'Detik',
     offerEnded: 'Promo telah berakhir',
+    video: 'Video',
+    playVideo: 'Putar: {title}',
+    videoMissing: 'Alamat video belum diisi.',
   },
   en: {
     products: 'Products',
@@ -60,6 +66,9 @@ const MESSAGES: Record<Lang, Record<MessageKey, string>> = {
     minutes: 'Minutes',
     seconds: 'Seconds',
     offerEnded: 'This offer has ended',
+    video: 'Video',
+    playVideo: 'Play: {title}',
+    videoMissing: 'Video address missing.',
   },
 };
 

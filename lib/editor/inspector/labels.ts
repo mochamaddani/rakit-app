@@ -24,6 +24,10 @@ const FIELD_LABELS: Readonly<Record<string, string>> = {
   utcOffset: 'Time zone',
   onEnd: 'When it ends',
   endedText: 'Message after the end',
+  'video.url': 'Video address',
+  'video.title': 'Video title',
+  poster: 'Poster image',
+  ratio: 'Shape',
   openFirst: 'Open the first question',
   exclusive: 'Only one answer open at a time',
   hideOn: 'Hide on',
@@ -78,7 +82,10 @@ function humanize(text: string): string {
   return spaced.charAt(0).toUpperCase() + spaced.slice(1);
 }
 
-export function fieldLabel(key: string): string {
+/** `parent.key` overrides first ("video.url"), then the key alone. */
+export function fieldLabel(key: string, parent?: string): string {
+  const scoped = parent ? `${parent}.${key}` : null;
+  if (scoped && Object.hasOwn(FIELD_LABELS, scoped)) return FIELD_LABELS[scoped]!;
   return Object.hasOwn(FIELD_LABELS, key) ? FIELD_LABELS[key]! : humanize(key);
 }
 

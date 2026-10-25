@@ -1,6 +1,7 @@
 import type { RenderContext } from '@/lib/renderer/context';
-import { renderCta, renderImage } from '@/lib/renderer/fragments';
+import { renderCta, renderImage, renderVideo } from '@/lib/renderer/fragments';
 import { html, type SafeHtml } from '@/lib/renderer/html';
+import { parseVideoUrl } from '@/lib/renderer/video';
 import type { HeroProps } from './schema';
 
 export function renderHero(props: HeroProps, ctx: RenderContext): SafeHtml {
@@ -29,13 +30,20 @@ export function renderHero(props: HeroProps, ctx: RenderContext): SafeHtml {
       : ''
   }</div>`;
 
-  const media = props.image
-    ? html`<div class="lp-hero__media">${renderImage(
-        props.image,
-        { className: 'lp-hero__img', eager: ctx.aboveFold, highPriority: ctx.highPriority },
-        ctx,
-      )}</div>`
-    : '';
+  const media =
+    props.video && parseVideoUrl(props.video.url)
+      ? html`<div class="lp-hero__media">${renderVideo(props.video, ctx, {
+          eager: ctx.aboveFold,
+          highPriority: ctx.highPriority,
+          fallbackPoster: props.image,
+        })}</div>`
+      : props.image
+        ? html`<div class="lp-hero__media">${renderImage(
+            props.image,
+            { className: 'lp-hero__img', eager: ctx.aboveFold, highPriority: ctx.highPriority },
+            ctx,
+          )}</div>`
+        : '';
 
   return html`<div class="lp-hero lp-hero--${props.layout} lp-hero--${props.align}">${text}${media}</div>`;
 }

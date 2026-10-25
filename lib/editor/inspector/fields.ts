@@ -154,10 +154,16 @@ function linkKinds(schema: z.ZodType): LinkSpec['kinds'] | null {
   return kinds;
 }
 
-function describeField(key: string, declared: z.ZodType): FieldSpec {
+function describeField(key: string, declared: z.ZodType, parent?: string): FieldSpec {
   const { inner: schema, optional } = unwrap(declared);
   const showWhen = showWhenOf(declared);
-  const base = { key, label: fieldLabel(key), optional, schema, ...(showWhen && { showWhen }) };
+  const base = {
+    key,
+    label: fieldLabel(key, parent),
+    optional,
+    schema,
+    ...(showWhen && { showWhen }),
+  };
 
   if (schema instanceof z.ZodString) {
     const control = controlOf(schema);
@@ -197,7 +203,7 @@ function describeField(key: string, declared: z.ZodType): FieldSpec {
   }
   if (schema instanceof z.ZodObject) {
     if (controlOf(schema) === 'image') return { ...base, kind: 'image' };
-    return { ...base, kind: 'group', fields: describeFields(schema) };
+    return { ...base, kind: 'group', fields: describeFields(schema, key) };
   }
   if (schema instanceof z.ZodArray && schema.element instanceof z.ZodObject) {
     const element = schema.element as z.ZodObject;
@@ -208,11 +214,11 @@ function describeField(key: string, declared: z.ZodType): FieldSpec {
       max: maxItems ?? Number.POSITIVE_INFINITY,
       item: {
         key,
-        label: fieldLabel(key),
+        label: fieldLabel(key, parent),
         optional: false,
         schema: element,
         kind: 'group',
-        fields: describeFields(element),
+        fields: describeFields(element, key),
       },
     };
   }
@@ -228,18 +234,23 @@ export function isFieldShown(
   return spec.showWhen.in.includes(siblings?.[spec.showWhen.key] as string | boolean);
 }
 
-const described = new WeakMap<z.ZodType, FieldSpec[]>();
+const described = new WeakMap<z.ZodType, Map<string, FieldSpec[]>>();
 
-/** Fields of an object schema, in shape order, without `id` keys. Cached per schema. */
-export function describeFields(schema: z.ZodType): FieldSpec[] {
-  const cached = described.get(schema);
+/**
+ * Fields of an object schema, in shape order, without `id` keys. `parent` is the key the object
+ * sits under, for scoped labels ("video.url"). Cached per schema and parent.
+ */
+export function describeFields(schema: z.ZodType, parent = ''): FieldSpec[] {
+  const byParent = described.get(schema) ?? new Map<string, FieldSpec[]>();
+  described.set(schema, byParent);
+  const cached = byParent.get(parent);
   if (cached) return cached;
   const { inner } = unwrap(schema);
   if (!(inner instanceof z.ZodObject)) throw new Error('describeFields needs an object schema');
   const fields = Object.entries(inner.shape as Record<string, z.ZodType>)
     .filter(([key]) => key !== 'id')
-    .map(([key, field]) => describeField(key, field));
-  described.set(schema, fields);
+    .map(([key, field]) => describeField(key, field, parent || undefined));
+  byParent.set(parent, fields);
   return fields;
 }
 

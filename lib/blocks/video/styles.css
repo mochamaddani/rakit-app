@@ -1,0 +1,14 @@
+/* The facade itself is styled in base CSS, because Hero uses it too (D-052). */
+.lp-video-block {
+  display: grid;
+  gap: 16px;
+}
+.lp-video-block .lp-h2 {
+  margin: 0;
+}
+.lp-video-block__caption {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--lp-fg-muted);
+  text-align: center;
+}

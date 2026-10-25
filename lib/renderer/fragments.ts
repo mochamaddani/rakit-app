@@ -1,9 +1,10 @@
-import type { AspectRatio, Cta, Image } from '@/lib/schema/primitives';
+import type { AspectRatio, Cta, Image, Video } from '@/lib/schema/primitives';
 import type { RenderContext } from './context';
 import { formatDecimal } from './format';
 import { html, unsafeRaw, type SafeHtml } from './html';
 import { ICON_SVG, type UiIconName } from './icons';
 import { sanitizeUrl } from './url';
+import { parseVideoUrl, videoEmbedUrl, videoPoster, videoWatchUrl } from './video';
 
 // Markup shared by several blocks. Attribute order is fixed so output stays byte-stable.
 
@@ -77,4 +78,39 @@ export function renderStars(rating: number, ctx: RenderContext): SafeHtml {
     'rated',
     { rating: formatDecimal(value, ctx.lang) },
   )}</span>`;
+}
+
+/**
+ * A click-to-play facade (docs/DECISIONS.md D-052): a link to the video that works without
+ * JavaScript; the video snippet swaps in the player on click. `fallbackPoster` (the hero image)
+ * is used when the video has no poster of its own.
+ */
+export function renderVideo(
+  video: Video,
+  ctx: RenderContext,
+  opts: { eager: boolean; highPriority: boolean; fallbackPoster?: Image },
+): SafeHtml {
+  const ratio = `--lp-ratio:${video.ratio.replace(':', '/')}`;
+  const ref = parseVideoUrl(video.url);
+  if (!ref) {
+    return html`<div class="lp-video lp-video--missing" style="${ratio}"><p>${ctx.t('videoMissing')}</p></div>`;
+  }
+  const own = video.poster.src.trim() ? video.poster : undefined;
+  const fallback = opts.fallbackPoster?.src.trim() ? opts.fallbackPoster : undefined;
+  const derived = videoPoster(ref);
+  const poster = own ?? fallback ?? (derived ? { src: derived } : undefined);
+  const title = video.title.trim() || ctx.t('video');
+  const img = poster
+    ? renderImage(
+        { ...poster, alt: '' } as Image,
+        { className: 'lp-video__poster', eager: opts.eager, highPriority: opts.highPriority },
+        ctx,
+      )
+    : '';
+  return html`<div class="lp-video" style="${ratio}"><a class="lp-video__play" href="${videoWatchUrl(
+    ref,
+  )}" target="_blank" rel="noopener" data-lp-video="${videoEmbedUrl(ref)}" data-lp-title="${title}" aria-label="${ctx.t(
+    'playVideo',
+    { title },
+  )}">${img}<span class="lp-video__button">${renderIcon('play')}</span></a></div>`;
 }

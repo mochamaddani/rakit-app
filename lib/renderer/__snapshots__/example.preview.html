@@ -251,6 +251,47 @@ a {
   }
 }
 
+/* Video facade (Hero media and the Video block, D-052): a ratio box with a poster and a play button. */
+.lp-video {
+  --lp-fg: var(--lp-on-dark);
+  position: relative;
+  aspect-ratio: var(--lp-ratio);
+  overflow: hidden;
+  border-radius: var(--lp-radius);
+  background: var(--lp-dark);
+  color: var(--lp-fg);
+}
+.lp-video > *,
+.lp-video img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  border: 0;
+  object-fit: cover;
+}
+/* Inside the box: overflow would clip a ring drawn outside it. */
+.lp-video a:focus-visible {
+  outline-offset: -5px;
+}
+.lp-video--missing p,
+.lp-video__button {
+  display: grid;
+  place-items: center;
+  text-align: center;
+}
+.lp-video__button {
+  position: absolute;
+  inset: 0;
+  width: 64px;
+  height: 64px;
+  margin: auto;
+  border-radius: 50%;
+  background: #0009;
+  color: #fff;
+}
+
 /* Editor preview only: highlights [REPLACE: …] placeholders that still need real content. */
 .lp-replace {
   background: #fde047;
