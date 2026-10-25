@@ -68,7 +68,7 @@ Blocks in the first section count as above the fold: their images load eagerly, 
 Trailing sections whose blocks all declare `landmark: 'footer'` render after `</main>`, so the footer becomes the page's `contentinfo` landmark.
 
 ## D-018 Product Carousel scope split — Accepted
-**M1** covers the scroll-snap layout, cards (image, title, description, price, compare-at price, discount badge, badge, rating and review count, CTA), arrows, dots, loop, keyboard, accessibility, eager/lazy images and per-instance layout. **M4** adds autoplay, bulk paste, tracking events and the JSON-LD toggle (PRD §10). M4 fields arrive with Zod defaults, so M1 documents still parse.
+**M1** covers the scroll-snap layout, cards (image, title, description, price, compare-at price, discount badge, badge, rating and review count, CTA), arrows, dots, loop, keyboard, accessibility, eager/lazy images and per-instance layout. **M4** adds autoplay, bulk paste, tracking events and the JSON-LD toggle (PRD §10); done in M4a, see D-054. M4 fields arrive with Zod defaults, so M1 documents still parse.
 
 ## D-019 Tracking event mapping (PRD Q3) — Accepted (M3; carousel M4)
 | Trigger | Meta Pixel | GA4 | Google Ads |
@@ -78,7 +78,7 @@ Trailing sections whose blocks all declare `landmark: 'footer'` render after `</
 | Other CTA (hero, pricing, sticky) | none by default; per CTA `Lead`, `Contact` or `InitiateCheckout` | `generate_lead`, `contact`, `begin_checkout` | `conversion` for `Lead` |
 | Form submit (when detectable) | `Lead` | `generate_lead` | `conversion` `{send_to: 'AW-…/label'}` |
 
-GTM receives the GA4 names: `dataLayer.push({ event: 'generate_lead', event_id, … })`. Google Ads fires `conversion` (`transaction_id` = the event id) on every `Lead` when a lead conversion label is set. The carousel row arrives in M4 (`ViewContent` → `select_item`). Revised in M3 (D-047).
+GTM receives the GA4 names: `dataLayer.push({ event: 'generate_lead', event_id, … })`. Google Ads fires `conversion` (`transaction_id` = the event id) on every `Lead` when a lead conversion label is set. The carousel row is live since M4a (D-054): a carousel can also fire `AddToCart` (GA4 `add_to_cart`, with `value` and `currency`) or nothing. Revised in M3 (D-047).
 
 The carousel default is `ViewContent`, not `AddToCart`: a card click shows interest in a product, and there is no cart, so `AddToCart` would feed the ad algorithm a misleading signal. The event is configurable per carousel.
 
@@ -267,7 +267,7 @@ Consequences:
 ## D-047 Tracking in exported pages — Accepted (M3)
 - **Export only.** Vendor tags, the custom head/body code and the page runtime appear only in `mode: 'export'`; the editor preview never runs third-party code (Plan §2.10). The export dialog's "Include tracking" switch (`renderPage(…, { tracking: false })`) drops vendor tags and custom code but keeps the runtime's passthrough.
 - **Head order:** charset, viewport, title, description, robots, `og:title`, `og:description`, `og:type`, `og:image` (absolute http(s) only), favicon link, `<style>`, then Meta base code (`fbq('init')` and `PageView` with an event id computed in the browser), one `gtag.js` loader (the GA4 id, else the Ads id) with a `config` per id, the GTM snippet, and the custom head code. `<body>` starts with the GTM and Meta `<noscript>` fallbacks; the custom body code comes after the footer and before the page script.
-- **Page runtime** (`lib/tracking/snippet.js`, ≤ 2048 bytes minified, no globals): one dispatcher for `lp:track` DOM events (`{ name, params }`) and clicks on `[data-lp-event]`. Each event gets an id (`<ms base36>-<8 random base36>`, `crypto.getRandomValues`) shared by `fbq('track', name, params, { eventID })`, `gtag('event', gaName, { …params, event_id })`, the GTM push (with `data-lp-gtm` on `<body>`) and the Ads conversion (with `data-lp-conversion`). Blocks fire events by dispatching `lp:track`.
+- **Page runtime** (`lib/tracking/snippet.js`, ≤ 2304 bytes minified since M4a, no globals): one dispatcher for `lp:track` DOM events (`{ name, params, ga? }`) and clicks on `[data-lp-event]`, whose JSON `data-lp-params` go to Meta and `data-lp-ga` (else the same params) to gtag and GTM. Each event gets an id (`<ms base36>-<8 random base36>`, `crypto.getRandomValues`) shared by `fbq('track', name, params, { eventID })`, `gtag('event', gaName, { …params, event_id })`, the GTM push (with `data-lp-gtm` on `<body>`) and the Ads conversion (with `data-lp-conversion`). Blocks fire events by dispatching `lp:track`.
 - **Passthrough:** every `utm_*` key plus `gclid`, `fbclid`, `wbraid`, `gbraid` (at most 20 keys, values ≤ 500 characters) is read from the URL, merged over `sessionStorage['lp-params']`, and appended to `a[data-lp-cta]` web links and `iframe[data-lp-pass]` sources that don't already have that key. The hash and other parameters stay as typed; `#…`, `tel:` and `mailto:` links are untouched.
 - **When it ships:** with vendor ids (and tracking on), a CTA to a web URL, a CTA event or a passthrough iframe. A page whose CTAs only jump within the page still ships no JavaScript.
 
@@ -288,3 +288,43 @@ Consequences:
 - **Favicon:** in both modes it is drawn into a 64×64 PNG on a canvas and inlined (PRD §6.6); one that can't be read is dropped and counted.
 - **Social image** (`og:image`) is never inlined: crawlers need an absolute URL.
 - The document is never changed by export; the export copy is built with `structuredClone`.
+
+## D-050 Remaining blocks (M4a) — Accepted
+- **Library:** Spacer/Divider, Image + text, Logos strip, Gallery (product showcase), Pricing/offer, Countdown (D-051), Video (D-052), Sticky CTA bar, Cookie banner and Custom HTML (D-053). A new palette group, **Utility**, holds Spacer, Cookie banner and Custom HTML.
+- **Conditional fields:** `when(schema, key, values)` marks a field the inspector shows only while a sibling has one of `values` (Form Embed's iframe and code fields, a countdown's end message, autoplay seconds). Hidden values are kept. Labels may be scoped by parent key (`'video.url'`).
+- **One high-priority image** (refines D-016): only the first block of the first section that has an image gets `fetchpriority="high"`, on its first image, and only in export (M0/M1 review m-5).
+- **Floating blocks:** the Sticky CTA bar and the Cookie banner are ordinary blocks; their stylesheets fix them to the viewport, collapse their own band with `:has()` and pad the page bottom so the bar never covers the footer. The cookie banner sits above the bar when both exist. The canvas measures a block by its content when its wrapper has no height.
+- **Cookie banner:** a notice, not a consent gate. Tracking loads either way; pages aimed at EU or UK visitors need a consent manager in the custom head code. It shows until dismissed (remembered in `localStorage`) and never without JavaScript.
+- **Defaults never invent proof:** Logos and Pricing default to `[REPLACE: …]` names and no prices.
+
+## D-051 Countdown to a fixed deadline — Accepted (M4a)
+- **No evergreen timer:** a timer that restarts for every visitor states an urgency that isn't real, which Meta and Google ad policies treat as misleading. The deadline is a wall-clock time (`YYYY-MM-DDTHH:MM`, impossible dates rejected) in WIB, WITA, WIT or UTC, so it is the same moment for every visitor.
+- **Pure renderer:** `countdownEndMs` converts it with civil-date arithmetic (no `Date`); the snippet (≤ 1024 bytes) reads the clock in the browser, rounds the remaining seconds up (so it reads 00:00 exactly at the deadline) and ticks on whole seconds.
+- **The end:** the block shows its message (or "Promo telah berakhir") or hides itself, already at load. In the canvas it never hides. Without a deadline it renders nothing in export, and the checklist warns about an ended or unset countdown.
+
+## D-052 Video facade — Accepted (M4a)
+- **URLs:** YouTube (`watch?v=`, `youtu.be`, `/shorts/`, `/embed/`, `/live/`, `m.` and `nocookie` hosts) and Vimeo (`vimeo.com/<id>`, `player.vimeo.com/video/<id>`); anything else shows "Video address missing".
+- **Facade:** a link to the video (it works without JavaScript) with a poster and a play button in a ratio box. The snippet (export only, ≤ 768 bytes) swaps in `youtube-nocookie.com` or Vimeo with `dnt=1` on click, so no player request happens before the visitor asks.
+- **Poster:** the video's own poster image (inlined in Portable mode), else the hero image when the video is the Hero's media, else YouTube's thumbnail URL (never inlined), else a dark box (Vimeo).
+- **Hero media:** Hero takes an optional video; Hero and Video share one snippet, which ships once. The facade CSS lives in base CSS (still ≤ 4 KB).
+
+## D-053 Custom HTML and the canvas channel — Accepted (M4a)
+- **Sanitizer** (`lib/sanitize/html.ts`, parse5 8.0.1, moved forward from M6): parses and never executes; keeps listed tags and attributes; removes scripts, frames, forms, SVG/MathML, `on*` handlers, unsafe URLs, `data-lp-*` and ids starting `b-`/`s-`; keeps `<style>` minus `@import`, external `url()` and `expression()`.
+- **Export:** sanitized code, or the code verbatim when the owner turns on "Run scripts in the exported page". The checklist names each block that runs scripts and each whose scripts were removed.
+- **Canvas:** the code never enters the canvas document. It renders in a nested `<iframe sandbox="allow-scripts" srcdoc>`, a second opaque origin that can't read the canvas DOM or its channel id; the frame reports its height (clamped 20–4000 px) and takes no pointer events, so a click selects the block.
+- **Channel hardening** (closes M2a review M4 and M2b review M3/M13):
+  - An inline edit counts only for the selected block or the block whose edit session the editor already accepted.
+  - An edit carries at most 2000 nodes, link labels included.
+  - The runtime acts only on messages from its parent window; the editor only on messages from the current iframe.
+  - A second `load` means the canvas navigated: the editor builds a new frame and channel, and sends nothing but the greeting until ready.
+  - More than 3 error rebuilds in 10 s stop rebuilding and say so.
+- **No flash after Escape:** the editor never sends patches for the block being edited, so a sync in flight can't show an older value when editing ends; `editEnd` resends the block from the document.
+
+## D-054 Product Carousel, M4 — Accepted (M4a)
+- **Autoplay** (off by default, 2–15 s per card): exported pages only, never with reduced motion. It skips its turn while the carousel is hovered, focused (except its pause button), off-screen or in a hidden tab, wraps to the first card, and stops for good once the visitor swipes, clicks, scrolls or types in it. A pause button (WCAG 2.2.2) toggles it and its label.
+- **Fixes:** two fast clicks advance two cards; there is one dot per scroll position (5 dots for 8 cards at 4 per view); an empty track isn't focusable (M0/M1 review m-3, m-4).
+- **Card events** (D-019): `ViewContent` by default, `AddToCart` or none. Card buttons carry `data-lp-event`, `data-lp-params` (Meta) and `data-lp-ga` (GA4/GTM), only on pages with tracking ids, so a page with nobody to send to ships no runtime.
+- **JSON-LD** (off by default): an `ItemList` of `Product` with name, absolute image and `Offer` price, in export only. No ratings: review markup must come from real reviews, and the owner's ratings are self-reported.
+- **Bulk paste:** "Paste rows" takes spreadsheet rows (title, price, compare-at price, image URL, link), tab-, comma- or semicolon-separated with CSV quoting and an optional header. Prices parse by the page currency (`Rp149.000`, `1,234.50`), bad rows are named by row number and skipped, rows past the 50-card limit are reported, and the paste is one undo step (`listInsertMany`).
+- **Budgets:** carousel snippet ≤ 2048 bytes (from 1536), page runtime ≤ 2304 (from 2048). A page using every snippet ships ≤ 10,240 bytes of inline JS (the example: 6,342).
+

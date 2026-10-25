@@ -113,8 +113,8 @@ Split into two plans: **M2a** (state, canvas, inspector; [detailed plan](superpo
 ### M4 — Production workflow (completes v1) · [M4a plan](superpowers/plans/2026-10-25-m4a-blocks-carousel.md)
 Split into two plans: **M4a** (remaining blocks, carousel polish, canvas hardening; [detailed plan](superpowers/plans/2026-10-25-m4a-blocks-carousel.md)) and **M4b** (workflow and the acceptance review), which is written when M4a merges.
 - Duplicate page; templates (built-in seeds plus "save as template"); block presets; tags, search, status filter, archive.
-- Remaining blocks: Logos strip, Product showcase/gallery, Pricing/offer box, Countdown, Image + text, Video embed (lazy facade; also usable as Hero media), Sticky mobile CTA, Custom HTML (sanitized, scripts sandboxed in preview, opt-in in export), Spacer/Divider, cookie banner.
-- Carousel polish: bulk paste (CSV/TSV), autoplay (pause on hover/touch/focus, respects reduced motion), per-carousel tracking event, JSON-LD toggle.
+- (M4a) Remaining blocks: Logos strip, Product showcase/gallery, Pricing/offer box, Countdown, Image + text, Video embed (lazy facade; also usable as Hero media), Sticky mobile CTA, Custom HTML (sanitized, scripts sandboxed in preview, opt-in in export), Spacer/Divider, cookie banner.
+- (M4a) Carousel polish: bulk paste (CSV/TSV), autoplay (pause on hover/touch/focus, respects reduced motion), per-carousel tracking event, JSON-LD toggle.
 - **Exit:** the acceptance review for AC1–AC9 (§6), including a timed manual run of AC1 (template → edit → download in < 15 minutes).
 
 ### M5 — AI foundation + Wizard (v1.1)

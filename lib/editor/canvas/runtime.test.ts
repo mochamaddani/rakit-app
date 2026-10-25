@@ -142,8 +142,10 @@ describe('preview runtime', () => {
     expect(last.blocks.find((b) => b.id === 'b1')).toMatchObject({ top: 700, height: 64 });
   });
   describe('Custom HTML frames', () => {
+    // happy-dom logs an error for every iframe it won't load; a stand-in element with a
+    // contentWindow is all the runtime looks at.
     const addFrame = () => {
-      const iframe = document.createElement('iframe');
+      const iframe = document.createElement('div');
       iframe.setAttribute('data-lp-custom-frame', '');
       const source = { name: 'child' } as unknown as Window;
       Object.defineProperty(iframe, 'contentWindow', { value: source });

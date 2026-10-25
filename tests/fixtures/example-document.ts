@@ -74,6 +74,23 @@ export const exampleDocument = {
       ],
     },
     {
+      id: 'sLogos',
+      style: { padY: 'sm' },
+      blocks: [
+        {
+          id: 'bLogos',
+          type: 'logos',
+          props: {
+            heading: 'Dijual juga di',
+            items: ['Toko A', 'Toko B', 'Toko C'].map((name, i) => ({
+              id: `l${i + 1}`,
+              image: { src: svgPlaceholder(name, '#6B7280'), alt: name, width: 300, height: 100 },
+            })),
+          },
+        },
+      ],
+    },
+    {
       id: 'sBenefits',
       style: { tone: 'muted' },
       blocks: [
@@ -94,6 +111,31 @@ export const exampleDocument = {
       ],
     },
     {
+      id: 'sStory',
+      blocks: [
+        {
+          id: 'bStory',
+          type: 'image-text',
+          props: {
+            eyebrow: 'Cara kerjanya',
+            heading: 'Dinding ganda, **dingin lebih lama**',
+            body: 'Ruang hampa udara di antara dua dinding baja menahan panas dari luar.',
+            points: [
+              { id: 'p1', text: 'Baja tahan karat 304' },
+              { id: 'p2', text: 'Tutup ulir dengan karet' },
+            ],
+            image: {
+              src: svgPlaceholder('Dinding ganda', '#0EA5E9'),
+              alt: 'Potongan dinding botol',
+              width: 800,
+              height: 1000,
+            },
+            imageSide: 'right',
+          },
+        },
+      ],
+    },
+    {
       id: 'sProducts',
       blocks: [
         {
@@ -103,6 +145,101 @@ export const exampleDocument = {
             heading: 'Pilih **warnamu**',
             subheading: 'Semua ukuran 750ml',
             items: productItems(),
+            // 15 s per card, so autoplay never moves under the carousel's own e2e tests.
+            autoplay: true,
+            autoplaySeconds: 15,
+            event: 'ViewContent',
+          },
+        },
+      ],
+    },
+    {
+      id: 'sGallery',
+      style: { tone: 'muted' },
+      blocks: [
+        {
+          id: 'bGallery',
+          type: 'gallery',
+          props: {
+            heading: 'Lihat lebih dekat',
+            items: ['Tutup', 'Dasar', 'Tali'].map((caption, i) => ({
+              id: `g${i + 1}`,
+              image: { src: svgPlaceholder(caption, '#334155'), alt: `Bagian ${caption}` },
+              caption,
+            })),
+          },
+        },
+      ],
+    },
+    {
+      id: 'sPricing',
+      blocks: [
+        {
+          id: 'bPricing',
+          type: 'pricing',
+          props: {
+            heading: 'Pilih paket',
+            offers: [
+              {
+                id: 'o1',
+                name: 'Satu botol',
+                price: 149000,
+                features: [{ id: 'f1', text: 'Gratis ongkir' }],
+                cta: { label: 'Pesan satu', link: { kind: 'default' } },
+              },
+              {
+                id: 'o2',
+                name: 'Paket keluarga',
+                price: 399000,
+                compareAtPrice: 447000,
+                showDiscount: true,
+                badge: 'Hemat',
+                highlighted: true,
+                features: [
+                  { id: 'f1', text: 'Tiga botol' },
+                  { id: 'f2', text: 'Gratis ongkir' },
+                ],
+                cta: { label: 'Pesan paket', link: { kind: 'default' } },
+              },
+            ],
+            note: 'Bayar di tempat tersedia',
+          },
+        },
+      ],
+    },
+    {
+      id: 'sCountdown',
+      style: { tone: 'dark', padY: 'sm' },
+      blocks: [
+        {
+          id: 'bCountdown',
+          type: 'countdown',
+          props: { heading: 'Promo berakhir dalam', endsAt: '2099-12-31T23:59' },
+        },
+      ],
+    },
+    {
+      id: 'sVideo',
+      blocks: [
+        {
+          id: 'bVideo',
+          type: 'video',
+          props: {
+            heading: 'Lihat cara pakainya',
+            video: {
+              url: 'https://youtu.be/dQw4w9WgXcQ',
+              title: 'Cara pakai botol',
+              poster: { src: svgPlaceholder('Video', '#111827'), alt: '' },
+            },
+          },
+        },
+        { id: 'bSpacer', type: 'spacer', props: { size: 'md', line: true } },
+        {
+          id: 'bCustom',
+          type: 'custom-html',
+          props: {
+            html: '<p class="note">Stok terbatas untuk <strong>bulan ini</strong>.</p>',
+            blockName: 'Catatan stok',
           },
         },
       ],
@@ -190,6 +327,29 @@ export const exampleDocument = {
               link: { kind: 'url', url: 'https://wa.me/6281234567890', newTab: true },
             },
           },
+        },
+      ],
+    },
+    {
+      id: 'sSticky',
+      blocks: [
+        {
+          id: 'bSticky',
+          type: 'sticky-cta',
+          props: {
+            text: 'Gratis ongkir hari ini',
+            cta: { label: 'Pesan', link: { kind: 'default' } },
+          },
+        },
+      ],
+    },
+    {
+      id: 'sCookie',
+      blocks: [
+        {
+          id: 'bCookie',
+          type: 'cookie-banner',
+          props: { privacyLink: { kind: 'url', url: 'https://botolku.example/privasi' } },
         },
       ],
     },

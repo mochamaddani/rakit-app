@@ -207,7 +207,8 @@ export function startPreviewRuntime(options: RuntimeOptions): () => void {
     const data: unknown = event.data;
     if (!event.source || !isRecord(data) || typeof data.lpHeight !== 'number') return false;
     if (!Number.isFinite(data.lpHeight)) return true;
-    const frameEl = Array.from(doc.querySelectorAll('iframe[data-lp-custom-frame]')).find(
+    // Only the renderer emits this attribute (the sanitizer drops every data-lp-* one).
+    const frameEl = Array.from(doc.querySelectorAll('[data-lp-custom-frame]')).find(
       (el) => (el as HTMLIFrameElement).contentWindow === event.source,
     ) as HTMLIFrameElement | undefined;
     if (!frameEl) return false;

@@ -29,7 +29,7 @@ describe('sizeReport', () => {
     expect(blocks.map((row) => row.bytes)).toEqual(
       [...blocks.map((row) => row.bytes)].sort((a, b) => b - a),
     );
-    expect(blocks[0]!.label).toBe('Product Carousel · section 3');
+    expect(blocks[0]!.label).toBe('Product Carousel · section 5');
     expect(report.rows.slice(-3).map((row) => row.label)).toEqual([
       'Styles',
       'Scripts',

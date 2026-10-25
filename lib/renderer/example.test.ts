@@ -21,4 +21,23 @@ describe('example document', () => {
       './__snapshots__/example.preview.html',
     );
   });
+  it('a page using every snippet ships at most 10,240 bytes of inline JS', () => {
+    // Tracking ids make the page runtime ship too; the example uses every block snippet.
+    const tracked = parseDocument({
+      ...exampleDocument,
+      settings: { ...exampleDocument.settings, tracking: { metaPixelId: '1234567890' } },
+    });
+    const { jsBytes, html } = renderPage(tracked, { mode: 'export' });
+    for (const marker of [
+      'data-lp-carousel',
+      'data-lp-countdown',
+      'data-lp-video',
+      'data-lp-sticky',
+      'data-lp-cookie',
+      'lp:track',
+    ]) {
+      expect(html, marker).toContain(marker);
+    }
+    expect(jsBytes).toBeLessThanOrEqual(10_240);
+  });
 });

@@ -366,6 +366,122 @@ html {
   }
 }
 
+/* A floating card (D-050); it paints its own background, so it resets its tone colors (D-033). */
+.lp-cookie {
+  --lp-fg: var(--lp-text);
+  --lp-btn-bg: var(--lp-primary);
+  --lp-btn-fg: var(--lp-on-primary);
+  position: fixed;
+  inset: auto 8px 8px;
+  z-index: 60;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  align-items: center;
+  max-width: 560px;
+  margin-inline: auto;
+  padding: 12px 16px;
+  border: 1px solid var(--lp-border);
+  border-radius: var(--lp-radius);
+  background: var(--lp-background);
+  color: var(--lp-fg);
+  box-shadow: 0 4px 24px rgb(0 0 0 / 0.18);
+}
+.lp-cookie[hidden] {
+  display: none;
+}
+.lp-cookie__text {
+  flex: 1 1 240px;
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+.lp-cookie__ok {
+  min-height: 40px;
+  padding: 8px 20px;
+}
+.lp-s:has(> .lp-c > .lp-b > .lp-cookie:only-child) {
+  padding-block: 0;
+}
+/* Above the sticky CTA bar when the page has one. */
+body:has(.lp-sticky--all) .lp-cookie {
+  bottom: 80px;
+}
+@media (max-width: 1023.98px) {
+  body:has(.lp-sticky--mobile) .lp-cookie {
+    bottom: 80px;
+  }
+}
+
+.lp-b[hidden],
+.lp-countdown [hidden] {
+  display: none;
+}
+.lp-countdown {
+  display: grid;
+  gap: 12px;
+  justify-items: center;
+  text-align: center;
+}
+.lp-countdown__heading {
+  margin: 0;
+  font-weight: 700;
+}
+.lp-countdown__units {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+/* Each unit paints its own background, so it resets the tone colors it uses (D-033). */
+.lp-countdown__unit {
+  --lp-fg: var(--lp-on-dark);
+  display: grid;
+  min-width: 64px;
+  padding: 8px 6px;
+  border-radius: var(--lp-radius);
+  background: var(--lp-dark);
+  color: var(--lp-fg);
+}
+.lp-countdown__n {
+  font-size: 1.75rem;
+  font-weight: 800;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+.lp-countdown__l {
+  font-size: 0.75rem;
+  opacity: 0.85;
+}
+.lp-countdown__end {
+  margin: 0;
+  font-weight: 700;
+}
+.lp-countdown__hint {
+  margin: 0;
+  padding: 12px 16px;
+  border: 1px dashed var(--lp-line);
+  border-radius: var(--lp-radius);
+  color: var(--lp-fg-muted);
+}
+@media (min-width: 640px) {
+  .lp-countdown__unit {
+    min-width: 80px;
+  }
+  .lp-countdown__n {
+    font-size: 2.25rem;
+  }
+}
+
+/* The canvas shows owner code in a nested frame; the canvas runtime sizes it to its content. */
+.lp-custom__frame {
+  display: block;
+  width: 100%;
+  height: 120px;
+  border: 0;
+  /* Clicks select the block in the canvas instead of reaching the owner's code. */
+  pointer-events: none;
+}
+
 .lp-faq__item {
   border-bottom: 1px solid var(--lp-line);
 }
@@ -439,6 +555,35 @@ html {
   color: var(--lp-fg-muted);
 }
 
+.lp-gallery__grid {
+  display: grid;
+  grid-template-columns: repeat(var(--lp-cols-m), minmax(0, 1fr));
+  gap: 12px;
+}
+.lp-gallery__item {
+  margin: 0;
+}
+.lp-gallery__img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: var(--lp-ar);
+  object-fit: var(--lp-fit);
+  border-radius: var(--lp-radius);
+  background: var(--lp-card-bg);
+}
+.lp-gallery__caption {
+  margin-top: 8px;
+  font-size: 0.875rem;
+  color: var(--lp-fg-muted);
+}
+@media (min-width: 1024px) {
+  .lp-gallery__grid {
+    grid-template-columns: repeat(var(--lp-cols-d), minmax(0, 1fr));
+    gap: 16px;
+  }
+}
+
 .lp-hero {
   display: grid;
   gap: 32px;
@@ -500,6 +645,221 @@ html {
   }
   .lp-hero--split .lp-hero__text {
     max-width: none;
+  }
+}
+
+.lp-image-text {
+  display: grid;
+  gap: 24px;
+  align-items: center;
+}
+.lp-image-text__img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: var(--lp-radius);
+  aspect-ratio: var(--lp-ar);
+  object-fit: cover;
+}
+.lp-image-text__text {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.lp-image-text__text .lp-h2 {
+  margin: 0;
+}
+.lp-image-text__eyebrow {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--lp-fg-muted);
+}
+.lp-image-text__body {
+  margin: 0;
+  color: var(--lp-fg-muted);
+}
+.lp-image-text__points {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.lp-image-text__points li {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+.lp-image-text__points .lp-icon {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  margin-top: 2px;
+}
+@media (min-width: 640px) {
+  .lp-image-text {
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+  }
+  .lp-image-text--right .lp-image-text__media {
+    order: 2;
+  }
+}
+
+.lp-logos {
+  --lp-logo-h: 32px;
+  display: grid;
+  gap: 16px;
+  text-align: center;
+}
+.lp-logos--sm {
+  --lp-logo-h: 24px;
+}
+.lp-logos--lg {
+  --lp-logo-h: 48px;
+}
+.lp-logos__heading {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--lp-fg-muted);
+}
+.lp-logos__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px 40px;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.lp-logos__img {
+  display: block;
+  width: auto;
+  height: var(--lp-logo-h);
+  max-width: 160px;
+  object-fit: contain;
+}
+.lp-logos__img.lp-img-ph {
+  width: calc(var(--lp-logo-h) * 3);
+}
+.lp-logos--grey .lp-logos__img {
+  filter: grayscale(1);
+  opacity: 0.7;
+  transition:
+    filter 0.2s,
+    opacity 0.2s;
+}
+.lp-logos--grey .lp-logos__item:hover .lp-logos__img {
+  filter: none;
+  opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .lp-logos--grey .lp-logos__img {
+    transition: none;
+  }
+}
+
+.lp-pricing__offers {
+  display: grid;
+  gap: 16px;
+  align-items: stretch;
+}
+/* Each offer paints its own background, so it resets the tone colors it uses (D-033). */
+.lp-pricing__offer {
+  --lp-fg: var(--lp-text);
+  --lp-fg-muted: var(--lp-muted);
+  --lp-line: var(--lp-border);
+  --lp-btn-bg: var(--lp-primary);
+  --lp-btn-fg: var(--lp-on-primary);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 24px 20px;
+  border: 1px solid var(--lp-line);
+  border-radius: var(--lp-radius);
+  background: var(--lp-card-bg);
+  color: var(--lp-fg);
+}
+.lp-pricing__offer--hl {
+  border: 2px solid var(--lp-accent);
+}
+.lp-pricing__offer .lp-h3 {
+  margin: 0;
+}
+.lp-pricing__badge {
+  align-self: flex-start;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: var(--lp-dark);
+  color: var(--lp-on-dark);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+.lp-pricing__offer--hl .lp-pricing__badge {
+  background: var(--lp-accent);
+  color: var(--lp-on-accent);
+}
+.lp-pricing__desc {
+  margin: 0;
+  color: var(--lp-fg-muted);
+}
+.lp-pricing__price {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  align-items: baseline;
+  margin: 0;
+}
+.lp-pricing__now {
+  font-size: 1.75rem;
+  font-weight: 800;
+}
+.lp-pricing__was {
+  color: var(--lp-fg-muted);
+}
+.lp-pricing__off {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--lp-accent);
+  color: var(--lp-on-accent);
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+.lp-pricing__features {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.lp-pricing__features li {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+.lp-pricing__features .lp-icon {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  margin-top: 2px;
+}
+.lp-pricing__offer .lp-btn {
+  margin-top: auto;
+}
+.lp-pricing__note {
+  margin: 16px 0 0;
+  text-align: center;
+  color: var(--lp-fg-muted);
+}
+@media (min-width: 1024px) {
+  .lp-pricing__offers {
+    grid-template-columns: repeat(var(--lp-offers), minmax(0, 1fr));
   }
 }
 
@@ -718,6 +1078,92 @@ html {
   }
 }
 
+/* Vertical space with an optional divider; the line takes its tone's line color (D-015). */
+.lp-spacer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.lp-spacer--sm {
+  height: 16px;
+}
+.lp-spacer--md {
+  height: 32px;
+}
+.lp-spacer--lg {
+  height: 64px;
+}
+.lp-spacer--xl {
+  height: 96px;
+}
+.lp-spacer__line {
+  width: 100%;
+  margin: 0;
+  border: 0;
+  border-top: 1px solid var(--lp-line);
+}
+.lp-spacer__line--short {
+  width: 64px;
+}
+
+/* Floating bar (D-050). It paints its own background, so it resets the tone colors it uses (D-033). */
+.lp-sticky {
+  --lp-fg: var(--lp-on-dark);
+  --lp-btn-bg: var(--lp-accent);
+  --lp-btn-fg: var(--lp-on-accent);
+  position: fixed;
+  inset: auto 0 0;
+  z-index: 50;
+  padding: 8px 16px calc(8px + env(safe-area-inset-bottom));
+  background: var(--lp-dark);
+  color: var(--lp-fg);
+  box-shadow: 0 -4px 16px rgb(0 0 0 / 0.15);
+  transition: transform 0.2s;
+}
+.lp-sticky__inner {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  max-width: 1040px;
+  margin-inline: auto;
+}
+.lp-sticky__text {
+  flex: 1;
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+.lp-sticky .lp-btn {
+  flex: 1;
+}
+.lp-sticky__text + .lp-btn {
+  flex: none;
+}
+/* Hidden until the first section scrolls away; only with JavaScript, which sets html.lp-js. */
+.lp-js .lp-sticky[data-reveal]:not(.lp-sticky--on) {
+  visibility: hidden;
+  transform: translateY(110%);
+}
+/* The band holding only the bar takes no room. */
+.lp-s:has(> .lp-c > .lp-b > .lp-sticky:only-child) {
+  padding-block: 0;
+}
+/* Room at the bottom of the page, so the bar never covers the footer. */
+body:has(.lp-sticky--all) {
+  padding-bottom: 72px;
+}
+@media (max-width: 1023.98px) {
+  body:has(.lp-sticky--mobile) {
+    padding-bottom: 72px;
+  }
+}
+@media (min-width: 1024px) {
+  .lp-sticky--mobile {
+    display: none;
+  }
+}
+
 .lp-testimonials__list {
   display: grid;
   grid-template-columns: 1fr;
@@ -777,7 +1223,84 @@ html {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
-</style></head><body><main><section id="s-sHero" class="lp-s lp-tone-base lp-pad-md" data-lp-section="sHero"><div class="lp-c lp-w-normal"><div class="lp-b" id="b-bHero" data-lp-block="bHero" data-lp-type="hero"><div class="lp-hero lp-hero--split lp-hero--left"><div class="lp-hero__text"><p class="lp-eyebrow" data-lp-field="eyebrow">Baru</p><h1 class="lp-h1" data-lp-field="headline" data-lp-rich>Botol Minum <strong>Anti Bocor</strong> 750ml</h1><p class="lp-lead" data-lp-field="subheadline" data-lp-rich>Air tetap dingin 24 jam. Tutup kedap, aman masuk tas.</p><div class="lp-actions"><a class="lp-btn lp-btn--primary" href="#order" data-lp-cta data-lp-field="primaryCta.label">Pesan Sekarang</a></div><p class="lp-trust" data-lp-field="trustLine">Gratis ongkir · Garansi 30 hari</p></div><div class="lp-hero__media"><img class="lp-hero__img" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MDAiIGhlaWdodD0iODAwIiB2aWV3Qm94PSIwIDAgODAwIDgwMCI+PHJlY3Qgd2lkdGg9IjgwMCIgaGVpZ2h0PSI4MDAiIGZpbGw9IiMyNTYzRUIiLz48dGV4dCB4PSI0MDAiIHk9IjQyMCIgZm9udC1mYW1pbHk9InN5c3RlbS11aSwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSI2NCIgZm9udC13ZWlnaHQ9IjcwMCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iI2ZmZmZmZiI+Qm90b2xrdTwvdGV4dD48L3N2Zz4=" alt="Botol minum biru" width="800" height="800" loading="eager" decoding="async"></div></div></div></div></section><section id="s-sBenefits" class="lp-s lp-tone-muted lp-pad-md" data-lp-section="sBenefits"><div class="lp-c lp-w-normal"><div class="lp-b" id="b-bBenefits" data-lp-block="bBenefits" data-lp-type="benefits"><div class="lp-benefits lp-benefits--cards" style="--lp-cols:4"><h2 class="lp-h2" data-lp-field="heading" data-lp-rich>Kenapa pilih botol ini?</h2><ul class="lp-benefits__list"><li class="lp-benefit"><span class="lp-benefit__icon"><svg class="lp-icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></span><h3 class="lp-h3" data-lp-field="items.0.title">Dingin 24 jam</h3><p data-lp-field="items.0.text" data-lp-rich>Dinding ganda vakum.</p></li><li class="lp-benefit"><span class="lp-benefit__icon"><svg class="lp-icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg></span><h3 class="lp-h3" data-lp-field="items.1.title">Tidak bocor</h3><p data-lp-field="items.1.text" data-lp-rich>Tutup ulir dengan karet.</p></li><li class="lp-benefit"><span class="lp-benefit__icon"><svg class="lp-icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 20a10 10 0 0010-10 25.9 25.9 0 00-1.04-7.281 1 1 0 00-1.755-.325C15.833 5.5 13 5.5 9.8 6.1A7 7 0 0011 20"/><path d="M2 21a5 5 0 012.911-4.544C7.613 15.212 8.351 15.24 11 13"/></svg></span><h3 class="lp-h3" data-lp-field="items.2.title">Bebas BPA</h3><p data-lp-field="items.2.text" data-lp-rich>Aman untuk minum harian.</p></li><li class="lp-benefit"><span class="lp-benefit__icon"><svg class="lp-icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/></svg></span><h3 class="lp-h3" data-lp-field="items.3.title">Gratis ongkir</h3><p data-lp-field="items.3.text" data-lp-rich>Ke seluruh Indonesia.</p></li></ul></div></div></div></section><section id="s-sProducts" class="lp-s lp-tone-base lp-pad-md" data-lp-section="sProducts"><div class="lp-c lp-w-normal"><div class="lp-b" id="b-bProducts" data-lp-block="bProducts" data-lp-type="product-carousel"><section class="lp-carousel" aria-roledescription="carousel" aria-label="Pilih warnamu" data-lp-carousel data-loop="0" style="--lp-spv-m:1.3;--lp-spv-t:2.5;--lp-spv-d:4;--lp-gap:16px;--lp-ar:1/1;--lp-fit:cover"><div class="lp-carousel__head"><h2 class="lp-h2" data-lp-field="heading" data-lp-rich>Pilih <strong>warnamu</strong></h2><p class="lp-sub" data-lp-field="subheading" data-lp-rich>Semua ukuran 750ml</p></div><div class="lp-carousel__track" tabindex="0"><div class="lp-carousel__slide" role="group" aria-roledescription="slide" aria-label="1 dari 8: Botol Biru Laut" id="b-bProducts-p1"><article class="lp-card"><div class="lp-card__media"><img class="lp-card__img" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MDAiIGhlaWdodD0iODAwIiB2aWV3Qm94PSIwIDAgODAwIDgwMCI+PHJlY3Qgd2lkdGg9IjgwMCIgaGVpZ2h0PSI4MDAiIGZpbGw9IiMxRDRFRDgiLz48dGV4dCB4PSI0MDAiIHk9IjQyMCIgZm9udC1mYW1pbHk9InN5c3RlbS11aSwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSI2NCIgZm9udC13ZWlnaHQ9IjcwMCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iI2ZmZmZmZiI+QmlydSBMYXV0PC90ZXh0Pjwvc3ZnPg==" alt="Botol Biru Laut" width="800" height="800" loading="lazy" decoding="async"><span class="lp-badge" data-lp-field="items.0.badge">Terlaris</span><span class="lp-badge lp-badge--discount">-25%</span></div><div class="lp-card__body"><h3 class="lp-card__title" data-lp-field="items.0.title">Botol Biru Laut</h3><p class="lp-card__desc" data-lp-field="items.0.description" data-lp-rich>Stainless 750ml, tutup kedap.</p><div class="lp-rating"><span class="lp-stars" style="--lp-rating:100%" aria-hidden="true"></span><span class="lp-sr">Rating 5 dari 5</span><span class="lp-rating__count">(40 ulasan)</span></div><p class="lp-price"><span class="lp-price__now">Rp149.000</span> <s class="lp-price__was"><span class="lp-sr">Harga normal</span> Rp199.000</s></p><a class="lp-btn lp-btn--primary lp-btn--block" href="#order" data-lp-cta data-lp-item="p1" data-lp-field="items.0.cta.label">Pilih</a></div></article></div><div class="lp-carousel__slide" role="group" aria-roledescription="slide" aria-label="2 dari 8: Botol Hijau Daun" id="b-bProducts-p2"><article class="lp-card"><div class="lp-card__media"><img class="lp-card__img" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MDAiIGhlaWdodD0iODAwIiB2aWV3Qm94PSIwIDAgODAwIDgwMCI+PHJlY3Qgd2lkdGg9IjgwMCIgaGVpZ2h0PSI4MDAiIGZpbGw9IiMxNTgwM0QiLz48dGV4dCB4PSI0MDAiIHk9IjQyMCIgZm9udC1mYW1pbHk9InN5c3RlbS11aSwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSI2NCIgZm9udC13ZWlnaHQ9IjcwMCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iI2ZmZmZmZiI+SGlqYXUgRGF1bjwvdGV4dD48L3N2Zz4=" alt="Botol Hijau Daun" width="800" height="800" loading="lazy" decoding="async"><span class="lp-badge lp-badge--discount">-25%</span></div><div class="lp-card__body"><h3 class="lp-card__title" data-lp-field="items.1.title">Botol Hijau Daun</h3><p class="lp-card__desc" data-lp-field="items.1.description" data-lp-rich>Stainless 750ml, tutup kedap.</p><div class="lp-rating"><span class="lp-stars" style="--lp-rating:90%" aria-hidden="true"></span><span class="lp-sr">Rating 4,5 dari 5</span><span class="lp-rating__count">(47 ulasan)</span></div><p class="lp-price"><span class="lp-price__now">Rp149.000</span> <s class="lp-price__was"><span class="lp-sr">Harga normal</span> Rp199.000</s></p><a class="lp-btn lp-btn--primary lp-btn--block" href="#order" data-lp-cta data-lp-item="p2" data-lp-field="items.1.cta.label">Pilih</a></div></article></div><div class="lp-carousel__slide" role="group" aria-roledescription="slide" aria-label="3 dari 8: Botol Merah Bata" id="b-bProducts-p3"><article class="lp-card"><div class="lp-card__media"><img class="lp-card__img" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MDAiIGhlaWdodD0iODAwIiB2aWV3Qm94PSIwIDAgODAwIDgwMCI+PHJlY3Qgd2lkdGg9IjgwMCIgaGVpZ2h0PSI4MDAiIGZpbGw9IiNCOTFDMUMiLz48dGV4dCB4PSI0MDAiIHk9IjQyMCIgZm9udC1mYW1pbHk9InN5c3RlbS11aSwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSI2NCIgZm9udC13ZWlnaHQ9IjcwMCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iI2ZmZmZmZiI+TWVyYWggQmF0YTwvdGV4dD48L3N2Zz4=" alt="Botol Merah Bata" width="800" height="800" loading="lazy" decoding="async"><span class="lp-badge lp-badge--discount">-25%</span></div><div class="lp-card__body"><h3 class="lp-card__title" data-lp-field="items.2.title">Botol Merah Bata</h3><p class="lp-card__desc" data-lp-field="items.2.description" data-lp-rich>Stainless 750ml, tutup kedap.</p><div class="lp-rating"><span class="lp-stars" style="--lp-rating:100%" aria-hidden="true"></span><span class="lp-sr">Rating 5 dari 5</span><span class="lp-rating__count">(54 ulasan)</span></div><p class="lp-price"><span class="lp-price__now">Rp149.000</span> <s class="lp-price__was"><span class="lp-sr">Harga normal</span> Rp199.000</s></p><a class="lp-btn lp-btn--primary lp-btn--block" href="#order" data-lp-cta data-lp-item="p3" data-lp-field="items.2.cta.label">Pilih</a></div></article></div><div class="lp-carousel__slide" role="group" aria-roledescription="slide" aria-label="4 dari 8: Botol Ungu" id="b-bProducts-p4"><article class="lp-card"><div class="lp-card__media"><img class="lp-card__img" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MDAiIGhlaWdodD0iODAwIiB2aWV3Qm94PSIwIDAgODAwIDgwMCI+PHJlY3Qgd2lkdGg9IjgwMCIgaGVpZ2h0PSI4MDAiIGZpbGw9IiM3RTIyQ0UiLz48dGV4dCB4PSI0MDAiIHk9IjQyMCIgZm9udC1mYW1pbHk9InN5c3RlbS11aSwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSI2NCIgZm9udC13ZWlnaHQ9IjcwMCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iI2ZmZmZmZiI+VW5ndTwvdGV4dD48L3N2Zz4=" alt="Botol Ungu" width="800" height="800" loading="lazy" decoding="async"><span class="lp-badge lp-badge--discount">-25%</span></div><div class="lp-card__body"><h3 class="lp-card__title" data-lp-field="items.3.title">Botol Ungu</h3><p class="lp-card__desc" data-lp-field="items.3.description" data-lp-rich>Stainless 750ml, tutup kedap.</p><div class="lp-rating"><span class="lp-stars" style="--lp-rating:90%" aria-hidden="true"></span><span class="lp-sr">Rating 4,5 dari 5</span><span class="lp-rating__count">(61 ulasan)</span></div><p class="lp-price"><span class="lp-price__now">Rp149.000</span> <s class="lp-price__was"><span class="lp-sr">Harga normal</span> Rp199.000</s></p><a class="lp-btn lp-btn--primary lp-btn--block" href="#order" data-lp-cta data-lp-item="p4" data-lp-field="items.3.cta.label">Pilih</a></div></article></div><div class="lp-carousel__slide" role="group" aria-roledescription="slide" aria-label="5 dari 8: Botol Oranye" id="b-bProducts-p5"><article class="lp-card"><div class="lp-card__media"><img class="lp-card__img" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MDAiIGhlaWdodD0iODAwIiB2aWV3Qm94PSIwIDAgODAwIDgwMCI+PHJlY3Qgd2lkdGg9IjgwMCIgaGVpZ2h0PSI4MDAiIGZpbGw9IiNDMjQxMEMiLz48dGV4dCB4PSI0MDAiIHk9IjQyMCIgZm9udC1mYW1pbHk9InN5c3RlbS11aSwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSI2NCIgZm9udC13ZWlnaHQ9IjcwMCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iI2ZmZmZmZiI+T3JhbnllPC90ZXh0Pjwvc3ZnPg==" alt="Botol Oranye" width="800" height="800" loading="lazy" decoding="async"><span class="lp-badge lp-badge--discount">-25%</span></div><div class="lp-card__body"><h3 class="lp-card__title" data-lp-field="items.4.title">Botol Oranye</h3><p class="lp-card__desc" data-lp-field="items.4.description" data-lp-rich>Stainless 750ml, tutup kedap.</p><div class="lp-rating"><span class="lp-stars" style="--lp-rating:100%" aria-hidden="true"></span><span class="lp-sr">Rating 5 dari 5</span><span class="lp-rating__count">(68 ulasan)</span></div><p class="lp-price"><span class="lp-price__now">Rp149.000</span> <s class="lp-price__was"><span class="lp-sr">Harga normal</span> Rp199.000</s></p><a class="lp-btn lp-btn--primary lp-btn--block" href="#order" data-lp-cta data-lp-item="p5" data-lp-field="items.4.cta.label">Pilih</a></div></article></div><div class="lp-carousel__slide" role="group" aria-roledescription="slide" aria-label="6 dari 8: Botol Toska" id="b-bProducts-p6"><article class="lp-card"><div class="lp-card__media"><div class="lp-card__img lp-img-ph" aria-hidden="true"></div><span class="lp-badge lp-badge--discount">-25%</span></div><div class="lp-card__body"><h3 class="lp-card__title" data-lp-field="items.5.title">Botol Toska</h3><p class="lp-card__desc" data-lp-field="items.5.description" data-lp-rich>Stainless 750ml, tutup kedap.</p><div class="lp-rating"><span class="lp-stars" style="--lp-rating:90%" aria-hidden="true"></span><span class="lp-sr">Rating 4,5 dari 5</span><span class="lp-rating__count">(75 ulasan)</span></div><p class="lp-price"><span class="lp-price__now">Rp149.000</span> <s class="lp-price__was"><span class="lp-sr">Harga normal</span> Rp199.000</s></p><a class="lp-btn lp-btn--primary lp-btn--block" href="#order" data-lp-cta data-lp-item="p6" data-lp-field="items.5.cta.label">Pilih</a></div></article></div><div class="lp-carousel__slide" role="group" aria-roledescription="slide" aria-label="7 dari 8: Botol Kuning" id="b-bProducts-p7"><article class="lp-card"><div class="lp-card__media"><img class="lp-card__img" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MDAiIGhlaWdodD0iODAwIiB2aWV3Qm94PSIwIDAgODAwIDgwMCI+PHJlY3Qgd2lkdGg9IjgwMCIgaGVpZ2h0PSI4MDAiIGZpbGw9IiNBMTYyMDciLz48dGV4dCB4PSI0MDAiIHk9IjQyMCIgZm9udC1mYW1pbHk9InN5c3RlbS11aSwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSI2NCIgZm9udC13ZWlnaHQ9IjcwMCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iI2ZmZmZmZiI+S3VuaW5nPC90ZXh0Pjwvc3ZnPg==" alt="Botol Kuning" width="800" height="800" loading="lazy" decoding="async"><span class="lp-badge lp-badge--discount">-25%</span></div><div class="lp-card__body"><h3 class="lp-card__title" data-lp-field="items.6.title">Botol Kuning</h3><p class="lp-card__desc" data-lp-field="items.6.description" data-lp-rich>Stainless 750ml, tutup kedap.</p><div class="lp-rating"><span class="lp-stars" style="--lp-rating:100%" aria-hidden="true"></span><span class="lp-sr">Rating 5 dari 5</span><span class="lp-rating__count">(82 ulasan)</span></div><p class="lp-price"><span class="lp-price__now">Rp149.000</span> <s class="lp-price__was"><span class="lp-sr">Harga normal</span> Rp199.000</s></p><a class="lp-btn lp-btn--primary lp-btn--block" href="#order" data-lp-cta data-lp-item="p7" data-lp-field="items.6.cta.label">Pilih</a></div></article></div><div class="lp-carousel__slide" role="group" aria-roledescription="slide" aria-label="8 dari 8: Botol Merah Muda" id="b-bProducts-p8"><article class="lp-card"><div class="lp-card__media"><img class="lp-card__img" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MDAiIGhlaWdodD0iODAwIiB2aWV3Qm94PSIwIDAgODAwIDgwMCI+PHJlY3Qgd2lkdGg9IjgwMCIgaGVpZ2h0PSI4MDAiIGZpbGw9IiNCRTE4NUQiLz48dGV4dCB4PSI0MDAiIHk9IjQyMCIgZm9udC1mYW1pbHk9InN5c3RlbS11aSwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSI2NCIgZm9udC13ZWlnaHQ9IjcwMCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iI2ZmZmZmZiI+TWVyYWggTXVkYTwvdGV4dD48L3N2Zz4=" alt="Botol Merah Muda" width="800" height="800" loading="lazy" decoding="async"><span class="lp-badge lp-badge--discount">-25%</span></div><div class="lp-card__body"><h3 class="lp-card__title" data-lp-field="items.7.title">Botol Merah Muda</h3><p class="lp-card__desc" data-lp-field="items.7.description" data-lp-rich>Stainless 750ml, tutup kedap.</p><div class="lp-rating"><span class="lp-stars" style="--lp-rating:90%" aria-hidden="true"></span><span class="lp-sr">Rating 4,5 dari 5</span><span class="lp-rating__count">(89 ulasan)</span></div><p class="lp-price"><span class="lp-price__now">Rp149.000</span> <s class="lp-price__was"><span class="lp-sr">Harga normal</span> Rp199.000</s></p><a class="lp-btn lp-btn--primary lp-btn--block" href="#order" data-lp-cta data-lp-item="p8" data-lp-field="items.7.cta.label">Pilih</a></div></article></div></div><div class="lp-carousel__nav" hidden><button type="button" class="lp-carousel__arrow lp-carousel__prev" aria-label="Slide sebelumnya" data-lp-prev><svg class="lp-icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button><div class="lp-carousel__dots"><button type="button" class="lp-carousel__dot" aria-label="Ke slide 1" aria-current="true" data-lp-dot="0"></button><button type="button" class="lp-carousel__dot" aria-label="Ke slide 2" aria-current="false" data-lp-dot="1"></button><button type="button" class="lp-carousel__dot" aria-label="Ke slide 3" aria-current="false" data-lp-dot="2"></button><button type="button" class="lp-carousel__dot" aria-label="Ke slide 4" aria-current="false" data-lp-dot="3"></button><button type="button" class="lp-carousel__dot" aria-label="Ke slide 5" aria-current="false" data-lp-dot="4"></button><button type="button" class="lp-carousel__dot" aria-label="Ke slide 6" aria-current="false" data-lp-dot="5"></button><button type="button" class="lp-carousel__dot" aria-label="Ke slide 7" aria-current="false" data-lp-dot="6"></button><button type="button" class="lp-carousel__dot" aria-label="Ke slide 8" aria-current="false" data-lp-dot="7"></button></div><button type="button" class="lp-carousel__arrow lp-carousel__next" aria-label="Slide berikutnya" data-lp-next><svg class="lp-icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button></div></section></div></div></section><section id="s-sTestimonials" class="lp-s lp-tone-muted lp-pad-md" data-lp-section="sTestimonials"><div class="lp-c lp-w-normal"><div class="lp-b" id="b-bTestimonials" data-lp-block="bTestimonials" data-lp-type="testimonials"><div class="lp-testimonials lp-testimonials--grid"><h2 class="lp-h2" data-lp-field="heading" data-lp-rich>Kata pembeli</h2><div class="lp-testimonials__list"><figure class="lp-quote"><span class="lp-stars" style="--lp-rating:100%" aria-hidden="true"></span><span class="lp-sr">Rating 5 dari 5</span><blockquote class="lp-quote__text"><p data-lp-field="items.0.quote" data-lp-rich>Esnya masih ada sampai sore.</p></blockquote><figcaption class="lp-quote__by"><span class="lp-quote__name" data-lp-field="items.0.name">Rina</span><span class="lp-quote__detail" data-lp-field="items.0.detail">Bandung</span></figcaption></figure><figure class="lp-quote"><span class="lp-stars" style="--lp-rating:100%" aria-hidden="true"></span><span class="lp-sr">Rating 5 dari 5</span><blockquote class="lp-quote__text"><p data-lp-field="items.1.quote" data-lp-rich>Tutupnya <strong>benar-benar</strong> kedap.</p></blockquote><figcaption class="lp-quote__by"><span class="lp-quote__name" data-lp-field="items.1.name">Budi</span><span class="lp-quote__detail" data-lp-field="items.1.detail">Surabaya</span></figcaption></figure><figure class="lp-quote"><span class="lp-stars" style="--lp-rating:90%" aria-hidden="true"></span><span class="lp-sr">Rating 4,5 dari 5</span><blockquote class="lp-quote__text"><p data-lp-field="items.2.quote" data-lp-rich>Warnanya bagus, pengiriman cepat.</p></blockquote><figcaption class="lp-quote__by"><span class="lp-quote__name" data-lp-field="items.2.name">Sari</span><span class="lp-quote__detail" data-lp-field="items.2.detail">Medan</span></figcaption></figure></div></div></div></div></section><section id="s-sFaq" class="lp-s lp-tone-base lp-pad-md" data-lp-section="sFaq"><div class="lp-c lp-w-normal"><div class="lp-b" id="b-bFaq" data-lp-block="bFaq" data-lp-type="faq"><div class="lp-faq"><h2 class="lp-h2" data-lp-field="heading" data-lp-rich>Pertanyaan</h2><details class="lp-faq__item" open><summary class="lp-faq__q" data-lp-field="items.0.question">Berapa lama pengiriman?</summary><div class="lp-faq__a" data-lp-field="items.0.answer" data-lp-rich>Jawa 2-3 hari.<br>Luar Jawa 3-5 hari.</div></details><details class="lp-faq__item"><summary class="lp-faq__q" data-lp-field="items.1.question">Bisa bayar di tempat (COD)?</summary><div class="lp-faq__a" data-lp-field="items.1.answer" data-lp-rich>Bisa, untuk semua kota.</div></details><details class="lp-faq__item"><summary class="lp-faq__q" data-lp-field="items.2.question">Apakah aman untuk air panas?</summary><div class="lp-faq__a" data-lp-field="items.2.answer" data-lp-rich>Aman sampai 90°C.</div></details><details class="lp-faq__item"><summary class="lp-faq__q" data-lp-field="items.3.question">Bagaimana cara klaim garansi?</summary><div class="lp-faq__a" data-lp-field="items.3.answer" data-lp-rich>Hubungi kami lewat WhatsApp dengan foto produk.</div></details></div></div></div></section><section id="order" class="lp-s lp-tone-primary lp-pad-md" data-lp-section="sOrder"><div class="lp-c lp-w-normal"><div class="lp-b" id="b-bOrder" data-lp-block="bOrder" data-lp-type="hero"><div class="lp-hero lp-hero--stacked lp-hero--center"><div class="lp-hero__text"><h2 class="lp-h1" data-lp-field="headline" data-lp-rich>Pesan sekarang, dikirim hari ini</h2><p class="lp-lead" data-lp-field="subheadline" data-lp-rich>Klik tombol di bawah untuk pesan lewat WhatsApp.</p><div class="lp-actions"><a class="lp-btn lp-btn--primary" href="https://wa.me/6281234567890" target="_blank" rel="noopener" data-lp-cta data-lp-field="primaryCta.label">Pesan via WhatsApp</a></div></div></div></div></div></section></main><div id="s-sFooter" class="lp-s lp-tone-base lp-pad-sm" data-lp-section="sFooter"><div class="lp-c lp-w-normal"><div class="lp-b" id="b-bFooter" data-lp-block="bFooter" data-lp-type="footer"><footer class="lp-footer"><p class="lp-footer__brand" data-lp-field="brand">Botolku</p><nav class="lp-footer__nav" aria-label="Tautan"><ul><li><a href="https://botolku.example/privasi" data-lp-field="links.0.label">Kebijakan Privasi</a></li><li><a href="https://botolku.example/syarat" data-lp-field="links.1.label">Syarat &amp; Ketentuan</a></li><li><a href="https://wa.me/6281234567890" data-lp-field="links.2.label">Kontak</a></li></ul></nav><p class="lp-disclaimer" data-lp-field="disclaimer" data-lp-rich>Hasil dapat berbeda untuk setiap orang.</p><p class="lp-footer__copy" data-lp-field="copyright">© 2026 Botolku</p></footer></div></div></div><script>(() => {
+
+/* The facade itself is styled in base CSS, because Hero uses it too (D-052). */
+.lp-video-block {
+  display: grid;
+  gap: 16px;
+}
+.lp-video-block .lp-h2 {
+  margin: 0;
+}
+.lp-video-block__caption {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--lp-fg-muted);
+  text-align: center;
+}
+</style></head><body><main><section id="s-sHero" class="lp-s lp-tone-base lp-pad-md" data-lp-section="sHero"><div class="lp-c lp-w-normal"><div class="lp-b" id="b-bHero" data-lp-block="bHero" data-lp-type="hero"><div class="lp-hero lp-hero--split lp-hero--left"><div class="lp-hero__text"><p class="lp-eyebrow" data-lp-field="eyebrow">Baru</p><h1 class="lp-h1" data-lp-field="headline" data-lp-rich>Botol Minum <strong>Anti Bocor</strong> 750ml</h1><p class="lp-lead" data-lp-field="subheadline" data-lp-rich>Air tetap dingin 24 jam. Tutup kedap, aman masuk tas.</p><div class="lp-actions"><a class="lp-btn lp-btn--primary" href="#order" data-lp-cta data-lp-field="primaryCta.label">Pesan Sekarang</a></div><p class="lp-trust" data-lp-field="trustLine">Gratis ongkir · Garansi 30 hari</p></div><div class="lp-hero__media"><img class="lp-hero__img" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MDAiIGhlaWdodD0iODAwIiB2aWV3Qm94PSIwIDAgODAwIDgwMCI+PHJlY3Qgd2lkdGg9IjgwMCIgaGVpZ2h0PSI4MDAiIGZpbGw9IiMyNTYzRUIiLz48dGV4dCB4PSI0MDAiIHk9IjQyMCIgZm9udC1mYW1pbHk9InN5c3RlbS11aSwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSI2NCIgZm9udC13ZWlnaHQ9IjcwMCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iI2ZmZmZmZiI+Qm90b2xrdTwvdGV4dD48L3N2Zz4=" alt="Botol minum biru" width="800" height="800" loading="eager" decoding="async"></div></div></div></div></section><section id="s-sLogos" class="lp-s lp-tone-base lp-pad-sm" data-lp-section="sLogos"><div class="lp-c lp-w-normal"><div class="lp-b" id="b-bLogos" data-lp-block="bLogos" data-lp-type="logos"><div class="lp-logos lp-logos--md lp-logos--grey"><p class="lp-logos__heading" data-lp-field="heading">Dijual juga di</p><ul class="lp-logos__list"><li class="lp-logos__item"><img class="lp-logos__img" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MDAiIGhlaWdodD0iODAwIiB2aWV3Qm94PSIwIDAgODAwIDgwMCI+PHJlY3Qgd2lkdGg9IjgwMCIgaGVpZ2h0PSI4MDAiIGZpbGw9IiM2QjcyODAiLz48dGV4dCB4PSI0MDAiIHk9IjQyMCIgZm9udC1mYW1pbHk9InN5c3RlbS11aSwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSI2NCIgZm9udC13ZWlnaHQ9IjcwMCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iI2ZmZmZmZiI+VG9rbyBBPC90ZXh0Pjwvc3ZnPg==" alt="Toko A" width="300" height="100" loading="lazy" decoding="async"></li><li class="lp-logos__item"><img class="lp-logos__img" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MDAiIGhlaWdodD0iODAwIiB2aWV3Qm94PSIwIDAgODAwIDgwMCI+PHJlY3Qgd2lkdGg9IjgwMCIgaGVpZ2h0PSI4MDAiIGZpbGw9IiM2QjcyODAiLz48dGV4dCB4PSI0MDAiIHk9IjQyMCIgZm9udC1mYW1pbHk9InN5c3RlbS11aSwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSI2NCIgZm9udC13ZWlnaHQ9IjcwMCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iI2ZmZmZmZiI+VG9rbyBCPC90ZXh0Pjwvc3ZnPg==" alt="Toko B" width="300" height="100" loading="lazy" decoding="async"></li><li class="lp-logos__item"><img class="lp-logos__img" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MDAiIGhlaWdodD0iODAwIiB2aWV3Qm94PSIwIDAgODAwIDgwMCI+PHJlY3Qgd2lkdGg9IjgwMCIgaGVpZ2h0PSI4MDAiIGZpbGw9IiM2QjcyODAiLz48dGV4dCB4PSI0MDAiIHk9IjQyMCIgZm9udC1mYW1pbHk9InN5c3RlbS11aSwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSI2NCIgZm9udC13ZWlnaHQ9IjcwMCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iI2ZmZmZmZiI+VG9rbyBDPC90ZXh0Pjwvc3ZnPg==" alt="Toko C" width="300" height="100" loading="lazy" decoding="async"></li></ul></div></div></div></section><section id="s-sBenefits" class="lp-s lp-tone-muted lp-pad-md" data-lp-section="sBenefits"><div class="lp-c lp-w-normal"><div class="lp-b" id="b-bBenefits" data-lp-block="bBenefits" data-lp-type="benefits"><div class="lp-benefits lp-benefits--cards" style="--lp-cols:4"><h2 class="lp-h2" data-lp-field="heading" data-lp-rich>Kenapa pilih botol ini?</h2><ul class="lp-benefits__list"><li class="lp-benefit"><span class="lp-benefit__icon"><svg class="lp-icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></span><h3 class="lp-h3" data-lp-field="items.0.title">Dingin 24 jam</h3><p data-lp-field="items.0.text" data-lp-rich>Dinding ganda vakum.</p></li><li class="lp-benefit"><span class="lp-benefit__icon"><svg class="lp-icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg></span><h3 class="lp-h3" data-lp-field="items.1.title">Tidak bocor</h3><p data-lp-field="items.1.text" data-lp-rich>Tutup ulir dengan karet.</p></li><li class="lp-benefit"><span class="lp-benefit__icon"><svg class="lp-icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 20a10 10 0 0010-10 25.9 25.9 0 00-1.04-7.281 1 1 0 00-1.755-.325C15.833 5.5 13 5.5 9.8 6.1A7 7 0 0011 20"/><path d="M2 21a5 5 0 012.911-4.544C7.613 15.212 8.351 15.24 11 13"/></svg></span><h3 class="lp-h3" data-lp-field="items.2.title">Bebas BPA</h3><p data-lp-field="items.2.text" data-lp-rich>Aman untuk minum harian.</p></li><li class="lp-benefit"><span class="lp-benefit__icon"><svg class="lp-icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/></svg></span><h3 class="lp-h3" data-lp-field="items.3.title">Gratis ongkir</h3><p data-lp-field="items.3.text" data-lp-rich>Ke seluruh Indonesia.</p></li></ul></div></div></div></section><section id="s-sStory" class="lp-s lp-tone-base lp-pad-md" data-lp-section="sStory"><div class="lp-c lp-w-normal"><div class="lp-b" id="b-bStory" data-lp-block="bStory" data-lp-type="image-text"><div class="lp-image-text lp-image-text--right" style="--lp-ar:4/5"><div class="lp-image-text__media"><img class="lp-image-text__img" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MDAiIGhlaWdodD0iODAwIiB2aWV3Qm94PSIwIDAgODAwIDgwMCI+PHJlY3Qgd2lkdGg9IjgwMCIgaGVpZ2h0PSI4MDAiIGZpbGw9IiMwRUE1RTkiLz48dGV4dCB4PSI0MDAiIHk9IjQyMCIgZm9udC1mYW1pbHk9InN5c3RlbS11aSwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSI2NCIgZm9udC13ZWlnaHQ9IjcwMCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iI2ZmZmZmZiI+RGluZGluZyBnYW5kYTwvdGV4dD48L3N2Zz4=" alt="Potongan dinding botol" width="800" height="1000" loading="lazy" decoding="async"></div><div class="lp-image-text__text"><p class="lp-image-text__eyebrow" data-lp-field="eyebrow">Cara kerjanya</p><h2 class="lp-h2" data-lp-field="heading" data-lp-rich>Dinding ganda, <strong>dingin lebih lama</strong></h2><p class="lp-image-text__body" data-lp-field="body" data-lp-rich>Ruang hampa udara di antara dua dinding baja menahan panas dari luar.</p><ul class="lp-image-text__points"><li><svg class="lp-icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-lp-field="points.0.text">Baja tahan karat 304</span></li><li><svg class="lp-icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-lp-field="points.1.text">Tutup ulir dengan karet</span></li></ul></div></div></div></div></section><section id="s-sProducts" class="lp-s lp-tone-base lp-pad-md" data-lp-section="sProducts"><div class="lp-c lp-w-normal"><div class="lp-b" id="b-bProducts" data-lp-block="bProducts" data-lp-type="product-carousel"><section class="lp-carousel" aria-roledescription="carousel" aria-label="Pilih warnamu" data-lp-carousel data-loop="0" data-autoplay="15" style="--lp-spv-m:1.3;--lp-spv-t:2.5;--lp-spv-d:4;--lp-gap:16px;--lp-ar:1/1;--lp-fit:cover"><div class="lp-carousel__head"><h2 class="lp-h2" data-lp-field="heading" data-lp-rich>Pilih <strong>warnamu</strong></h2><p class="lp-sub" data-lp-field="subheading" data-lp-rich>Semua ukuran 750ml</p></div><div class="lp-carousel__track" tabindex="0"><div class="lp-carousel__slide" role="group" aria-roledescription="slide" aria-label="1 dari 8: Botol Biru Laut" id="b-bProducts-p1"><article class="lp-card"><div class="lp-card__media"><img class="lp-card__img" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MDAiIGhlaWdodD0iODAwIiB2aWV3Qm94PSIwIDAgODAwIDgwMCI+PHJlY3Qgd2lkdGg9IjgwMCIgaGVpZ2h0PSI4MDAiIGZpbGw9IiMxRDRFRDgiLz48dGV4dCB4PSI0MDAiIHk9IjQyMCIgZm9udC1mYW1pbHk9InN5c3RlbS11aSwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSI2NCIgZm9udC13ZWlnaHQ9IjcwMCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iI2ZmZmZmZiI+QmlydSBMYXV0PC90ZXh0Pjwvc3ZnPg==" alt="Botol Biru Laut" width="800" height="800" loading="lazy" decoding="async"><span class="lp-badge" data-lp-field="items.0.badge">Terlaris</span><span class="lp-badge lp-badge--discount">-25%</span></div><div class="lp-card__body"><h3 class="lp-card__title" data-lp-field="items.0.title">Botol Biru Laut</h3><p class="lp-card__desc" data-lp-field="items.0.description" data-lp-rich>Stainless 750ml, tutup kedap.</p><div class="lp-rating"><span class="lp-stars" style="--lp-rating:100%" aria-hidden="true"></span><span class="lp-sr">Rating 5 dari 5</span><span class="lp-rating__count">(40 ulasan)</span></div><p class="lp-price"><span class="lp-price__now">Rp149.000</span> <s class="lp-price__was"><span class="lp-sr">Harga normal</span> Rp199.000</s></p><a class="lp-btn lp-btn--primary lp-btn--block" href="#order" data-lp-cta data-lp-item="p1" data-lp-field="items.0.cta.label">Pilih</a></div></article></div><div class="lp-carousel__slide" role="group" aria-roledescription="slide" aria-label="2 dari 8: Botol Hijau Daun" id="b-bProducts-p2"><article class="lp-card"><div class="lp-card__media"><img class="lp-card__img" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MDAiIGhlaWdodD0iODAwIiB2aWV3Qm94PSIwIDAgODAwIDgwMCI+PHJlY3Qgd2lkdGg9IjgwMCIgaGVpZ2h0PSI4MDAiIGZpbGw9IiMxNTgwM0QiLz48dGV4dCB4PSI0MDAiIHk9IjQyMCIgZm9udC1mYW1pbHk9InN5c3RlbS11aSwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSI2NCIgZm9udC13ZWlnaHQ9IjcwMCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iI2ZmZmZmZiI+SGlqYXUgRGF1bjwvdGV4dD48L3N2Zz4=" alt="Botol Hijau Daun" width="800" height="800" loading="lazy" decoding="async"><span class="lp-badge lp-badge--discount">-25%</span></div><div class="lp-card__body"><h3 class="lp-card__title" data-lp-field="items.1.title">Botol Hijau Daun</h3><p class="lp-card__desc" data-lp-field="items.1.description" data-lp-rich>Stainless 750ml, tutup kedap.</p><div class="lp-rating"><span class="lp-stars" style="--lp-rating:90%" aria-hidden="true"></span><span class="lp-sr">Rating 4,5 dari 5</span><span class="lp-rating__count">(47 ulasan)</span></div><p class="lp-price"><span class="lp-price__now">Rp149.000</span> <s class="lp-price__was"><span class="lp-sr">Harga normal</span> Rp199.000</s></p><a class="lp-btn lp-btn--primary lp-btn--block" href="#order" data-lp-cta data-lp-item="p2" data-lp-field="items.1.cta.label">Pilih</a></div></article></div><div class="lp-carousel__slide" role="group" aria-roledescription="slide" aria-label="3 dari 8: Botol Merah Bata" id="b-bProducts-p3"><article class="lp-card"><div class="lp-card__media"><img class="lp-card__img" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MDAiIGhlaWdodD0iODAwIiB2aWV3Qm94PSIwIDAgODAwIDgwMCI+PHJlY3Qgd2lkdGg9IjgwMCIgaGVpZ2h0PSI4MDAiIGZpbGw9IiNCOTFDMUMiLz48dGV4dCB4PSI0MDAiIHk9IjQyMCIgZm9udC1mYW1pbHk9InN5c3RlbS11aSwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSI2NCIgZm9udC13ZWlnaHQ9IjcwMCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iI2ZmZmZmZiI+TWVyYWggQmF0YTwvdGV4dD48L3N2Zz4=" alt="Botol Merah Bata" width="800" height="800" loading="lazy" decoding="async"><span class="lp-badge lp-badge--discount">-25%</span></div><div class="lp-card__body"><h3 class="lp-card__title" data-lp-field="items.2.title">Botol Merah Bata</h3><p class="lp-card__desc" data-lp-field="items.2.description" data-lp-rich>Stainless 750ml, tutup kedap.</p><div class="lp-rating"><span class="lp-stars" style="--lp-rating:100%" aria-hidden="true"></span><span class="lp-sr">Rating 5 dari 5</span><span class="lp-rating__count">(54 ulasan)</span></div><p class="lp-price"><span class="lp-price__now">Rp149.000</span> <s class="lp-price__was"><span class="lp-sr">Harga normal</span> Rp199.000</s></p><a class="lp-btn lp-btn--primary lp-btn--block" href="#order" data-lp-cta data-lp-item="p3" data-lp-field="items.2.cta.label">Pilih</a></div></article></div><div class="lp-carousel__slide" role="group" aria-roledescription="slide" aria-label="4 dari 8: Botol Ungu" id="b-bProducts-p4"><article class="lp-card"><div class="lp-card__media"><img class="lp-card__img" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MDAiIGhlaWdodD0iODAwIiB2aWV3Qm94PSIwIDAgODAwIDgwMCI+PHJlY3Qgd2lkdGg9IjgwMCIgaGVpZ2h0PSI4MDAiIGZpbGw9IiM3RTIyQ0UiLz48dGV4dCB4PSI0MDAiIHk9IjQyMCIgZm9udC1mYW1pbHk9InN5c3RlbS11aSwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSI2NCIgZm9udC13ZWlnaHQ9IjcwMCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iI2ZmZmZmZiI+VW5ndTwvdGV4dD48L3N2Zz4=" alt="Botol Ungu" width="800" height="800" loading="lazy" decoding="async"><span class="lp-badge lp-badge--discount">-25%</span></div><div class="lp-card__body"><h3 class="lp-card__title" data-lp-field="items.3.title">Botol Ungu</h3><p class="lp-card__desc" data-lp-field="items.3.description" data-lp-rich>Stainless 750ml, tutup kedap.</p><div class="lp-rating"><span class="lp-stars" style="--lp-rating:90%" aria-hidden="true"></span><span class="lp-sr">Rating 4,5 dari 5</span><span class="lp-rating__count">(61 ulasan)</span></div><p class="lp-price"><span class="lp-price__now">Rp149.000</span> <s class="lp-price__was"><span class="lp-sr">Harga normal</span> Rp199.000</s></p><a class="lp-btn lp-btn--primary lp-btn--block" href="#order" data-lp-cta data-lp-item="p4" data-lp-field="items.3.cta.label">Pilih</a></div></article></div><div class="lp-carousel__slide" role="group" aria-roledescription="slide" aria-label="5 dari 8: Botol Oranye" id="b-bProducts-p5"><article class="lp-card"><div class="lp-card__media"><img class="lp-card__img" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MDAiIGhlaWdodD0iODAwIiB2aWV3Qm94PSIwIDAgODAwIDgwMCI+PHJlY3Qgd2lkdGg9IjgwMCIgaGVpZ2h0PSI4MDAiIGZpbGw9IiNDMjQxMEMiLz48dGV4dCB4PSI0MDAiIHk9IjQyMCIgZm9udC1mYW1pbHk9InN5c3RlbS11aSwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSI2NCIgZm9udC13ZWlnaHQ9IjcwMCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iI2ZmZmZmZiI+T3JhbnllPC90ZXh0Pjwvc3ZnPg==" alt="Botol Oranye" width="800" height="800" loading="lazy" decoding="async"><span class="lp-badge lp-badge--discount">-25%</span></div><div class="lp-card__body"><h3 class="lp-card__title" data-lp-field="items.4.title">Botol Oranye</h3><p class="lp-card__desc" data-lp-field="items.4.description" data-lp-rich>Stainless 750ml, tutup kedap.</p><div class="lp-rating"><span class="lp-stars" style="--lp-rating:100%" aria-hidden="true"></span><span class="lp-sr">Rating 5 dari 5</span><span class="lp-rating__count">(68 ulasan)</span></div><p class="lp-price"><span class="lp-price__now">Rp149.000</span> <s class="lp-price__was"><span class="lp-sr">Harga normal</span> Rp199.000</s></p><a class="lp-btn lp-btn--primary lp-btn--block" href="#order" data-lp-cta data-lp-item="p5" data-lp-field="items.4.cta.label">Pilih</a></div></article></div><div class="lp-carousel__slide" role="group" aria-roledescription="slide" aria-label="6 dari 8: Botol Toska" id="b-bProducts-p6"><article class="lp-card"><div class="lp-card__media"><div class="lp-card__img lp-img-ph" aria-hidden="true"></div><span class="lp-badge lp-badge--discount">-25%</span></div><div class="lp-card__body"><h3 class="lp-card__title" data-lp-field="items.5.title">Botol Toska</h3><p class="lp-card__desc" data-lp-field="items.5.description" data-lp-rich>Stainless 750ml, tutup kedap.</p><div class="lp-rating"><span class="lp-stars" style="--lp-rating:90%" aria-hidden="true"></span><span class="lp-sr">Rating 4,5 dari 5</span><span class="lp-rating__count">(75 ulasan)</span></div><p class="lp-price"><span class="lp-price__now">Rp149.000</span> <s class="lp-price__was"><span class="lp-sr">Harga normal</span> Rp199.000</s></p><a class="lp-btn lp-btn--primary lp-btn--block" href="#order" data-lp-cta data-lp-item="p6" data-lp-field="items.5.cta.label">Pilih</a></div></article></div><div class="lp-carousel__slide" role="group" aria-roledescription="slide" aria-label="7 dari 8: Botol Kuning" id="b-bProducts-p7"><article class="lp-card"><div class="lp-card__media"><img class="lp-card__img" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MDAiIGhlaWdodD0iODAwIiB2aWV3Qm94PSIwIDAgODAwIDgwMCI+PHJlY3Qgd2lkdGg9IjgwMCIgaGVpZ2h0PSI4MDAiIGZpbGw9IiNBMTYyMDciLz48dGV4dCB4PSI0MDAiIHk9IjQyMCIgZm9udC1mYW1pbHk9InN5c3RlbS11aSwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSI2NCIgZm9udC13ZWlnaHQ9IjcwMCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iI2ZmZmZmZiI+S3VuaW5nPC90ZXh0Pjwvc3ZnPg==" alt="Botol Kuning" width="800" height="800" loading="lazy" decoding="async"><span class="lp-badge lp-badge--discount">-25%</span></div><div class="lp-card__body"><h3 class="lp-card__title" data-lp-field="items.6.title">Botol Kuning</h3><p class="lp-card__desc" data-lp-field="items.6.description" data-lp-rich>Stainless 750ml, tutup kedap.</p><div class="lp-rating"><span class="lp-stars" style="--lp-rating:100%" aria-hidden="true"></span><span class="lp-sr">Rating 5 dari 5</span><span class="lp-rating__count">(82 ulasan)</span></div><p class="lp-price"><span class="lp-price__now">Rp149.000</span> <s class="lp-price__was"><span class="lp-sr">Harga normal</span> Rp199.000</s></p><a class="lp-btn lp-btn--primary lp-btn--block" href="#order" data-lp-cta data-lp-item="p7" data-lp-field="items.6.cta.label">Pilih</a></div></article></div><div class="lp-carousel__slide" role="group" aria-roledescription="slide" aria-label="8 dari 8: Botol Merah Muda" id="b-bProducts-p8"><article class="lp-card"><div class="lp-card__media"><img class="lp-card__img" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MDAiIGhlaWdodD0iODAwIiB2aWV3Qm94PSIwIDAgODAwIDgwMCI+PHJlY3Qgd2lkdGg9IjgwMCIgaGVpZ2h0PSI4MDAiIGZpbGw9IiNCRTE4NUQiLz48dGV4dCB4PSI0MDAiIHk9IjQyMCIgZm9udC1mYW1pbHk9InN5c3RlbS11aSwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSI2NCIgZm9udC13ZWlnaHQ9IjcwMCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iI2ZmZmZmZiI+TWVyYWggTXVkYTwvdGV4dD48L3N2Zz4=" alt="Botol Merah Muda" width="800" height="800" loading="lazy" decoding="async"><span class="lp-badge lp-badge--discount">-25%</span></div><div class="lp-card__body"><h3 class="lp-card__title" data-lp-field="items.7.title">Botol Merah Muda</h3><p class="lp-card__desc" data-lp-field="items.7.description" data-lp-rich>Stainless 750ml, tutup kedap.</p><div class="lp-rating"><span class="lp-stars" style="--lp-rating:90%" aria-hidden="true"></span><span class="lp-sr">Rating 4,5 dari 5</span><span class="lp-rating__count">(89 ulasan)</span></div><p class="lp-price"><span class="lp-price__now">Rp149.000</span> <s class="lp-price__was"><span class="lp-sr">Harga normal</span> Rp199.000</s></p><a class="lp-btn lp-btn--primary lp-btn--block" href="#order" data-lp-cta data-lp-item="p8" data-lp-field="items.7.cta.label">Pilih</a></div></article></div></div><div class="lp-carousel__nav" hidden><button type="button" class="lp-carousel__play" aria-label="Jeda" data-lp-play="Putar"><svg class="lp-icon lp-icon--pause" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="14" y="3" width="5" height="18" rx="1"/><rect x="5" y="3" width="5" height="18" rx="1"/></svg><svg class="lp-icon lp-icon--play" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/></svg></button><button type="button" class="lp-carousel__arrow lp-carousel__prev" aria-label="Slide sebelumnya" data-lp-prev><svg class="lp-icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button><div class="lp-carousel__dots"><button type="button" class="lp-carousel__dot" aria-label="Ke slide 1" aria-current="true" data-lp-dot="0"></button><button type="button" class="lp-carousel__dot" aria-label="Ke slide 2" aria-current="false" data-lp-dot="1"></button><button type="button" class="lp-carousel__dot" aria-label="Ke slide 3" aria-current="false" data-lp-dot="2"></button><button type="button" class="lp-carousel__dot" aria-label="Ke slide 4" aria-current="false" data-lp-dot="3"></button><button type="button" class="lp-carousel__dot" aria-label="Ke slide 5" aria-current="false" data-lp-dot="4"></button><button type="button" class="lp-carousel__dot" aria-label="Ke slide 6" aria-current="false" data-lp-dot="5"></button><button type="button" class="lp-carousel__dot" aria-label="Ke slide 7" aria-current="false" data-lp-dot="6"></button><button type="button" class="lp-carousel__dot" aria-label="Ke slide 8" aria-current="false" data-lp-dot="7"></button></div><button type="button" class="lp-carousel__arrow lp-carousel__next" aria-label="Slide berikutnya" data-lp-next><svg class="lp-icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button></div></section></div></div></section><section id="s-sGallery" class="lp-s lp-tone-muted lp-pad-md" data-lp-section="sGallery"><div class="lp-c lp-w-normal"><div class="lp-b" id="b-bGallery" data-lp-block="bGallery" data-lp-type="gallery"><div class="lp-gallery" style="--lp-cols-m:2;--lp-cols-d:3;--lp-ar:1/1;--lp-fit:cover"><h2 class="lp-h2" data-lp-field="heading" data-lp-rich>Lihat lebih dekat</h2><div class="lp-gallery__grid"><figure class="lp-gallery__item"><img class="lp-gallery__img" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MDAiIGhlaWdodD0iODAwIiB2aWV3Qm94PSIwIDAgODAwIDgwMCI+PHJlY3Qgd2lkdGg9IjgwMCIgaGVpZ2h0PSI4MDAiIGZpbGw9IiMzMzQxNTUiLz48dGV4dCB4PSI0MDAiIHk9IjQyMCIgZm9udC1mYW1pbHk9InN5c3RlbS11aSwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSI2NCIgZm9udC13ZWlnaHQ9IjcwMCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iI2ZmZmZmZiI+VHV0dXA8L3RleHQ+PC9zdmc+" alt="Bagian Tutup" width="800" height="800" loading="lazy" decoding="async"><figcaption class="lp-gallery__caption" data-lp-field="items.0.caption">Tutup</figcaption></figure><figure class="lp-gallery__item"><img class="lp-gallery__img" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MDAiIGhlaWdodD0iODAwIiB2aWV3Qm94PSIwIDAgODAwIDgwMCI+PHJlY3Qgd2lkdGg9IjgwMCIgaGVpZ2h0PSI4MDAiIGZpbGw9IiMzMzQxNTUiLz48dGV4dCB4PSI0MDAiIHk9IjQyMCIgZm9udC1mYW1pbHk9InN5c3RlbS11aSwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSI2NCIgZm9udC13ZWlnaHQ9IjcwMCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iI2ZmZmZmZiI+RGFzYXI8L3RleHQ+PC9zdmc+" alt="Bagian Dasar" width="800" height="800" loading="lazy" decoding="async"><figcaption class="lp-gallery__caption" data-lp-field="items.1.caption">Dasar</figcaption></figure><figure class="lp-gallery__item"><img class="lp-gallery__img" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MDAiIGhlaWdodD0iODAwIiB2aWV3Qm94PSIwIDAgODAwIDgwMCI+PHJlY3Qgd2lkdGg9IjgwMCIgaGVpZ2h0PSI4MDAiIGZpbGw9IiMzMzQxNTUiLz48dGV4dCB4PSI0MDAiIHk9IjQyMCIgZm9udC1mYW1pbHk9InN5c3RlbS11aSwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSI2NCIgZm9udC13ZWlnaHQ9IjcwMCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iI2ZmZmZmZiI+VGFsaTwvdGV4dD48L3N2Zz4=" alt="Bagian Tali" width="800" height="800" loading="lazy" decoding="async"><figcaption class="lp-gallery__caption" data-lp-field="items.2.caption">Tali</figcaption></figure></div></div></div></div></section><section id="s-sPricing" class="lp-s lp-tone-base lp-pad-md" data-lp-section="sPricing"><div class="lp-c lp-w-normal"><div class="lp-b" id="b-bPricing" data-lp-block="bPricing" data-lp-type="pricing"><div class="lp-pricing" style="--lp-offers:2"><h2 class="lp-h2" data-lp-field="heading" data-lp-rich>Pilih paket</h2><div class="lp-pricing__offers"><article class="lp-pricing__offer"><h3 class="lp-h3" data-lp-field="offers.0.name">Satu botol</h3><p class="lp-pricing__price"><span class="lp-pricing__now">Rp149.000</span></p><ul class="lp-pricing__features"><li><svg class="lp-icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-lp-field="offers.0.features.0.text">Gratis ongkir</span></li></ul><a class="lp-btn lp-btn--primary lp-btn--block" href="#order" data-lp-cta data-lp-field="offers.0.cta.label">Pesan satu</a></article><article class="lp-pricing__offer lp-pricing__offer--hl"><span class="lp-pricing__badge" data-lp-field="offers.1.badge">Hemat</span><h3 class="lp-h3" data-lp-field="offers.1.name">Paket keluarga</h3><p class="lp-pricing__price"><span class="lp-pricing__now">Rp399.000</span> <s class="lp-pricing__was"><span class="lp-sr">Harga normal</span> Rp447.000</s> <span class="lp-pricing__off">-11%</span></p><ul class="lp-pricing__features"><li><svg class="lp-icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-lp-field="offers.1.features.0.text">Tiga botol</span></li><li><svg class="lp-icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-lp-field="offers.1.features.1.text">Gratis ongkir</span></li></ul><a class="lp-btn lp-btn--primary lp-btn--block" href="#order" data-lp-cta data-lp-field="offers.1.cta.label">Pesan paket</a></article></div><p class="lp-pricing__note" data-lp-field="note">Bayar di tempat tersedia</p></div></div></div></section><section id="s-sCountdown" class="lp-s lp-tone-dark lp-pad-sm" data-lp-section="sCountdown"><div class="lp-c lp-w-normal"><div class="lp-b" id="b-bCountdown" data-lp-block="bCountdown" data-lp-type="countdown"><div class="lp-countdown" data-lp-countdown data-end="4102419540000" data-on-end="message" role="timer" aria-live="off"><p class="lp-countdown__heading" data-lp-field="heading" data-lp-rich>Promo berakhir dalam</p><div class="lp-countdown__units"><div class="lp-countdown__unit"><span class="lp-countdown__n" data-u="d">--</span><span class="lp-countdown__l">Hari</span></div><div class="lp-countdown__unit"><span class="lp-countdown__n" data-u="h">--</span><span class="lp-countdown__l">Jam</span></div><div class="lp-countdown__unit"><span class="lp-countdown__n" data-u="m">--</span><span class="lp-countdown__l">Menit</span></div><div class="lp-countdown__unit"><span class="lp-countdown__n" data-u="s">--</span><span class="lp-countdown__l">Detik</span></div></div><p class="lp-countdown__end" hidden>Promo telah berakhir</p></div></div></div></section><section id="s-sVideo" class="lp-s lp-tone-base lp-pad-md" data-lp-section="sVideo"><div class="lp-c lp-w-normal"><div class="lp-b" id="b-bVideo" data-lp-block="bVideo" data-lp-type="video"><div class="lp-video-block"><h2 class="lp-h2" data-lp-field="heading" data-lp-rich>Lihat cara pakainya</h2><div class="lp-video" style="--lp-ratio:16/9"><a class="lp-video__play" href="https://www.youtube.com/watch?v=dQw4w9WgXcQ" target="_blank" rel="noopener" data-lp-video="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ?autoplay=1&amp;rel=0" data-lp-title="Cara pakai botol" aria-label="Putar: Cara pakai botol"><img class="lp-video__poster" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MDAiIGhlaWdodD0iODAwIiB2aWV3Qm94PSIwIDAgODAwIDgwMCI+PHJlY3Qgd2lkdGg9IjgwMCIgaGVpZ2h0PSI4MDAiIGZpbGw9IiMxMTE4MjciLz48dGV4dCB4PSI0MDAiIHk9IjQyMCIgZm9udC1mYW1pbHk9InN5c3RlbS11aSwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSI2NCIgZm9udC13ZWlnaHQ9IjcwMCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iI2ZmZmZmZiI+VmlkZW88L3RleHQ+PC9zdmc+" alt="" loading="lazy" decoding="async"><span class="lp-video__button"><svg class="lp-icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/></svg></span></a></div></div></div><div class="lp-b" id="b-bSpacer" data-lp-block="bSpacer" data-lp-type="spacer"><div class="lp-spacer lp-spacer--md" aria-hidden="true"><hr class="lp-spacer__line lp-spacer__line--full"></div></div><div class="lp-b" id="b-bCustom" data-lp-block="bCustom" data-lp-type="custom-html"><iframe class="lp-custom__frame" sandbox="allow-scripts" title="Catatan stok" data-lp-custom-frame srcdoc="&lt;!doctype html&gt;&lt;html lang=&quot;id&quot;&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;style&gt;:root{--lp-primary:#2563EB;--lp-on-primary:#FFFFFF;--lp-accent:#F59E0B;--lp-on-accent:#111827;--lp-background:#FFFFFF;--lp-surface:#F3F4F6;--lp-text:#111827;--lp-muted:#4B5563;--lp-border:#E5E7EB;--lp-dark:#111827;--lp-on-dark:#F9FAFB;--lp-font:system-ui, sans-serif;--lp-heading-font:system-ui, sans-serif;--lp-radius:8px;--lp-btn-radius:8px}*,*:before,*:after{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;font-family:var(--lp-font);color:var(--lp-text);background:var(--lp-background);line-height:1.6;overflow-wrap:anywhere;-webkit-text-size-adjust:100%;text-size-adjust:100%}img,svg{display:block;max-width:100%}button,input,select,textarea{font:inherit}a{color:inherit}.lp-tone-base{--lp-bg: var(--lp-background);--lp-fg: var(--lp-text);--lp-fg-muted: var(--lp-muted);--lp-btn-bg: var(--lp-primary);--lp-btn-fg: var(--lp-on-primary);--lp-card-bg: var(--lp-surface);--lp-line: var(--lp-border)}.lp-tone-muted{--lp-bg: var(--lp-surface);--lp-fg: var(--lp-text);--lp-fg-muted: var(--lp-muted);--lp-btn-bg: var(--lp-primary);--lp-btn-fg: var(--lp-on-primary);--lp-card-bg: var(--lp-background);--lp-line: var(--lp-border)}.lp-tone-primary{--lp-bg: var(--lp-primary);--lp-fg: var(--lp-on-primary);--lp-fg-muted: var(--lp-on-primary);--lp-btn-bg: var(--lp-on-primary);--lp-btn-fg: var(--lp-primary);--lp-card-bg: var(--lp-background);--lp-line: var(--lp-on-primary)}.lp-tone-dark{--lp-bg: var(--lp-dark);--lp-fg: var(--lp-on-dark);--lp-fg-muted: var(--lp-on-dark);--lp-btn-bg: var(--lp-accent);--lp-btn-fg: var(--lp-on-accent);--lp-card-bg: var(--lp-background);--lp-line: var(--lp-on-dark)}.lp-s{background:var(--lp-bg);color:var(--lp-fg)}.lp-pad-none{padding-block:0}.lp-pad-sm{padding-block:24px}.lp-pad-md{padding-block:48px}.lp-pad-lg{padding-block:72px}.lp-c{margin-inline:auto;padding-inline:16px}.lp-w-narrow{max-width:640px}.lp-w-normal{max-width:1040px}.lp-w-wide{max-width:1280px}.lp-w-full{max-width:none}.lp-mt-sm{margin-top:16px}.lp-mt-md{margin-top:32px}.lp-mt-lg{margin-top:48px}.lp-align-center{text-align:center}.lp-h1,.lp-h2,.lp-h3{margin:0 0 .5em;font-family:var(--lp-heading-font);line-height:1.15}.lp-h1{font-size:clamp(1.875rem,1.2rem + 3.2vw,3.25rem)}.lp-h2{font-size:clamp(1.5rem,1.1rem + 2vw,2.25rem)}.lp-h3{font-size:1.125rem}.lp-sub{color:var(--lp-fg-muted)}.lp-btn{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:12px 24px;border:2px solid var(--lp-btn-bg);border-radius:var(--lp-btn-radius);background:var(--lp-btn-bg);color:var(--lp-btn-fg);font-weight:700;line-height:1.2;text-align:center;text-decoration:none}.lp-btn--secondary{border-color:currentColor;background:transparent;color:inherit}.lp-btn--block{display:flex;width:100%}.lp-icon{width:24px;height:24px;flex:none}.lp-stars{position:relative;display:inline-block;line-height:1;letter-spacing:2px;color:var(--lp-line)}.lp-stars:before{content:&quot;\2605\2605\2605\2605\2605&quot;}.lp-stars:after{content:&quot;\2605\2605\2605\2605\2605&quot;;position:absolute;inset:0;width:var(--lp-rating);overflow:hidden;white-space:nowrap;color:var(--lp-accent)}.lp-sr{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}.lp-hl{padding:0 .15em;border-radius:.2em;background:var(--lp-accent);color:var(--lp-on-accent)}.lp-img-ph{min-height:120px;background:repeating-linear-gradient(45deg,var(--lp-line) 0 10px,transparent 10px 20px)}:focus-visible{outline:3px solid var(--lp-fg);outline-offset:2px}@media(min-width:640px){.lp-c{padding-inline:24px}}@media(min-width:1024px){.lp-pad-sm{padding-block:32px}.lp-pad-md{padding-block:64px}.lp-pad-lg{padding-block:96px}.lp-hide-d{display:none}}@media(max-width:1023.98px){.lp-hide-m{display:none}}@media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}.lp-video{--lp-fg: var(--lp-on-dark);position:relative;aspect-ratio:var(--lp-ratio);overflow:hidden;border-radius:var(--lp-radius);background:var(--lp-dark);color:var(--lp-fg)}.lp-video&gt;*,.lp-video img{position:absolute;inset:0;width:100%;height:100%;margin:0;border:0;object-fit:cover}.lp-video a:focus-visible{outline-offset:-5px}.lp-video--missing p,.lp-video__button{display:grid;place-items:center;text-align:center}.lp-video__button{position:absolute;inset:0;width:64px;height:64px;margin:auto;border-radius:50%;background:#0009;color:#fff}body{margin:0;background:transparent}&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&lt;p class=&quot;note&quot;&gt;Stok terbatas untuk &lt;strong&gt;bulan ini&lt;/strong&gt;.&lt;/p&gt;&lt;script&gt;(function(){var r=function(){parent.postMessage({lpHeight:document.documentElement.scrollHeight},&#39;*&#39;)};addEventListener(&#39;load&#39;,r);if(window.ResizeObserver)new ResizeObserver(r).observe(document.documentElement);r()})()&lt;/script&gt;&lt;/body&gt;&lt;/html&gt;"></iframe></div></div></section><section id="s-sTestimonials" class="lp-s lp-tone-muted lp-pad-md" data-lp-section="sTestimonials"><div class="lp-c lp-w-normal"><div class="lp-b" id="b-bTestimonials" data-lp-block="bTestimonials" data-lp-type="testimonials"><div class="lp-testimonials lp-testimonials--grid"><h2 class="lp-h2" data-lp-field="heading" data-lp-rich>Kata pembeli</h2><div class="lp-testimonials__list"><figure class="lp-quote"><span class="lp-stars" style="--lp-rating:100%" aria-hidden="true"></span><span class="lp-sr">Rating 5 dari 5</span><blockquote class="lp-quote__text"><p data-lp-field="items.0.quote" data-lp-rich>Esnya masih ada sampai sore.</p></blockquote><figcaption class="lp-quote__by"><span class="lp-quote__name" data-lp-field="items.0.name">Rina</span><span class="lp-quote__detail" data-lp-field="items.0.detail">Bandung</span></figcaption></figure><figure class="lp-quote"><span class="lp-stars" style="--lp-rating:100%" aria-hidden="true"></span><span class="lp-sr">Rating 5 dari 5</span><blockquote class="lp-quote__text"><p data-lp-field="items.1.quote" data-lp-rich>Tutupnya <strong>benar-benar</strong> kedap.</p></blockquote><figcaption class="lp-quote__by"><span class="lp-quote__name" data-lp-field="items.1.name">Budi</span><span class="lp-quote__detail" data-lp-field="items.1.detail">Surabaya</span></figcaption></figure><figure class="lp-quote"><span class="lp-stars" style="--lp-rating:90%" aria-hidden="true"></span><span class="lp-sr">Rating 4,5 dari 5</span><blockquote class="lp-quote__text"><p data-lp-field="items.2.quote" data-lp-rich>Warnanya bagus, pengiriman cepat.</p></blockquote><figcaption class="lp-quote__by"><span class="lp-quote__name" data-lp-field="items.2.name">Sari</span><span class="lp-quote__detail" data-lp-field="items.2.detail">Medan</span></figcaption></figure></div></div></div></div></section><section id="s-sFaq" class="lp-s lp-tone-base lp-pad-md" data-lp-section="sFaq"><div class="lp-c lp-w-normal"><div class="lp-b" id="b-bFaq" data-lp-block="bFaq" data-lp-type="faq"><div class="lp-faq"><h2 class="lp-h2" data-lp-field="heading" data-lp-rich>Pertanyaan</h2><details class="lp-faq__item" open><summary class="lp-faq__q" data-lp-field="items.0.question">Berapa lama pengiriman?</summary><div class="lp-faq__a" data-lp-field="items.0.answer" data-lp-rich>Jawa 2-3 hari.<br>Luar Jawa 3-5 hari.</div></details><details class="lp-faq__item"><summary class="lp-faq__q" data-lp-field="items.1.question">Bisa bayar di tempat (COD)?</summary><div class="lp-faq__a" data-lp-field="items.1.answer" data-lp-rich>Bisa, untuk semua kota.</div></details><details class="lp-faq__item"><summary class="lp-faq__q" data-lp-field="items.2.question">Apakah aman untuk air panas?</summary><div class="lp-faq__a" data-lp-field="items.2.answer" data-lp-rich>Aman sampai 90°C.</div></details><details class="lp-faq__item"><summary class="lp-faq__q" data-lp-field="items.3.question">Bagaimana cara klaim garansi?</summary><div class="lp-faq__a" data-lp-field="items.3.answer" data-lp-rich>Hubungi kami lewat WhatsApp dengan foto produk.</div></details></div></div></div></section><section id="order" class="lp-s lp-tone-primary lp-pad-md" data-lp-section="sOrder"><div class="lp-c lp-w-normal"><div class="lp-b" id="b-bOrder" data-lp-block="bOrder" data-lp-type="hero"><div class="lp-hero lp-hero--stacked lp-hero--center"><div class="lp-hero__text"><h2 class="lp-h1" data-lp-field="headline" data-lp-rich>Pesan sekarang, dikirim hari ini</h2><p class="lp-lead" data-lp-field="subheadline" data-lp-rich>Klik tombol di bawah untuk pesan lewat WhatsApp.</p><div class="lp-actions"><a class="lp-btn lp-btn--primary" href="https://wa.me/6281234567890" target="_blank" rel="noopener" data-lp-cta data-lp-field="primaryCta.label">Pesan via WhatsApp</a></div></div></div></div></div></section><section id="s-sSticky" class="lp-s lp-tone-base lp-pad-md" data-lp-section="sSticky"><div class="lp-c lp-w-normal"><div class="lp-b" id="b-bSticky" data-lp-block="bSticky" data-lp-type="sticky-cta"><div class="lp-sticky lp-sticky--mobile" data-lp-sticky data-reveal><div class="lp-sticky__inner"><p class="lp-sticky__text" data-lp-field="text">Gratis ongkir hari ini</p><a class="lp-btn lp-btn--primary" href="#order" data-lp-cta data-lp-field="cta.label">Pesan</a></div></div></div></div></section><section id="s-sCookie" class="lp-s lp-tone-base lp-pad-md" data-lp-section="sCookie"><div class="lp-c lp-w-normal"><div class="lp-b" id="b-bCookie" data-lp-block="bCookie" data-lp-type="cookie-banner"><section class="lp-cookie" data-lp-cookie aria-label="Pemberitahuan cookie"><p class="lp-cookie__text">Situs ini memakai cookie untuk mengukur iklan dan memperbaiki halaman. <a href="https://botolku.example/privasi">Kebijakan privasi</a></p><button type="button" class="lp-btn lp-cookie__ok">Oke</button></section></div></div></section></main><div id="s-sFooter" class="lp-s lp-tone-base lp-pad-sm" data-lp-section="sFooter"><div class="lp-c lp-w-normal"><div class="lp-b" id="b-bFooter" data-lp-block="bFooter" data-lp-type="footer"><footer class="lp-footer"><p class="lp-footer__brand" data-lp-field="brand">Botolku</p><nav class="lp-footer__nav" aria-label="Tautan"><ul><li><a href="https://botolku.example/privasi" data-lp-field="links.0.label">Kebijakan Privasi</a></li><li><a href="https://botolku.example/syarat" data-lp-field="links.1.label">Syarat &amp; Ketentuan</a></li><li><a href="https://wa.me/6281234567890" data-lp-field="links.2.label">Kontak</a></li></ul></nav><p class="lp-disclaimer" data-lp-field="disclaimer" data-lp-rich>Hasil dapat berbeda untuk setiap orang.</p><p class="lp-footer__copy" data-lp-field="copyright">© 2026 Botolku</p></footer></div></div></div><script>(() => {
+  const KEY = "lp-cookie-ok";
+  document.querySelectorAll("[data-lp-cookie]").forEach((banner) => {
+    if (banner.hasAttribute("data-lp-ready") || banner.closest("[data-lp-block]")) return;
+    banner.setAttribute("data-lp-ready", "");
+    try {
+      if (localStorage.getItem(KEY) === "1") return;
+    } catch (err) {
+    }
+    banner.hidden = false;
+    banner.querySelector("button").addEventListener("click", () => {
+      try {
+        localStorage.setItem(KEY, "1");
+      } catch (err) {
+      }
+      banner.hidden = true;
+      const main = document.querySelector("main");
+      if (main) {
+        main.setAttribute("tabindex", "-1");
+        main.focus();
+      }
+    });
+  });
+})();
+(() => {
+  document.querySelectorAll("[data-lp-countdown]").forEach((root) => {
+    if (root.hasAttribute("data-lp-ready")) return;
+    root.setAttribute("data-lp-ready", "");
+    const end = Number(root.getAttribute("data-end"));
+    if (!end) return;
+    const block = root.closest(".lp-b");
+    const canvas = block && block.hasAttribute("data-lp-block");
+    const units = root.querySelector(".lp-countdown__units");
+    const message = root.querySelector(".lp-countdown__end");
+    const cells = root.querySelectorAll("[data-u]");
+    const hourMod = root.querySelector('[data-u="d"]') ? 24 : Infinity;
+    const pad = (n) => (n < 10 ? "0" : "") + n;
+    const tick = () => {
+      if (!root.isConnected) return;
+      const now = Date.now();
+      const left = Math.max(0, Math.ceil((end - now) / 1e3));
+      const parts = {
+        d: Math.floor(left / 86400),
+        h: Math.floor(left / 3600) % hourMod,
+        m: Math.floor(left / 60) % 60,
+        s: left % 60
+      };
+      cells.forEach((cell) => {
+        cell.textContent = pad(parts[cell.getAttribute("data-u")]);
+      });
+      if (left > 0) {
+        setTimeout(tick, 1e3 - now % 1e3);
+      } else if (root.getAttribute("data-on-end") === "hide" && block && !canvas) {
+        block.hidden = true;
+      } else {
+        message.hidden = false;
+        if (!canvas) units.hidden = true;
+      }
+    };
+    tick();
+  });
+})();
+(() => {
   const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
   document.querySelectorAll("[data-lp-carousel]").forEach((root) => {
     const data = root.dataset;
@@ -874,5 +1397,16 @@ html {
       if (!stopped && !paused && !root.matches(":hover") && !$(":focus:not([data-lp-play])") && box.bottom > 0 && box.top < innerHeight && !document.hidden)
         step(1, true);
     }, seconds * 1e3);
+  });
+})();
+(() => {
+  document.documentElement.classList.add("lp-js");
+  document.querySelectorAll("[data-lp-sticky]").forEach((bar) => {
+    if (bar.hasAttribute("data-lp-ready")) return;
+    bar.setAttribute("data-lp-ready", "");
+    const first = [...document.querySelectorAll(".lp-s")].find((s) => !s.contains(bar));
+    const on = (value) => bar.classList.toggle("lp-sticky--on", value);
+    if (!bar.hasAttribute("data-reveal") || bar.closest("[data-lp-block]") || !first) return on(true);
+    new IntersectionObserver(([entry]) => on(!entry.isIntersecting)).observe(first);
   });
 })();</script></body></html>
