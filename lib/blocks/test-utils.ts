@@ -14,16 +14,31 @@ export interface TestContextOverrides {
   settings?: z.input<typeof PageSettingsSchema>;
   block?: Partial<BlockPosition>;
   sectionAnchors?: Record<string, string>;
+  /** Defaults to the tested block when it sits in the first section, as renderPage would. */
+  priorityBlockId?: string | null;
 }
 
 export function testContext(overrides: TestContextOverrides = {}): RenderContext {
+  const block = {
+    blockId: 'b1',
+    sectionId: 's1',
+    sectionIndex: 0,
+    indexInSection: 0,
+    ...overrides.block,
+  };
   return createRenderContext(
     {
       mode: overrides.mode ?? 'export',
       settings: PageSettingsSchema.parse(overrides.settings ?? {}),
       sectionAnchors: new Map(Object.entries(overrides.sectionAnchors ?? {})),
+      priorityBlockId:
+        overrides.priorityBlockId !== undefined
+          ? overrides.priorityBlockId
+          : block.sectionIndex === 0
+            ? block.blockId
+            : null,
     },
-    { blockId: 'b1', sectionId: 's1', sectionIndex: 0, indexInSection: 0, ...overrides.block },
+    block,
   );
 }
 

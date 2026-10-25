@@ -49,7 +49,7 @@ function renderSlide(
       className: 'lp-card__img',
       aspectRatio: props.aspectRatio,
       eager,
-      highPriority: ctx.aboveFold && index === 0,
+      highPriority: ctx.highPriority && index === 0,
     },
     ctx,
   )}${

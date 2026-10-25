@@ -32,7 +32,7 @@ export function renderHero(props: HeroProps, ctx: RenderContext): SafeHtml {
   const media = props.image
     ? html`<div class="lp-hero__media">${renderImage(
         props.image,
-        { className: 'lp-hero__img', eager: ctx.aboveFold, highPriority: ctx.aboveFold },
+        { className: 'lp-hero__img', eager: ctx.aboveFold, highPriority: ctx.highPriority },
         ctx,
       )}</div>`
     : '';

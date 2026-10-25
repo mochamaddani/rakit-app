@@ -9,6 +9,7 @@ const env: RenderEnv = {
     ['sForm', 'order'],
     ['sHero', 's-sHero'],
   ]),
+  priorityBlockId: null,
 };
 const pos = { blockId: 'b1', sectionId: 'sHero', sectionIndex: 0, indexInSection: 0 };
 

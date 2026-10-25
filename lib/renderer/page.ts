@@ -6,6 +6,7 @@ import {
   trackingBodyAttributes,
 } from '@/lib/tracking/vendors';
 import type { BlockInstance, PageDocument, Section } from '@/lib/schema/document';
+import { findImages } from '@/lib/schema/images';
 import { hasTrackingIds, type PageSettings } from '@/lib/schema/settings';
 import { collectCss, collectJs } from './collect';
 import { createRenderContext, type RenderEnv, type RenderMode } from './context';
@@ -65,11 +66,22 @@ function blockClasses(block: BlockInstance): string {
   return classes.join(' ');
 }
 
+/** The first block of the first section that has an image with a source (D-016). */
+function priorityBlock(doc: PageDocument): string | null {
+  const first = doc.sections[0];
+  const block = first?.blocks.find((b) => {
+    const definition = getBlockDefinition(b.type);
+    return definition && findImages(definition.schema, b.props).some((image) => image.src !== '');
+  });
+  return block?.id ?? null;
+}
+
 export function createRenderEnv(doc: PageDocument, mode: RenderMode): RenderEnv {
   return {
     mode,
     settings: doc.settings,
     sectionAnchors: new Map(doc.sections.map((section) => [section.id, sectionAnchor(section)])),
+    priorityBlockId: mode === 'export' ? priorityBlock(doc) : null,
   };
 }
 

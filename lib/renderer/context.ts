@@ -19,6 +19,8 @@ export interface RenderEnv {
   settings: PageSettings;
   /** sectionId → anchor (without '#'), for section links. */
   sectionAnchors: ReadonlyMap<string, string>;
+  /** The block that owns the page's one fetchpriority="high" image (D-016); null for none. */
+  priorityBlockId: string | null;
 }
 
 /** Everything a block's render() may use; blocks never read the document directly. */
@@ -30,6 +32,8 @@ export interface RenderContext {
   /** First section counts as above the fold (docs/DECISIONS.md D-016). */
   readonly aboveFold: boolean;
   readonly isFirstBlock: boolean;
+  /** Export only: this block's first image is the page's one fetchpriority="high" image. */
+  readonly highPriority: boolean;
   resolveLink(link: Link): string;
   /** Plain text, escaped; placeholders highlighted in preview. */
   text(value: string): SafeHtml;
@@ -68,6 +72,7 @@ export function createRenderContext(env: RenderEnv, block: BlockPosition): Rende
     block,
     aboveFold: block.sectionIndex === 0,
     isFirstBlock: block.sectionIndex === 0 && block.indexInSection === 0,
+    highPriority: env.mode === 'export' && block.blockId === env.priorityBlockId,
     resolveLink,
     text: (value) => renderText(value, inlineOptions),
     rich: (value) => renderInline(value, inlineOptions),

@@ -278,3 +278,47 @@ describe('tracking and social tags', () => {
     expect(await validateHtml(exported())).toEqual([]);
   });
 });
+
+describe('image priority (D-016)', () => {
+  const IMG = 'https://x.test/a.webp';
+  const carousel = (src: string) => ({
+    id: 'bCar',
+    type: 'product-carousel',
+    props: {
+      items: [
+        { id: 'i1', title: 'One', image: { src, alt: 'One' } },
+        { id: 'i2', title: 'Two', image: { src, alt: 'Two' } },
+      ],
+    },
+  });
+  const firstSection = (blocks: unknown[]) =>
+    parseDocument({ schemaVersion: 1, sections: [{ id: 's1', blocks }] });
+  const priorities = (html: string) => html.match(/<img[^>]*fetchpriority="high"[^>]*>/g) ?? [];
+
+  it('only one image is high priority when the first section has a hero and a carousel', () => {
+    const page = firstSection([
+      { id: 'bHero', type: 'hero', props: { headline: 'H', image: { src: IMG, alt: 'Hero' } } },
+      carousel(IMG),
+    ]);
+    const marked = priorities(renderPage(page, { mode: 'export' }).html);
+    expect(marked).toHaveLength(1);
+    expect(marked[0]).toContain('lp-hero__img');
+  });
+
+  it("the carousel's first card is high priority when the hero has no image", () => {
+    const page = firstSection([
+      { id: 'bHero', type: 'hero', props: { headline: 'H', image: { src: '', alt: '' } } },
+      carousel(IMG),
+    ]);
+    const marked = priorities(renderPage(page, { mode: 'export' }).html);
+    expect(marked).toHaveLength(1);
+    expect(marked[0]).toContain('alt="One"');
+  });
+
+  it('preview never marks fetchpriority', () => {
+    const page = firstSection([
+      { id: 'bHero', type: 'hero', props: { headline: 'H', image: { src: IMG, alt: 'Hero' } } },
+    ]);
+    expect(renderPage(page, { mode: 'preview' }).html).not.toContain('fetchpriority');
+  });
+});
