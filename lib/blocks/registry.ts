@@ -6,6 +6,7 @@ import { gallery } from './gallery';
 import { hero } from './hero';
 import { imageText } from './image-text';
 import { logos } from './logos';
+import { pricing } from './pricing';
 import { spacer } from './spacer';
 import { productCarousel } from './special/product-carousel';
 import { testimonials } from './testimonials';
@@ -24,6 +25,7 @@ export const BLOCKS = [
   imageText,
   logos,
   gallery,
+  pricing,
 ] as const;
 
 export type RegisteredBlock = (typeof BLOCKS)[number];

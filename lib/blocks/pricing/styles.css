@@ -1,0 +1,98 @@
+.lp-pricing__offers {
+  display: grid;
+  gap: 16px;
+  align-items: stretch;
+}
+/* Each offer paints its own background, so it resets the tone colors it uses (D-033). */
+.lp-pricing__offer {
+  --lp-fg: var(--lp-text);
+  --lp-fg-muted: var(--lp-muted);
+  --lp-line: var(--lp-border);
+  --lp-btn-bg: var(--lp-primary);
+  --lp-btn-fg: var(--lp-on-primary);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 24px 20px;
+  border: 1px solid var(--lp-line);
+  border-radius: var(--lp-radius);
+  background: var(--lp-card-bg);
+  color: var(--lp-fg);
+}
+.lp-pricing__offer--hl {
+  border: 2px solid var(--lp-accent);
+}
+.lp-pricing__offer .lp-h3 {
+  margin: 0;
+}
+.lp-pricing__badge {
+  align-self: flex-start;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: var(--lp-dark);
+  color: var(--lp-on-dark);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+.lp-pricing__offer--hl .lp-pricing__badge {
+  background: var(--lp-accent);
+  color: var(--lp-on-accent);
+}
+.lp-pricing__desc {
+  margin: 0;
+  color: var(--lp-fg-muted);
+}
+.lp-pricing__price {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  align-items: baseline;
+  margin: 0;
+}
+.lp-pricing__now {
+  font-size: 1.75rem;
+  font-weight: 800;
+}
+.lp-pricing__was {
+  color: var(--lp-fg-muted);
+}
+.lp-pricing__off {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--lp-accent);
+  color: var(--lp-on-accent);
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+.lp-pricing__features {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.lp-pricing__features li {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+.lp-pricing__features .lp-icon {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  margin-top: 2px;
+}
+.lp-pricing__offer .lp-btn {
+  margin-top: auto;
+}
+.lp-pricing__note {
+  margin: 16px 0 0;
+  text-align: center;
+  color: var(--lp-fg-muted);
+}
+@media (min-width: 1024px) {
+  .lp-pricing__offers {
+    grid-template-columns: repeat(var(--lp-offers), minmax(0, 1fr));
+  }
+}
