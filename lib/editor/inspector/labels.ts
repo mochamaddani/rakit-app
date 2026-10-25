@@ -14,6 +14,8 @@ const FIELD_LABELS: Readonly<Record<string, string>> = {
   arrowsOnTouch: 'Show arrows on touch screens',
   aspectRatio: 'Image shape',
   imageSide: 'Image side',
+  grayscale: 'Grey until hovered',
+  columns: 'Columns',
   openFirst: 'Open the first question',
   exclusive: 'Only one answer open at a time',
   hideOn: 'Hide on',

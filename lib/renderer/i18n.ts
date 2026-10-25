@@ -12,7 +12,8 @@ export type MessageKey =
   | 'links'
   | 'untitled'
   | 'orderForm'
-  | 'formMissing';
+  | 'formMissing'
+  | 'logos';
 
 const MESSAGES: Record<Lang, Record<MessageKey, string>> = {
   id: {
@@ -28,6 +29,7 @@ const MESSAGES: Record<Lang, Record<MessageKey, string>> = {
     untitled: 'Tanpa judul',
     orderForm: 'Formulir pemesanan',
     formMissing: 'Alamat formulir belum diisi.',
+    logos: 'Logo',
   },
   en: {
     products: 'Products',
@@ -42,6 +44,7 @@ const MESSAGES: Record<Lang, Record<MessageKey, string>> = {
     untitled: 'Untitled',
     orderForm: 'Order form',
     formMissing: 'Form address missing.',
+    logos: 'Logos',
   },
 };
 
