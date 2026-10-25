@@ -252,3 +252,27 @@ test('form embed shows only the fields of its mode', async ({ page }) => {
   await expect(code).toHaveValue('<div>my form</div>');
   await expect(address).toHaveCount(0);
 });
+
+test('paste rows adds products in one undo step', async ({ page }) => {
+  const frame = await heroAndCarousel(page);
+  await selectBlock(page, 'product-carousel');
+  await page.getByRole('button', { name: 'Paste rows' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Paste products' });
+  const rows = [
+    'Nama\tHarga\tHarga coret\tGambar\tLink',
+    ...Array.from(
+      { length: 8 },
+      (_, i) => `Teh ${i + 1}\tRp${i + 1}49.000\t\t\thttps://shop.test/${i + 1}`,
+    ),
+  ].join('\n');
+  await dialog.getByLabel('Rows').fill(rows);
+  await expect(dialog.getByRole('status')).toContainText('8 products ready');
+  await dialog.getByRole('button', { name: 'Add 8 products' }).click();
+  await expect(dialog).toBeHidden();
+  await expect(frame.locator('.lp-card')).toHaveCount(11);
+  await expect(frame.locator('.lp-card__title').last()).toHaveText('Teh 8');
+  await page.keyboard.press('ControlOrMeta+z');
+  await expect(frame.locator('.lp-card')).toHaveCount(3);
+  await page.keyboard.press('ControlOrMeta+y');
+  await expect(frame.locator('.lp-card')).toHaveCount(11);
+});

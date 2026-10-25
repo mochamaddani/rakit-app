@@ -22,6 +22,7 @@ import { createId } from '@/lib/schema/ids';
 import { cn } from '@/lib/utils';
 import { useListDrag } from '../../dnd/use-list-drag';
 import { FieldList } from '../field-list';
+import { BulkPasteDialog } from './bulk-paste-dialog';
 import type { ControlProps } from '../types';
 
 function ItemButton({
@@ -166,6 +167,19 @@ export function ListControl({ spec, value, path, actions, context }: ControlProp
         <Button type="button" variant="outline" size="sm" disabled={full} onClick={add}>
           Add item
         </Button>
+        {/* Only the Product Carousel's own products take pasted rows (D-054). */}
+        {context.definition?.type === 'product-carousel' && path.join('.') === 'items' ? (
+          <BulkPasteDialog
+            room={Math.max(0, spec.max - items.length)}
+            max={spec.max}
+            format={context.doc.settings.price}
+            onAdd={(added) => {
+              const result = actions.listInsertMany(path, items.length, added);
+              run(result);
+              return result;
+            }}
+          />
+        ) : null}
         {Number.isFinite(spec.max) ? (
           <span className="text-xs text-muted-foreground">
             {items.length} of {spec.max}

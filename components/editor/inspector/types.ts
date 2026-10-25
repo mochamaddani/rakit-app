@@ -12,6 +12,8 @@ export interface FieldActions {
   /** Ends the typing run (blur). */
   endEdit(): void;
   listInsert(path: PropPath, index: number, item: unknown): CommandResult;
+  /** Bulk paste: every item in one undo step. */
+  listInsertMany(path: PropPath, index: number, items: unknown[]): CommandResult;
   listMove(path: PropPath, from: number, to: number): CommandResult;
   listRemove(path: PropPath, index: number): CommandResult;
   listDuplicate(path: PropPath, index: number): CommandResult;

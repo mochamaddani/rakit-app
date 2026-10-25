@@ -54,6 +54,8 @@ export type EditorCommand =
   | { type: 'setSectionAnchor'; sectionId: string; anchor: string | undefined }
   | { type: 'setSetting'; path: PropPath; value: unknown }
   | { type: 'listInsert'; blockId: string; path: PropPath; index: number; item: unknown }
+  /** Bulk paste (D-054): every item in one undo step; any invalid item or overflow changes nothing. */
+  | { type: 'listInsertMany'; blockId: string; path: PropPath; index: number; items: unknown[] }
   | { type: 'listMove'; blockId: string; path: PropPath; from: number; to: number }
   | { type: 'listRemove'; blockId: string; path: PropPath; index: number }
   | { type: 'listDuplicate'; blockId: string; path: PropPath; index: number }
@@ -303,6 +305,7 @@ function runCommand(
       return checkWhole(PageSettingsSchema, result.doc.settings) ?? result;
     }
     case 'listInsert':
+    case 'listInsertMany':
     case 'listMove':
     case 'listRemove':
     case 'listDuplicate':
@@ -737,7 +740,7 @@ function setSectionAnchor(
 
 type ListCommand = Extract<
   EditorCommand,
-  { type: 'listInsert' | 'listMove' | 'listRemove' | 'listDuplicate' }
+  { type: 'listInsert' | 'listInsertMany' | 'listMove' | 'listRemove' | 'listDuplicate' }
 >;
 
 function editList(
@@ -769,6 +772,23 @@ function editList(
         doc,
         (draft) => void draftList(draft).splice(command.index, 0, parsed.data),
         meta('Add item', `Added item ${command.index + 1}`),
+      );
+      break;
+    }
+    case 'listInsertMany': {
+      if (!inRange(command.index, list.length)) return fail('invalid', 'No such position');
+      if (command.items.length === 0) return fail('noop', 'Nothing to add');
+      const parsed: unknown[] = [];
+      for (const item of command.items) {
+        const one = z.safeParse(array.element, item);
+        if (!one.success) return fail('invalid', one.error.issues[0]?.message ?? 'Invalid item');
+        parsed.push(one.data);
+      }
+      const items = `${parsed.length} ${parsed.length === 1 ? 'item' : 'items'}`;
+      result = commit(
+        doc,
+        (draft) => void draftList(draft).splice(command.index, 0, ...parsed),
+        meta(`Add ${items}`, `Added ${items}`),
       );
       break;
     }

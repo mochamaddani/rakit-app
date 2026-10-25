@@ -56,6 +56,7 @@ export function PagePanel() {
         ),
       endEdit: endCoalescing,
       listInsert: notAList,
+      listInsertMany: notAList,
       listMove: notAList,
       listRemove: notAList,
       listDuplicate: notAList,

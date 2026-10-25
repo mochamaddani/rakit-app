@@ -30,6 +30,8 @@ export function BlockPanel({ blockId }: { blockId: string }) {
       endEdit: endCoalescing,
       listInsert: (path, index, item) =>
         dispatch({ type: 'listInsert', blockId, path, index, item }),
+      listInsertMany: (path, index, items) =>
+        dispatch({ type: 'listInsertMany', blockId, path, index, items }),
       listMove: (path, from, to) => dispatch({ type: 'listMove', blockId, path, from, to }),
       listRemove: (path, index) => dispatch({ type: 'listRemove', blockId, path, index }),
       listDuplicate: (path, index) => dispatch({ type: 'listDuplicate', blockId, path, index }),
@@ -45,6 +47,7 @@ export function BlockPanel({ blockId }: { blockId: string }) {
         ),
       endEdit: endCoalescing,
       listInsert: notAList,
+      listInsertMany: notAList,
       listMove: notAList,
       listRemove: notAList,
       listDuplicate: notAList,

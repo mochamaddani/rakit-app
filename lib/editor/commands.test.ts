@@ -1,6 +1,6 @@
 import { applyPatches } from 'immer';
 import { describe, expect, it } from 'vitest';
-import { PageDocumentSchema, parseDocument } from '@/lib/schema/document';
+import { PageDocumentSchema, parseDocument, type PageDocument } from '@/lib/schema/document';
 import { hero } from '@/lib/blocks/hero';
 import {
   applyCommand,
@@ -452,5 +452,37 @@ describe('restoreDocument', () => {
     };
     const failure = fail({ type: 'restoreDocument', doc: broken as never, when: 'now' });
     expect(failure.code).toBe('invalid');
+  });
+});
+
+describe('listInsertMany', () => {
+  const carouselItems = (doc: PageDocument) =>
+    (doc.sections[2]!.blocks[0]!.props as { items: { id: string; title: string }[] }).items;
+  const many = (n: number, at = 0) =>
+    ({
+      type: 'listInsertMany',
+      blockId: 'b4',
+      path: ['items'],
+      index: at,
+      items: Array.from({ length: n }, (_, i) => ({ id: `m${i}`, title: `Baru ${i}` })),
+    }) as const;
+
+  it('listInsertMany adds every item as one undo step', () => {
+    const before = carouselItems(editorDoc()).length;
+    const r = ok(run(many(8, before)));
+    expect(carouselItems(r.doc)).toHaveLength(before + 8);
+    expect(carouselItems(r.doc).at(-1)).toMatchObject({ id: 'm7', title: 'Baru 7' });
+    expect(r.label).toBe('Add 8 items');
+    expect(r.announcement).toBe('Added 8 items');
+  });
+  it('listInsertMany past the list limit changes nothing', () => {
+    const before = carouselItems(editorDoc()).length;
+    expect(fail(many(51 - before))).toMatchObject({ code: 'limit' });
+    expect(
+      fail({ ...many(1), items: [{ id: 'bad id', title: '' }] } as unknown as EditorCommand),
+    ).toMatchObject({ code: 'invalid' });
+  });
+  it('an empty listInsertMany is a noop', () => {
+    expect(fail(many(0))).toMatchObject({ code: 'noop' });
   });
 });
