@@ -1,0 +1,27 @@
+/* Vertical space with an optional divider; the line takes its tone's line color (D-015). */
+.lp-spacer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.lp-spacer--sm {
+  height: 16px;
+}
+.lp-spacer--md {
+  height: 32px;
+}
+.lp-spacer--lg {
+  height: 64px;
+}
+.lp-spacer--xl {
+  height: 96px;
+}
+.lp-spacer__line {
+  width: 100%;
+  margin: 0;
+  border: 0;
+  border-top: 1px solid var(--lp-line);
+}
+.lp-spacer__line--short {
+  width: 64px;
+}

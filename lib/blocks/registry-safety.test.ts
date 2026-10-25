@@ -1,5 +1,7 @@
 // @vitest-environment happy-dom
 import { describe, expect, it } from 'vitest';
+import { z } from 'zod';
+import type { AnyBlockDefinition } from '@/lib/blocks/types';
 import { listBlockDefinitions } from '@/lib/blocks/registry';
 import { singleBlockDoc, testContext } from '@/lib/blocks/test-utils';
 import { renderPage } from '@/lib/renderer/page';
@@ -7,6 +9,10 @@ import { parseDocument } from '@/lib/schema/document';
 import { sequentialIds } from '@/lib/schema/ids';
 import { HOSTILE_URL, poisonProps } from '@/tests/helpers/poison';
 import { validateHtml } from '@/tests/helpers/validate-html';
+
+/** True when some field is user text (control text or rich). */
+const hasUserText = (def: AnyBlockDefinition) =>
+  /"control":"(text|rich)"/.test(JSON.stringify(z.toJSONSchema(def.schema, { io: 'input' })));
 
 describe.each(listBlockDefinitions().map((d) => [d.type, d] as const))(
   '%s (registry-wide)',
@@ -27,7 +33,8 @@ describe.each(listBlockDefinitions().map((d) => [d.type, d] as const))(
               expect(attr.value.toLowerCase()).not.toContain('javascript:');
           }
         }
-        expect(fragment).toContain('&lt;script&gt;');
+        // Blocks without user text (Spacer) have nothing to echo back.
+        if (hasUserText(def)) expect(fragment).toContain('&lt;script&gt;');
       }
     });
 
