@@ -3,6 +3,7 @@ import { faq } from './faq';
 import { footer } from './footer';
 import { formEmbed } from './form-embed';
 import { hero } from './hero';
+import { imageText } from './image-text';
 import { spacer } from './spacer';
 import { productCarousel } from './special/product-carousel';
 import { testimonials } from './testimonials';
@@ -18,6 +19,7 @@ export const BLOCKS = [
   productCarousel,
   formEmbed,
   spacer,
+  imageText,
 ] as const;
 
 export type RegisteredBlock = (typeof BLOCKS)[number];
