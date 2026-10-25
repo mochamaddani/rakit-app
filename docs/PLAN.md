@@ -2,7 +2,7 @@
 
 **Status:** proposed for owner review · 2026-10-21
 **Spec:** [`docs/PRD.md`](PRD.md) · **Decisions:** [`docs/DECISIONS.md`](DECISIONS.md) (D-xxx below)
-**Detailed task plans:** [M0 Foundation](superpowers/plans/2026-10-21-m0-foundation.md) · [M1 Renderer](superpowers/plans/2026-10-21-m1-renderer.md) · [M2a Editor core](superpowers/plans/2026-10-22-m2a-editor-core.md) · [M2b Direct manipulation](superpowers/plans/2026-10-22-m2b-direct-manipulation.md) · [M3 Export + tracking](superpowers/plans/2026-10-24-m3-export-tracking.md). Plans for M4–M7 are written when each milestone starts, because each one depends on interfaces the previous milestone settles.
+**Detailed task plans:** [M0 Foundation](superpowers/plans/2026-10-21-m0-foundation.md) · [M1 Renderer](superpowers/plans/2026-10-21-m1-renderer.md) · [M2a Editor core](superpowers/plans/2026-10-22-m2a-editor-core.md) · [M2b Direct manipulation](superpowers/plans/2026-10-22-m2b-direct-manipulation.md) · [M3 Export + tracking](superpowers/plans/2026-10-24-m3-export-tracking.md) · [M4a Blocks + carousel](superpowers/plans/2026-10-25-m4a-blocks-carousel.md). Plans for M4b–M7 are written when each milestone starts, because each one depends on interfaces the previous milestone settles.
 
 ---
 
@@ -110,7 +110,8 @@ Split into two plans: **M2a** (state, canvas, inspector; [detailed plan](superpo
 - Pre-export checklist (PRD §6.7, plus `[REPLACE:]` placeholders and Custom HTML scripts); versions in Storage (D-006) with list and one-click rollback; status updates (draft/exported).
 - **Exit (e2e):** build → export → open via `file://` with stubbed vendor scripts → assert PageView, CTA event, `Lead` on a simulated provider message, UTM/gclid appended to CTA and form URLs; version recorded with hash; rollback restores the draft.
 
-### M4 — Production workflow (completes v1)
+### M4 — Production workflow (completes v1) · [M4a plan](superpowers/plans/2026-10-25-m4a-blocks-carousel.md)
+Split into two plans: **M4a** (remaining blocks, carousel polish, canvas hardening; [detailed plan](superpowers/plans/2026-10-25-m4a-blocks-carousel.md)) and **M4b** (workflow and the acceptance review), which is written when M4a merges.
 - Duplicate page; templates (built-in seeds plus "save as template"); block presets; tags, search, status filter, archive.
 - Remaining blocks: Logos strip, Product showcase/gallery, Pricing/offer box, Countdown, Image + text, Video embed (lazy facade; also usable as Hero media), Sticky mobile CTA, Custom HTML (sanitized, scripts sandboxed in preview, opt-in in export), Spacer/Divider, cookie banner.
 - Carousel polish: bulk paste (CSV/TSV), autoplay (pause on hover/touch/focus, respects reduced motion), per-carousel tracking event, JSON-LD toggle.
@@ -191,5 +192,6 @@ Base UI primitives (dialogs, popovers) are UI building blocks, not builders or D
 | M2a Editor core | [`superpowers/plans/2026-10-22-m2a-editor-core.md`](superpowers/plans/2026-10-22-m2a-editor-core.md) | Done |
 | M2b Direct manipulation | [`superpowers/plans/2026-10-22-m2b-direct-manipulation.md`](superpowers/plans/2026-10-22-m2b-direct-manipulation.md) | Done |
 | M3 Export + tracking | [`superpowers/plans/2026-10-24-m3-export-tracking.md`](superpowers/plans/2026-10-24-m3-export-tracking.md) | Done |
-| M4 Production workflow | Written at the start of the milestone | Next |
+| M4a Blocks + carousel | [`superpowers/plans/2026-10-25-m4a-blocks-carousel.md`](superpowers/plans/2026-10-25-m4a-blocks-carousel.md) | In progress |
+| M4b Workflow + acceptance | Written when M4a merges | — |
 | M5–M7 | Written at the start of each milestone | — |
