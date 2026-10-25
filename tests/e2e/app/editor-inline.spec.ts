@@ -225,3 +225,51 @@ test('arrow keys move the caret in a carousel card instead of scrolling the card
   await expect(title).toHaveText('ProductX 1');
   expect(await frame.locator('.lp-carousel__track').evaluate((el) => el.scrollLeft)).toBe(0);
 });
+
+test('after Escape the field never shows an older value', async ({ page }) => {
+  const frame = await openEditor(
+    page,
+    await seedPage({ name: 'Inline', document: docWith(['hero', 'product-carousel']) }),
+  );
+  const headline = field(frame, 'hero', 'headline');
+  const canvasFrame = page.frames().find((f) => f.parentFrame() === page.mainFrame())!;
+  // Every value the headline shows, and where the list stood when Escape was pressed (a window
+  // capture listener runs before the runtime's own).
+  await canvasFrame.evaluate(() => {
+    const w = window as unknown as { seen: string[]; escapedAt: number };
+    w.seen = [];
+    w.escapedAt = -1;
+    const read = () =>
+      document.querySelector('[data-lp-type="hero"] [data-lp-field="headline"]')?.textContent ??
+      '(none)';
+    new MutationObserver(() => {
+      const value = read();
+      if (w.seen.at(-1) !== value) w.seen.push(value);
+    }).observe(document.body, { subtree: true, childList: true, characterData: true });
+    window.addEventListener(
+      'keydown',
+      (event) => {
+        if (event.key === 'Escape') w.escapedAt = w.seen.length;
+      },
+      true,
+    );
+  });
+  for (let run = 0; run < 5; run++) {
+    const text = `Botol anti bocor ${run}`;
+    await headline.dblclick();
+    await expect(editing(frame)).toHaveCount(1);
+    await page.keyboard.press('ControlOrMeta+A');
+    // Typed without pauses and ended at once, like the M2 journey that first showed the flash.
+    await page.keyboard.type(text);
+    await page.keyboard.press('Escape');
+    await expect(editing(frame)).toHaveCount(0);
+    await expect(inspector(page, 'Headline')).toHaveValue(text);
+    await expect(headline).toHaveText(text);
+    await page.waitForTimeout(300);
+    const { seen, escapedAt } = await canvasFrame.evaluate(() => {
+      const w = window as unknown as { seen: string[]; escapedAt: number };
+      return { seen: w.seen, escapedAt: w.escapedAt };
+    });
+    expect(seen.slice(escapedAt).filter((value) => value !== text)).toEqual([]);
+  }
+});

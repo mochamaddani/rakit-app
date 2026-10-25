@@ -127,7 +127,7 @@ export function Canvas({
     s.raf = 0;
     if (!s.ready || !s.sent) return;
     const next = canvasState(store.getState().doc, s.cache);
-    const payload = diffCanvas(s.sent, next);
+    const payload = diffCanvas(s.sent, next, s.editingBlock);
     s.sent = next;
     if (payload) {
       s.rev += 1;

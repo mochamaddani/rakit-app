@@ -34,15 +34,23 @@ export function canvasState(doc: PageDocument, cache: BlockHtmlCache): CanvasSta
   };
 }
 
-/** What to send to go from `prev` to `next`; null when nothing changed. */
-export function diffCanvas(prev: CanvasState, next: CanvasState): SyncPayload | null {
+/**
+ * What to send to go from `prev` to `next`; null when nothing changed. `held` is the block being
+ * edited inline: it is never sent, so no patch computed mid-edit can land after editing ends and
+ * flash an older value; editEnd makes the editor resend it from the document.
+ */
+export function diffCanvas(
+  prev: CanvasState,
+  next: CanvasState,
+  held: string | null = null,
+): SyncPayload | null {
   const payload: SyncPayload = { blocks: [] };
   if (prev.css !== next.css) payload.css = next.css;
   if (prev.js !== next.js) payload.js = next.js;
   if (prev.lang !== next.lang) payload.lang = next.lang;
   if (prev.skeleton !== next.skeleton) payload.skeleton = next.skeleton;
   for (const [id, markup] of next.blocks) {
-    if (prev.blocks.get(id) !== markup) payload.blocks.push({ id, html: markup });
+    if (id !== held && prev.blocks.get(id) !== markup) payload.blocks.push({ id, html: markup });
   }
   const unchanged = Object.keys(payload).length === 1 && payload.blocks.length === 0;
   return unchanged ? null : payload;

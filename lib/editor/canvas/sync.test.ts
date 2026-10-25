@@ -16,6 +16,22 @@ const apply = (doc: ReturnType<typeof editorDoc>, command: Parameters<typeof app
 describe('diffCanvas', () => {
   const base = editorDoc();
   it('is null when nothing changed', () => expect(diffCanvas(state(base), state(base))).toBeNull());
+  it('never sends the block being edited, so a patch in flight cannot land after editing ends', () => {
+    const typed = apply(base, {
+      type: 'setBlockProp',
+      blockId: 'b1',
+      path: ['headline'],
+      value: 'Botol anti',
+    });
+    expect(diffCanvas(state(base), state(typed), 'b1')).toBeNull();
+    const both = apply(typed, {
+      type: 'setBlockProp',
+      blockId: 'b2',
+      path: ['heading'],
+      value: 'Kenapa kami',
+    });
+    expect(diffCanvas(state(base), state(both), 'b1')!.blocks.map((b) => b.id)).toEqual(['b2']);
+  });
   it('sends only the edited block for a prop change', () => {
     const next = apply(base, {
       type: 'setBlockProp',
