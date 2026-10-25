@@ -11,6 +11,7 @@ const GROUPS: ReadonlyArray<{ category: BlockCategory; label: string }> = [
   { category: 'content', label: 'Content' },
   { category: 'conversion', label: 'Conversion' },
   { category: 'special', label: 'Special' },
+  { category: 'utility', label: 'Utility' },
 ];
 
 /** Every registered block, by category. A click adds it after the selected section; a drag drops it. */

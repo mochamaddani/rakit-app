@@ -232,3 +232,23 @@ test('an item image from a URL appears in the canvas and asks for alt text', asy
   );
   await expect(saveStatus(page)).toHaveText('Saved');
 });
+
+test('form embed shows only the fields of its mode', async ({ page }) => {
+  await openEditor(page, await seedPage({ name: 'Form fields', document: EMPTY_DOC }));
+  await addBlock(page, 'Form Embed');
+  await selectBlock(page, 'form-embed');
+  const code = page.getByRole('textbox', { name: 'Embed code' });
+  const address = page.getByRole('textbox', { name: 'Form address' });
+  await expect(code).toBeVisible();
+  await expect(address).toHaveCount(0);
+  await code.fill('<div>my form</div>');
+
+  await page.getByLabel('Form type').selectOption('iframe');
+  await expect(address).toBeVisible();
+  await expect(page.getByLabel('Height (px)')).toBeVisible();
+  await expect(code).toHaveCount(0);
+
+  await page.getByLabel('Form type').selectOption('snippet');
+  await expect(code).toHaveValue('<div>my form</div>');
+  await expect(address).toHaveCount(0);
+});

@@ -4,7 +4,7 @@ import type { GeneratedAsset } from '@/lib/renderer/generated-asset';
 import type { SafeHtml } from '@/lib/renderer/html';
 import type { IdFactory } from '@/lib/schema/ids';
 
-export type BlockCategory = 'content' | 'conversion' | 'special';
+export type BlockCategory = 'content' | 'conversion' | 'special' | 'utility';
 
 export interface BlockSnippet<P> {
   readonly asset: GeneratedAsset;

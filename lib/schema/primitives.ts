@@ -19,6 +19,21 @@ export function code(max: number) {
   return z.string().max(max).meta({ control: 'code' });
 }
 
+/** Inspector-only metadata: show a field while sibling `key` has one of the values in `in`. */
+export interface ShowWhen {
+  key: string;
+  in: readonly (string | boolean)[];
+}
+
+/** Shows the field in the inspector only while sibling `key` has one of `values` (inspector-only metadata). */
+export function when<T extends z.ZodType>(
+  schema: T,
+  key: string,
+  values: readonly (string | boolean)[],
+): T {
+  return schema.meta({ ...schema.meta(), showWhen: { key, in: values } }) as T;
+}
+
 export const HexColorSchema = z
   .string()
   .regex(/^#[0-9A-Fa-f]{6}$/)

@@ -2,6 +2,7 @@ import { z } from 'zod';
 import type { AnyBlockDefinition } from '@/lib/blocks/types';
 import { toPlainText } from '@/lib/renderer/inline';
 import type { IdFactory } from '@/lib/schema/ids';
+import type { ShowWhen } from '@/lib/schema/primitives';
 import { getAtPath, withFreshIds, type PropPath } from '../structure';
 import { fieldLabel, optionLabel } from './labels';
 
@@ -15,6 +16,8 @@ interface BaseSpec {
   optional: boolean;
   /** The field's schema without optional/default/prefault wrappers. */
   schema: z.ZodType;
+  /** Shown only while a sibling field has one of these values (`when()` metadata). */
+  showWhen?: ShowWhen;
 }
 export interface TextSpec extends BaseSpec {
   kind: 'text';
@@ -83,6 +86,22 @@ const MULTILINE_AFTER = 160;
 const controlOf = (schema: z.ZodType) =>
   (schema.meta() as { control?: unknown } | undefined)?.control;
 
+/** `when()` metadata on the declared schema or any wrapper inside it. */
+function showWhenOf(declared: z.ZodType): ShowWhen | undefined {
+  let current: z.ZodType | undefined = declared;
+  while (current) {
+    const found = (current.meta() as { showWhen?: ShowWhen } | undefined)?.showWhen;
+    if (found) return found;
+    current =
+      current instanceof z.ZodOptional ||
+      current instanceof z.ZodDefault ||
+      current instanceof z.ZodPrefault
+        ? (current.unwrap() as z.ZodType)
+        : undefined;
+  }
+  return undefined;
+}
+
 /** Strips wrappers, noting whether the value may be absent (only `.optional()` allows that). */
 function unwrap(schema: z.ZodType): { inner: z.ZodType; optional: boolean } {
   let inner = schema;
@@ -132,7 +151,8 @@ function linkKinds(schema: z.ZodType): LinkSpec['kinds'] | null {
 
 function describeField(key: string, declared: z.ZodType): FieldSpec {
   const { inner: schema, optional } = unwrap(declared);
-  const base = { key, label: fieldLabel(key), optional, schema };
+  const showWhen = showWhenOf(declared);
+  const base = { key, label: fieldLabel(key), optional, schema, ...(showWhen && { showWhen }) };
 
   if (schema instanceof z.ZodString) {
     const control = controlOf(schema);
@@ -191,6 +211,15 @@ function describeField(key: string, declared: z.ZodType): FieldSpec {
     };
   }
   throw new Error(`The inspector cannot edit field "${key}" (${schema.type})`);
+}
+
+/** False while the field's `showWhen` sibling has another value; hidden values are kept. */
+export function isFieldShown(
+  spec: FieldSpec,
+  siblings: Record<string, unknown> | undefined,
+): boolean {
+  if (!spec.showWhen) return true;
+  return spec.showWhen.in.includes(siblings?.[spec.showWhen.key] as string | boolean);
 }
 
 const described = new WeakMap<z.ZodType, FieldSpec[]>();

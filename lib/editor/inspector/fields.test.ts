@@ -2,16 +2,18 @@ import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { HeroPropsSchema } from '@/lib/blocks/hero/schema';
 import { listBlockDefinitions } from '@/lib/blocks/registry';
+import { formEmbed } from '@/lib/blocks/form-embed';
 import { productCarousel } from '@/lib/blocks/special/product-carousel';
 import { ProductItemSchema } from '@/lib/blocks/special/product-carousel/schema';
 import { sequentialIds } from '@/lib/schema/ids';
-import { BlockStyleSchema, code, SectionStyleSchema } from '@/lib/schema/primitives';
+import { BlockStyleSchema, code, SectionStyleSchema, text, when } from '@/lib/schema/primitives';
 import { PageSettingsSchema } from '@/lib/schema/settings';
 import {
   describeFields,
   fieldError,
   fieldSpecAt,
   initialValueAt,
+  isFieldShown,
   listItemSummary,
   parseFieldPath,
   seedValue,
@@ -159,5 +161,41 @@ describe('field paths', () => {
     expect(fieldSpecAt(carousel, ['items', 'title'])).toBeNull();
     expect(fieldSpecAt(carousel, ['heading', 'x'])).toBeNull();
     expect(fieldSpecAt(carousel, ['constructor'])).toBeNull();
+  });
+});
+
+describe('conditional fields', () => {
+  const schema = z.object({
+    mode: z.enum(['a', 'b']).default('a'),
+    before: when(text(10).default(''), 'mode', ['b']),
+    after: when(text(10), 'mode', ['b']).default(''),
+    maybe: when(text(10).optional(), 'mode', ['a']),
+    always: text(10).default(''),
+  });
+  const field = (key: string) => describeFields(schema).find((f) => f.key === key)!;
+
+  it('showWhen is read through default and optional wrappers', () => {
+    for (const key of ['before', 'after']) {
+      expect(field(key).showWhen).toEqual({ key: 'mode', in: ['b'] });
+    }
+    expect(field('maybe').showWhen).toEqual({ key: 'mode', in: ['a'] });
+    expect(field('always').showWhen).toBeUndefined();
+  });
+
+  it('isFieldShown follows the sibling value', () => {
+    expect(isFieldShown(field('before'), { mode: 'a' })).toBe(false);
+    expect(isFieldShown(field('before'), { mode: 'b' })).toBe(true);
+    expect(isFieldShown(field('always'), { mode: 'a' })).toBe(true);
+    expect(isFieldShown(field('always'), undefined)).toBe(true);
+  });
+
+  it('form embed hides iframe fields in snippet mode', () => {
+    const fields = describeFields(formEmbed.schema);
+    const showWhen = (key: string) => fields.find((f) => f.key === key)!.showWhen;
+    for (const key of ['url', 'height', 'title']) {
+      expect(showWhen(key)).toEqual({ key: 'mode', in: ['iframe'] });
+    }
+    expect(showWhen('code')).toEqual({ key: 'mode', in: ['snippet'] });
+    expect(showWhen('thankYouUrl')).toBeUndefined();
   });
 });

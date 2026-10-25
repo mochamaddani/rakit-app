@@ -9,6 +9,7 @@ import {
   SectionStyleSchema,
   rich,
   text,
+  when,
 } from '@/lib/schema/primitives';
 
 describe('primitives', () => {
@@ -50,5 +51,11 @@ describe('primitives', () => {
   it('code() limits length and is marked as code', () => {
     expect(code(5).safeParse('<b>ok</b>').success).toBe(false);
     expect(code(10).meta()).toMatchObject({ control: 'code' });
+  });
+  it('when() keeps the control metadata and adds showWhen', () => {
+    expect(when(text(10), 'mode', ['a']).meta()).toEqual({
+      control: 'text',
+      showWhen: { key: 'mode', in: ['a'] },
+    });
   });
 });
