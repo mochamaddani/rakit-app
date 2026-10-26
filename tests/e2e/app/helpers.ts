@@ -65,6 +65,12 @@ export async function resetOwnerPages(): Promise<void> {
   }
 }
 
+export async function resetOwnerTemplates(): Promise<void> {
+  const workspace = await ownerWorkspaceId();
+  const { error } = await adminClient().from('templates').delete().eq('workspace_id', workspace);
+  if (error) throw error;
+}
+
 /** Newest first: the page's recorded versions as the server stores them. */
 export async function versionsOf(pageId: string) {
   const { data, error } = await adminClient()

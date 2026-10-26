@@ -1,7 +1,7 @@
 'use client';
 
 import { MoreHorizontal } from 'lucide-react';
-import { useActionState, useId, useState } from 'react';
+import { useActionState, useId, useState, useTransition } from 'react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -30,7 +30,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { downloadVersion } from '@/lib/export/versions';
 import { createSupabaseBrowserClient } from '@/lib/supabase/client';
-import { deletePage, renamePage, type ActionState } from './actions';
+import { deletePage, duplicatePage, renamePage, type ActionState } from './actions';
 
 const initialState: ActionState = { error: null };
 
@@ -55,6 +55,16 @@ export function PageActions({
 }) {
   const [open, setOpen] = useState<'rename' | 'delete' | null>(null);
   const close = () => setOpen(null);
+  const [duplicating, startDuplicate] = useTransition();
+  const [duplicateError, setDuplicateError] = useState<string | null>(null);
+  const duplicate = () =>
+    startDuplicate(async () => {
+      const formData = new FormData();
+      formData.set('pageId', pageId);
+      // Success redirects to the copy's editor; only a failure returns.
+      const result = await duplicatePage(initialState, formData);
+      if (result.error) setDuplicateError(result.error);
+    });
 
   return (
     <>
@@ -66,6 +76,9 @@ export function PageActions({
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem onClick={() => setOpen('rename')}>Rename</DropdownMenuItem>
+          <DropdownMenuItem disabled={duplicating} onClick={duplicate}>
+            Duplicate
+          </DropdownMenuItem>
           <DropdownMenuItem
             disabled={latestHtmlPath === null}
             onClick={() => {
@@ -82,6 +95,20 @@ export function PageActions({
       </DropdownMenu>
       <RenameDialog pageId={pageId} name={name} open={open === 'rename'} onClose={close} />
       <DeleteDialog pageId={pageId} name={name} open={open === 'delete'} onClose={close} />
+      <AlertDialog
+        open={duplicateError !== null}
+        onOpenChange={(next) => !next && setDuplicateError(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Couldn&apos;t duplicate “{name}”</AlertDialogTitle>
+            <AlertDialogDescription>{duplicateError}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Close</AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

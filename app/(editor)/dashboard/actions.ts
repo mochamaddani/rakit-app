@@ -4,10 +4,11 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
 import { requireUser } from '@/lib/auth/require-user';
+import { copyName, copySlugBase } from '@/lib/pages/copy';
+import { insertPage } from '@/lib/pages/insert';
 import { getWorkspaceId } from '@/lib/pages/queries';
-import { slugify, uniqueSlug } from '@/lib/pages/slug';
-import { CURRENT_SCHEMA_VERSION, createEmptyDocument } from '@/lib/schema/document';
-import type { Json } from '@/lib/supabase/database.types';
+import { slugify } from '@/lib/pages/slug';
+import { createEmptyDocument } from '@/lib/schema/document';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 
 export type ActionState = { error: string | null; done?: boolean };
@@ -24,36 +25,39 @@ export async function createPage(_prev: ActionState, formData: FormData): Promis
   const name = NameSchema.safeParse(formData.get('name'));
   if (!name.success) return { error: NAME_ERROR };
 
-  const supabase = await createSupabaseServerClient();
-  const workspaceId = await getWorkspaceId(supabase);
-  const base = slugify(name.data);
-  let pageId: string | null = null;
-  // Two creates can race for the same slug; the unique index decides, and the loser retries.
-  for (let attempt = 0; attempt < 3 && pageId === null; attempt += 1) {
-    const { data: taken, error: readError } = await supabase
-      .from('pages')
-      .select('slug')
-      .like('slug', `${base}%`);
-    if (readError) return { error: FAILED };
-    const { data, error } = await supabase
-      .from('pages')
-      .insert({
-        workspace_id: workspaceId,
-        name: name.data,
-        // Slugs name the exported file; renaming a page keeps it (the export dialog edits it).
-        slug: uniqueSlug(base, new Set(taken.map((row) => row.slug))),
-        current_draft: createEmptyDocument() as unknown as NonNullable<Json>,
-        schema_version: CURRENT_SCHEMA_VERSION,
-      })
-      .select('id')
-      .single();
-    if (!error) pageId = data.id;
-    else if (error.code !== UNIQUE_VIOLATION) return { error: FAILED };
-  }
-  if (pageId === null) return { error: FAILED };
-
+  const created = await insertPage(await createSupabaseServerClient(), {
+    name: name.data,
+    slugBase: slugify(name.data),
+    document: createEmptyDocument(),
+  });
+  if (!created.ok) return { error: FAILED };
   revalidatePath('/dashboard');
-  redirect(`/editor/${pageId}`);
+  redirect(`/editor/${created.id}`);
+}
+
+/** Copies the page's saved draft and tags into a new draft page and opens it (D-056). */
+export async function duplicatePage(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  await requireUser();
+  const pageId = PageIdSchema.safeParse(formData.get('pageId'));
+  if (!pageId.success) return { error: GONE };
+
+  const supabase = await createSupabaseServerClient();
+  const { data: source, error } = await supabase
+    .from('pages')
+    .select('name, slug, current_draft, tags')
+    .eq('id', pageId.data)
+    .maybeSingle();
+  if (error) return { error: FAILED };
+  if (!source) return { error: GONE };
+  const created = await insertPage(supabase, {
+    name: copyName(source.name),
+    slugBase: copySlugBase(source.slug),
+    document: source.current_draft,
+    tags: source.tags,
+  });
+  if (!created.ok) return { error: FAILED };
+  revalidatePath('/dashboard');
+  redirect(`/editor/${created.id}`);
 }
 
 export async function renamePage(_prev: ActionState, formData: FormData): Promise<ActionState> {
