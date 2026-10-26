@@ -328,3 +328,17 @@ Consequences:
 - **Bulk paste:** "Paste rows" takes spreadsheet rows (title, price, compare-at price, image URL, link), tab-, comma- or semicolon-separated with CSV quoting and an optional header. Prices parse by the page currency (`Rp149.000`, `Rp 1.250.000,00`, `1,234.50`); a cell with anything but a currency sign, digits and separators (`149rb`, `250 g`) is an error, never a guess. Bad rows are named by row number and skipped, rows past the 50-card limit are reported, and the paste is one undo step (`listInsertMany`).
 - **Budgets:** carousel snippet ≤ 2048 bytes (from 1536), page runtime ≤ 2304 (from 2048). A page using every snippet ships ≤ 10,240 bytes of inline JS (the example: 6,342).
 
+
+## D-055 Templates: built-ins in code, categories, preview — Accepted (M4b)
+- **Built-ins live in code** (`lib/templates/builtin/`, one module per template), not as seed rows: tests parse each one against the current schema, render it in both modes and check its content, they follow schema changes in the same commit, and a hosted database needs no seed step. Their ids are stable form values (`teh-herbal`, …). The `templates` policies for a null `workspace_id` stay, unused.
+- **Saved templates** ("Save as template" in the pages list menu) are rows in the user's workspace holding the page's stored draft, parsed first; a draft with errors can't be saved. Edit changes name, category and description; delete leaves pages made from it alone.
+- **Categories** are a list in code (`lib/templates/categories.ts`): Herbal & health, Fashion, Beauty & skincare, Food & drink, Home & living, Gadgets & electronics, Courses & digital, Other. The database checks only the slug shape (`^[a-z][a-z0-9-]{0,30}$`) and a 300-character description, so a new category needs no migration; an unknown one is filed under Other. `?category=` with an unknown value shows everything.
+- **Built-in content rules** (enforced by `builtin.test.ts`): Indonesian; every button goes to the order section through `settings.defaultCta`; no tracking ids, owner code, phone numbers, emails or links; empty images with an alt saying what goes there; testimonials, prices and claims are `[REPLACE: …]`; no ratings or review counts; no cure or treatment wording; theme pairs meet WCAG AA. One built-in per category.
+- **Teh Kumis Kucing** stays a `pnpm page:create` seed: it carries the owner's tracking ids, WhatsApp number, Storelink code and uploaded images. The owner saves the created page as a template instead; `teh-herbal` is its generic, built-in counterpart.
+- **Preview** renders the template on the server in preview mode (no vendor tags or form embeds, Custom HTML only in its nested frame) and shows it in `<iframe sandbox="" srcdoc>`: an opaque origin where nothing runs, nested frames included (D-022, D-049).
+- **Using a template** creates a draft page from the parsed (migrated) document and opens the editor.
+
+## D-056 Duplicate page — Accepted (M4b)
+- Copies the stored draft and tags into a new draft page named `<name> (copy)` (cut to 120 characters) with the slug base `<slug>-copy` (cut to 80) made unique, so a second copy is `-copy-2`. A copy of a copy keeps one suffix.
+- Versions, the export history and the status aren't copied: the copy is a draft that was never exported. Assets are shared (same workspace).
+- The editor opens on the copy. Blank pages, template pages and duplicates share one insert path (`lib/pages/insert.ts`) with the unique-slug retry.

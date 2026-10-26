@@ -38,7 +38,8 @@ Spec: `docs/PRD.md` · Plan: `docs/PLAN.md` · Decisions: `docs/DECISIONS.md` ·
 - Storage objects live under `<workspaceId>/`; their policies use `public.is_workspace_member(public.workspace_from_path(name))` (D-045).
 - Exported HTML never runs on the editor origin: download it as a Blob or store it; never open it in a tab or an unsandboxed iframe (D-022, D-049).
 - Preview output never carries vendor tags, custom code, the page runtime or form embeds (D-047, D-048); export runs in the browser (`lib/export`, D-007, D-046).
-- App e2e tests run serially against the one owner account and reset its pages.
+- App e2e tests run serially against the one owner account and reset its pages and templates.
+- Built-in templates live in `lib/templates/builtin/` (one per category, listed in `BUILTIN_TEMPLATES`); `builtin.test.ts` enforces their content rules: no ids, contacts, links or prices, placeholder images, `[REPLACE: …]` for proof (D-055).
 - Small conventional commits (`feat:`, `fix:`, `test:`, `docs:`, `chore:`, `ci:`).
 
 ## How to add a block

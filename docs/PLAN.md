@@ -112,7 +112,8 @@ Split into two plans: **M2a** (state, canvas, inspector; [detailed plan](superpo
 
 ### M4 — Production workflow (completes v1) · [M4a plan](superpowers/plans/2026-10-25-m4a-blocks-carousel.md) · [M4b-1 plan](superpowers/plans/2026-10-26-m4b-duplicate-templates.md)
 Split into two plans: **M4a** (remaining blocks, carousel polish, canvas hardening; [detailed plan](superpowers/plans/2026-10-25-m4a-blocks-carousel.md)) and **M4b** (workflow and the acceptance review). M4b starts with **M4b-1** (duplicate page and categorized templates; [detailed plan](superpowers/plans/2026-10-26-m4b-duplicate-templates.md)); presets, tags/search/filter/archive, the M3 minors and the acceptance review follow.
-- Duplicate page; templates (built-in seeds plus "save as template"); block presets; tags, search, status filter, archive.
+- (M4b-1, done) Duplicate page; categorized templates: eight built-ins in code plus "save as template" (D-055, D-056).
+- (M4b, next) Block presets; tags, search, status filter, archive; the M3 minors; the acceptance review.
 - (M4a) Remaining blocks: Logos strip, Product showcase/gallery, Pricing/offer box, Countdown, Image + text, Video embed (lazy facade; also usable as Hero media), Sticky mobile CTA, Custom HTML (sanitized, scripts sandboxed in preview, opt-in in export), Spacer/Divider, cookie banner.
 - (M4a) Carousel polish: bulk paste (CSV/TSV), autoplay (pause on hover/touch/focus, respects reduced motion), per-carousel tracking event, JSON-LD toggle.
 - **Exit:** the acceptance review for AC1–AC9 (§6), including a timed manual run of AC1 (template → edit → download in < 15 minutes).
@@ -193,6 +194,6 @@ Base UI primitives (dialogs, popovers) are UI building blocks, not builders or D
 | M2b Direct manipulation | [`superpowers/plans/2026-10-22-m2b-direct-manipulation.md`](superpowers/plans/2026-10-22-m2b-direct-manipulation.md) | Done |
 | M3 Export + tracking | [`superpowers/plans/2026-10-24-m3-export-tracking.md`](superpowers/plans/2026-10-24-m3-export-tracking.md) | Done |
 | M4a Blocks + carousel | [`superpowers/plans/2026-10-25-m4a-blocks-carousel.md`](superpowers/plans/2026-10-25-m4a-blocks-carousel.md) | Done |
-| M4b-1 Duplicate + templates | [`superpowers/plans/2026-10-26-m4b-duplicate-templates.md`](superpowers/plans/2026-10-26-m4b-duplicate-templates.md) | In progress |
+| M4b-1 Duplicate + templates | [`superpowers/plans/2026-10-26-m4b-duplicate-templates.md`](superpowers/plans/2026-10-26-m4b-duplicate-templates.md) | Done |
 | M4b Presets, tags/filter/archive, acceptance | Written after M4b-1 | Next |
 | M5–M7 | Written at the start of each milestone | — |

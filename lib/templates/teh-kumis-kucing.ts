@@ -1,6 +1,8 @@
 // The owner's Teh Kumis Kucing landing page (version 1: "Pesan Sekarang" opens WhatsApp), with
 // a Storelink order form section added. Rebuilt from files/public/teh-kumis-kucing/index.html with
-// today's blocks; M4 turns it into a built-in template. Copy is the owner's, verbatim.
+// today's blocks. It stays a `pnpm page:create` seed rather than a built-in template, because it
+// carries the owner's ids, contacts and images (D-055); `builtin/teh-herbal.ts` is its generic
+// counterpart. Copy is the owner's, verbatim.
 
 export const TEH_KUMIS_KUCING_IMAGES = ['header', 'benefit', 'promo', 'packages', 'cod'] as const;
 export type TehKumisKucingImage = (typeof TEH_KUMIS_KUCING_IMAGES)[number];
