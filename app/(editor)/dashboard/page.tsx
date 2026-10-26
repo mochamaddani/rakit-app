@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { RelativeTime } from '@/components/relative-time';
 import { Badge } from '@/components/ui/badge';
+import { buttonVariants } from '@/components/ui/button';
 import { requireUser } from '@/lib/auth/require-user';
 import { listPages, type PageStatus } from '@/lib/pages/queries';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
@@ -24,7 +25,12 @@ export default async function DashboardPage() {
     <main className="mx-auto w-full max-w-5xl">
       <div className="flex items-center justify-between gap-4">
         <h1 className="text-2xl font-semibold">Your pages</h1>
-        <NewPageDialog />
+        <div className="flex items-center gap-2">
+          <Link href="/dashboard/templates" className={buttonVariants({ variant: 'outline' })}>
+            Templates
+          </Link>
+          <NewPageDialog />
+        </div>
       </div>
       {pages.length === 0 ? (
         <p className="mt-2 text-muted-foreground">No pages yet.</p>

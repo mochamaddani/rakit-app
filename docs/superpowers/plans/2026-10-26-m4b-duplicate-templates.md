@@ -158,7 +158,7 @@
 - `previewTemplate(templateId: string): Promise<{ ok: true; html: string } | { ok: false; error: string }>`.
 
 **UI:**
-- Gallery heading "Templates", a "Back to pages" link, chips "All" + each category that has at least one template (links `?category=<id>`, the active one `aria-current="page"`), then cards grouped under a heading per category (filtered: one group). Card: three theme-color swatches, name, description, "<n> sections", badge "Saved" for saved ones, buttons "Use template" and "Preview", and for saved ones a menu "Actions for <name>" (Edit, Delete with confirmation "Delete template “<name>”?").
+- Gallery heading "Templates", a "Back to pages" link, chips "All" + each category that has at least one template (links `?category=<id>`, the active one `aria-current="page"`), then one grid of cards, each labeled with its category. Card: three theme-color swatches, name, description, "<n> sections", badge "Saved" for saved ones, buttons "Use template" and "Preview", and for saved ones a menu "Actions for <name>" (Edit, Delete with confirmation "Delete template “<name>”?").
 - "Use template" dialog: title "New page from <name>", Name field (defaults to the template name), button "Create page".
 - Preview dialog: title "<name>", `<iframe title="Template preview" sandbox="" srcdoc>` at 390 px wide with a toggle for 1280 px; error text on failure.
 - "Save as template" dialog (dashboard row menu): Name (defaults to the page name), Category select (default `other`), Description (textarea, max 300), button "Save template"; on success it closes and shows nothing else.

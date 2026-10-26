@@ -31,6 +31,7 @@ import { Label } from '@/components/ui/label';
 import { downloadVersion } from '@/lib/export/versions';
 import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 import { deletePage, duplicatePage, renamePage, type ActionState } from './actions';
+import { SaveTemplateDialog } from './save-template-dialog';
 
 const initialState: ActionState = { error: null };
 
@@ -53,7 +54,7 @@ export function PageActions({
   slug: string;
   latestHtmlPath: string | null;
 }) {
-  const [open, setOpen] = useState<'rename' | 'delete' | null>(null);
+  const [open, setOpen] = useState<'rename' | 'template' | 'delete' | null>(null);
   const close = () => setOpen(null);
   const [duplicating, startDuplicate] = useTransition();
   const [duplicateError, setDuplicateError] = useState<string | null>(null);
@@ -79,6 +80,7 @@ export function PageActions({
           <DropdownMenuItem disabled={duplicating} onClick={duplicate}>
             Duplicate
           </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setOpen('template')}>Save as template</DropdownMenuItem>
           <DropdownMenuItem
             disabled={latestHtmlPath === null}
             onClick={() => {
@@ -94,6 +96,7 @@ export function PageActions({
         </DropdownMenuContent>
       </DropdownMenu>
       <RenameDialog pageId={pageId} name={name} open={open === 'rename'} onClose={close} />
+      <SaveTemplateDialog pageId={pageId} name={name} open={open === 'template'} onClose={close} />
       <DeleteDialog pageId={pageId} name={name} open={open === 'delete'} onClose={close} />
       <AlertDialog
         open={duplicateError !== null}
