@@ -91,14 +91,14 @@ isOneToOne: false
                   ]
                 },"templates": {
                   Row: {
-                    "created_at": string,"document": NonNullable<Json>,"id": string,"name": string,"thumbnail_url": string | null,"updated_at": string,"workspace_id": string | null
+                    "category": string,"created_at": string,"description": string,"document": NonNullable<Json>,"id": string,"name": string,"thumbnail_url": string | null,"updated_at": string,"workspace_id": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"document": NonNullable<Json>,"id"?: string,"name": string,"thumbnail_url"?: string | null,"updated_at"?: string,"workspace_id"?: string | null
+                    "category"?: string,"created_at"?: string,"description"?: string,"document": NonNullable<Json>,"id"?: string,"name": string,"thumbnail_url"?: string | null,"updated_at"?: string,"workspace_id"?: string | null
                   }
                   Update: {
-                    "created_at"?: string,"document"?: NonNullable<Json>,"id"?: string,"name"?: string,"thumbnail_url"?: string | null,"updated_at"?: string,"workspace_id"?: string | null
+                    "category"?: string,"created_at"?: string,"description"?: string,"document"?: NonNullable<Json>,"id"?: string,"name"?: string,"thumbnail_url"?: string | null,"updated_at"?: string,"workspace_id"?: string | null
                   }
                   Relationships: [
                     {
