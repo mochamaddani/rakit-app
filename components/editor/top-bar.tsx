@@ -15,6 +15,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
+import { Spinner } from '@/components/ui/spinner';
 import type { Viewport } from '@/lib/editor/store';
 import { cn } from '@/lib/utils';
 import { useEditor } from './editor-context';
@@ -40,15 +41,19 @@ export function TopBar({ name }: { name: string }) {
   const [confirmLeave, setConfirmLeave] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [versions, setVersions] = useState(false);
+  const [leaving, setLeaving] = useState(false);
 
   // Save what is pending before leaving (at most 3 s), so the dashboard shows the latest edit,
   // and ask first when it could not be saved (offline, failed or conflicting).
   const leave = async (event: MouseEvent<HTMLAnchorElement>) => {
     if (event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) return;
     event.preventDefault();
+    if (leaving) return;
+    setLeaving(true);
     await Promise.race([autosave.flush(), new Promise((r) => setTimeout(r, LEAVE_WAIT_MS))]);
-    if (autosave.store.getState().status === 'saved') router.push('/dashboard');
-    else setConfirmLeave(true);
+    if (autosave.store.getState().status === 'saved') return router.push('/dashboard');
+    setLeaving(false);
+    setConfirmLeave(true);
   };
 
   return (
@@ -56,9 +61,10 @@ export function TopBar({ name }: { name: string }) {
       <Link
         href="/dashboard"
         onClick={leave}
+        aria-busy={leaving || undefined}
         className="flex items-center gap-1 rounded-md px-2 py-1 text-sm text-muted-foreground hover:bg-muted hover:text-foreground"
       >
-        <ChevronLeft className="size-4" aria-hidden="true" />
+        {leaving ? <Spinner /> : <ChevronLeft className="size-4" aria-hidden="true" />}
         Pages
       </Link>
       <h1 className="min-w-0 truncate text-sm font-semibold">{name}</h1>
@@ -88,6 +94,7 @@ export function TopBar({ name }: { name: string }) {
         onOpenChange={setConfirmLeave}
         onLeave={() => {
           setConfirmLeave(false);
+          setLeaving(true);
           router.push('/dashboard');
         }}
       />

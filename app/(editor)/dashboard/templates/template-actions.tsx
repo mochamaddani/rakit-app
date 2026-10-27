@@ -90,7 +90,7 @@ function EditDialog({ template, open, onClose }: DialogProps) {
           />
           {state.error ? <p className="text-sm text-destructive">{state.error}</p> : null}
           <DialogFooter>
-            <Button type="submit" disabled={pending}>
+            <Button type="submit" loading={pending}>
               Save
             </Button>
           </DialogFooter>
@@ -123,7 +123,7 @@ function DeleteDialog({ template, open, onClose }: DialogProps) {
           <AlertDialogCancel>Cancel</AlertDialogCancel>
           <form action={formAction}>
             <input type="hidden" name="templateId" value={template.ref} />
-            <AlertDialogAction type="submit" variant="destructive" disabled={pending}>
+            <AlertDialogAction type="submit" variant="destructive" loading={pending}>
               Delete template
             </AlertDialogAction>
           </form>

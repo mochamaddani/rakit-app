@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Spinner } from '@/components/ui/spinner';
 import { cn } from '@/lib/utils';
 import { previewTemplate } from './actions';
 
@@ -49,7 +50,13 @@ export function PreviewDialog({ templateId, name }: { templateId: string; name: 
           </DialogHeader>
           <div className="flex h-[70vh] justify-center overflow-hidden rounded-md border bg-muted">
             {loading || preview === null ? (
-              <p className="self-center text-muted-foreground">Loading preview…</p>
+              <p
+                role="status"
+                className="flex items-center gap-2 self-center text-muted-foreground"
+              >
+                <Spinner />
+                Loading preview…
+              </p>
             ) : preview.ok ? (
               <iframe
                 title="Template preview"

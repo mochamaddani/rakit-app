@@ -51,7 +51,7 @@ export function SaveTemplateDialog({
           <TemplateFields name={name} />
           {state.error ? <p className="text-sm text-destructive">{state.error}</p> : null}
           <DialogFooter>
-            <Button type="submit" disabled={pending}>
+            <Button type="submit" loading={pending}>
               Save template
             </Button>
           </DialogFooter>

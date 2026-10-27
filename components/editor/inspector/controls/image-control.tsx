@@ -171,7 +171,7 @@ function UploadButton({ onUploaded }: { onUploaded(image: UploadedImage): void }
         type="button"
         variant="outline"
         size="sm"
-        disabled={busy}
+        loading={busy}
         onClick={() => input.current?.click()}
       >
         Upload image
