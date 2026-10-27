@@ -28,6 +28,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Spinner } from '@/components/ui/spinner';
 import { downloadVersion } from '@/lib/export/versions';
 import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 import { deletePage, duplicatePage, renamePage, type ActionState } from './actions';
@@ -66,14 +67,29 @@ export function PageActions({
       const result = await duplicatePage(initialState, formData);
       if (result.error) setDuplicateError(result.error);
     });
+  const [downloading, startDownload] = useTransition();
+  const download = () =>
+    startDownload(async () => {
+      if (latestHtmlPath)
+        await downloadVersion(createSupabaseBrowserClient(), latestHtmlPath, `${slug}.html`);
+    });
+  // The menu closes on click, so its trigger shows that a request is still running.
+  const busy = duplicating || downloading;
 
   return (
     <>
       <DropdownMenu>
         <DropdownMenuTrigger
-          render={<Button variant="ghost" size="icon-sm" aria-label={`Actions for ${name}`} />}
+          render={
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              aria-label={`Actions for ${name}`}
+              aria-busy={busy || undefined}
+            />
+          }
         >
-          <MoreHorizontal />
+          {busy ? <Spinner /> : <MoreHorizontal />}
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem onClick={() => setOpen('rename')}>Rename</DropdownMenuItem>
@@ -81,13 +97,7 @@ export function PageActions({
             Duplicate
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => setOpen('template')}>Save as template</DropdownMenuItem>
-          <DropdownMenuItem
-            disabled={latestHtmlPath === null}
-            onClick={() => {
-              if (latestHtmlPath)
-                void downloadVersion(createSupabaseBrowserClient(), latestHtmlPath, `${slug}.html`);
-            }}
-          >
+          <DropdownMenuItem disabled={latestHtmlPath === null || downloading} onClick={download}>
             Download HTML
           </DropdownMenuItem>
           <DropdownMenuItem variant="destructive" onClick={() => setOpen('delete')}>
@@ -141,7 +151,7 @@ function RenameDialog({ pageId, name, open, onClose }: PageDialogProps) {
             {state.error ? <p className="text-sm text-destructive">{state.error}</p> : null}
           </div>
           <DialogFooter>
-            <Button type="submit" disabled={pending}>
+            <Button type="submit" loading={pending}>
               Save
             </Button>
           </DialogFooter>
@@ -175,7 +185,7 @@ function DeleteDialog({ pageId, name, open, onClose }: PageDialogProps) {
           <AlertDialogCancel>Cancel</AlertDialogCancel>
           <form action={formAction}>
             <input type="hidden" name="pageId" value={pageId} />
-            <AlertDialogAction type="submit" variant="destructive" disabled={pending}>
+            <AlertDialogAction type="submit" variant="destructive" loading={pending}>
               Delete page
             </AlertDialogAction>
           </form>

@@ -36,7 +36,7 @@ export function UseTemplateDialog({ templateId, name }: { templateId: string; na
             {state.error ? <p className="text-sm text-destructive">{state.error}</p> : null}
           </div>
           <DialogFooter>
-            <Button type="submit" disabled={pending}>
+            <Button type="submit" loading={pending}>
               Create page
             </Button>
           </DialogFooter>

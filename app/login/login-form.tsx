@@ -33,7 +33,7 @@ export function LoginForm({ next }: { next: string }) {
           {state.error}
         </p>
       ) : null}
-      <Button type="submit" disabled={pending}>
+      <Button type="submit" loading={pending}>
         Sign in
       </Button>
     </form>
