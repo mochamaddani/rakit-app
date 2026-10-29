@@ -25,7 +25,7 @@ const sha256 = (text: string) => createHash('sha256').update(text).digest('hex')
 
 function shopDocument(heroImage?: string) {
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     settings: { seo: { title: 'Teh Kumis Kucing', description: 'Teh herbal.' } },
     sections: [
       {

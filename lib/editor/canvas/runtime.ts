@@ -103,7 +103,7 @@ export function startPreviewRuntime(options: RuntimeOptions): () => void {
 
   const rectOf = (el: Element, id: string): CanvasRect => {
     let r = el.getBoundingClientRect();
-    // A fixed bar (Sticky CTA, cookie banner) leaves its wrapper with no height; use the bar.
+    // A fixed bar (Sticky CTA) leaves its wrapper with no height; use the bar.
     if (r.height === 0 && el.firstElementChild) r = el.firstElementChild.getBoundingClientRect();
     return { id, top: r.top, left: r.left, width: r.width, height: r.height };
   };

@@ -22,7 +22,7 @@ test.beforeEach(async ({ page }) => {
 });
 
 const DOC = {
-  schemaVersion: 1,
+  schemaVersion: 2,
   sections: [
     { id: 'sHero', blocks: [{ id: 'bHero', type: 'hero', props: { headline: 'Versi ekspor' } }] },
   ],
@@ -70,7 +70,7 @@ test('restoring a version is one undo step; an invalid stored document changes n
       id,
       page_id: pageId,
       document: {
-        schemaVersion: 1,
+        schemaVersion: 2,
         sections: [{ id: 's', blocks: [{ id: 'b', type: 'hero', props: {} }] }],
       },
       html_path: `${await ownerWorkspaceId()}/${pageId}/${id}.html`,

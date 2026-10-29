@@ -18,7 +18,7 @@ export const serumSkincare: BuiltinTemplate = {
   description:
     'Skincare atau kosmetik: hero, kandungan utama, keunggulan, paket, FAQ pemakaian dan formulir pesanan.',
   document: () => ({
-    schemaVersion: 1,
+    schemaVersion: 2,
     settings: settings(
       {
         title: '[REPLACE: Nama Serum] — Rawat Kulitmu Setiap Hari',

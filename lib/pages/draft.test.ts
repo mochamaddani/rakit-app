@@ -6,7 +6,7 @@ const PAGE = '7b0c7a52-3c1e-4c8e-9a43-2f1d2b6f0e11';
 const SAVE = '0f6a1c2e-9b7d-4e3a-8c5f-1a2b3c4d5e6f';
 const body = (document: unknown, baseRevision: unknown = 0, saveId?: unknown) =>
   JSON.stringify({ document, baseRevision, saveId });
-const EMPTY = { schemaVersion: 1, sections: [] };
+const EMPTY = { schemaVersion: 2, sections: [] };
 
 function memoryStore(revisions: Record<string, number>) {
   const rows = new Map(
@@ -42,7 +42,7 @@ describe('saveDraft', () => {
   });
   it('stores the parsed document with defaults filled in', async () => {
     const { store, rows } = memoryStore({ [PAGE]: 0 });
-    const raw = { schemaVersion: 1, sections: [{ id: 's1', blocks: [] }] };
+    const raw = { schemaVersion: 2, sections: [{ id: 's1', blocks: [] }] };
     await saveDraft(store, { pageId: PAGE, rawBody: body(raw) });
     expect(rows.get(PAGE)!.doc!.sections[0]!.style).toEqual({
       tone: 'base',
@@ -82,7 +82,7 @@ describe('saveDraft', () => {
   it('answers 422 with issue paths for an invalid document', async () => {
     const { store } = memoryStore({ [PAGE]: 0 });
     const dup = {
-      schemaVersion: 1,
+      schemaVersion: 2,
       sections: [
         {
           id: 's1',
@@ -120,7 +120,7 @@ describe('saveDraft', () => {
     const sections = Array.from({ length: 30 }, () => ({ id: 'same', blocks: [] }));
     const result = await saveDraft(store, {
       pageId: PAGE,
-      rawBody: body({ schemaVersion: 1, sections }),
+      rawBody: body({ schemaVersion: 2, sections }),
     });
     expect(result.status === 422 && result.body.issues.length).toBe(20);
   });

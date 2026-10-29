@@ -83,7 +83,7 @@ describe('hero video', () => {
   });
   it('hero and a video block ship the video snippet once', () => {
     const doc = parseDocument({
-      schemaVersion: 1,
+      schemaVersion: 2,
       sections: [
         {
           id: 's1',

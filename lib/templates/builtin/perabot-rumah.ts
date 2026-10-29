@@ -18,7 +18,7 @@ export const perabotRumah: BuiltinTemplate = {
   description:
     'Peralatan rumah tangga atau dekorasi: hero, cara pakai, keunggulan, galeri, FAQ dan formulir pesanan.',
   document: () => ({
-    schemaVersion: 1,
+    schemaVersion: 2,
     settings: settings(
       {
         title: '[REPLACE: Nama Produk] — Rumah Lebih Rapi',

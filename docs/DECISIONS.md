@@ -290,11 +290,11 @@ Consequences:
 - The document is never changed by export; the export copy is built with `structuredClone`.
 
 ## D-050 Remaining blocks (M4a) — Accepted
-- **Library:** Spacer/Divider, Image + text, Logos strip, Gallery (product showcase), Pricing/offer, Countdown (D-051), Video (D-052), Sticky CTA bar, Cookie banner and Custom HTML (D-053). A new palette group, **Utility**, holds Spacer, Cookie banner and Custom HTML.
+- **Library:** Spacer/Divider, Image + text, Logos strip, Gallery (product showcase), Pricing/offer, Countdown (D-051), Video (D-052), Sticky CTA bar, Cookie banner (removed in D-057) and Custom HTML (D-053). A new palette group, **Utility**, holds Spacer and Custom HTML.
 - **Conditional fields:** `when(schema, key, values)` marks a field the inspector shows only while a sibling has one of `values` (Form Embed's iframe and code fields, a countdown's end message, autoplay seconds). Hidden values are kept. Labels may be scoped by parent key (`'video.url'`).
 - **One high-priority image** (refines D-016): only the first block of the first section that has an image gets `fetchpriority="high"`, on its first image, and only in export (M0/M1 review m-5).
 - **Floating blocks:** the Sticky CTA bar and the Cookie banner are ordinary blocks; their stylesheets fix them to the viewport, collapse their own band with `:has()` and pad the page bottom so the bar never covers the footer. The cookie banner sits above the bar when both exist. The canvas measures a block by its content when its wrapper has no height.
-- **Cookie banner:** a notice, not a consent gate. Tracking loads either way; pages aimed at EU or UK visitors need a consent manager in the custom head code. It shows until dismissed (remembered in `localStorage`) and never without JavaScript.
+- **Cookie banner** (removed in D-057): a notice, not a consent gate. Tracking loads either way; pages aimed at EU or UK visitors need a consent manager in the custom head code. It shows until dismissed (remembered in `localStorage`) and never without JavaScript.
 - **Defaults never invent proof:** Logos and Pricing default to `[REPLACE: …]` names and no prices.
 
 ## D-051 Countdown to a fixed deadline — Accepted (M4a)
@@ -342,3 +342,6 @@ Consequences:
 - Copies the stored draft and tags into a new draft page named `<name> (copy)` (cut to 120 characters) with the slug base `<slug>-copy` (cut to 80) made unique, so a second copy is `-copy-2`. A copy of a copy keeps one suffix.
 - Versions, the export history and the status aren't copied: the copy is a draft that was never exported. Assets are shared (same workspace).
 - The editor opens on the copy. Blank pages, template pages and duplicates share one insert path (`lib/pages/insert.ts`) with the unique-slug retry.
+
+## D-057 No cookie banner — Accepted
+- **Cookie banner removed.** Schema version 2; the 1 → 2 migration drops `cookie-banner` blocks and any section they leave empty, so stored drafts and versions still open. Pages that need a consent notice use a consent manager in the custom head code.

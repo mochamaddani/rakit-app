@@ -17,7 +17,7 @@ describe('render CLI', () => {
     writeFileSync(
       bad,
       JSON.stringify({
-        schemaVersion: 1,
+        schemaVersion: 2,
         sections: [{ id: 's', blocks: [{ id: 'b', type: 'hero', props: {} }] }],
       }),
     );

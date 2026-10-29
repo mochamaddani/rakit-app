@@ -19,7 +19,7 @@ export const camilanKekinian: BuiltinTemplate = {
   description:
     'Makanan ringan atau minuman: hero, galeri varian rasa, keunggulan, paket hemat, FAQ dan formulir pesanan.',
   document: () => ({
-    schemaVersion: 1,
+    schemaVersion: 2,
     settings: settings(
       {
         title: '[REPLACE: Nama Camilan] — Renyah Sampai Gigitan Terakhir',

@@ -53,5 +53,5 @@ export function renderBlock(
 
 /** A raw (unvalidated) one-section, one-block document for parseDocument + renderPage tests. */
 export function singleBlockDoc(type: string, props: unknown): unknown {
-  return { schemaVersion: 1, sections: [{ id: 's1', blocks: [{ id: 'b1', type, props }] }] };
+  return { schemaVersion: 2, sections: [{ id: 's1', blocks: [{ id: 'b1', type, props }] }] };
 }

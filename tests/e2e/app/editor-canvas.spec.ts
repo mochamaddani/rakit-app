@@ -85,7 +85,7 @@ test('an empty page shows a hint', async ({ page }) => {
 });
 
 test('an invalid stored draft shows an error instead of the editor', async ({ page }) => {
-  const id = await seedPage({ name: 'Broken', document: { schemaVersion: 1, sections: 'x' } });
+  const id = await seedPage({ name: 'Broken', document: { schemaVersion: 2, sections: 'x' } });
   await page.goto(`/editor/${id}`);
   await expect(page.getByRole('heading', { name: "This draft can't be opened" })).toBeVisible();
 });
@@ -133,7 +133,7 @@ test('canvas messages from the iframe are ignored unless they carry its channel'
 });
 
 const HERO_DOC = {
-  schemaVersion: 1,
+  schemaVersion: 2,
   sections: [
     { id: 's1', blocks: [{ id: 'bHero', type: 'hero', props: { headline: 'Botol asli' } }] },
   ],

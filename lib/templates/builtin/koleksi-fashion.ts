@@ -19,7 +19,7 @@ export const koleksiFashion: BuiltinTemplate = {
   description:
     'Pakaian atau hijab: hero, carousel produk, bahan dan ukuran, galeri lookbook, FAQ ukuran dan retur, formulir pesanan.',
   document: () => ({
-    schemaVersion: 1,
+    schemaVersion: 2,
     settings: settings(
       {
         title: '[REPLACE: Nama Koleksi] — Koleksi Terbaru',

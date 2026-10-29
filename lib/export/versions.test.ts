@@ -15,7 +15,7 @@ describe('loadVersionDocument', () => {
   it('loadVersionDocument migrates an old document and reports an invalid one', async () => {
     const old = {
       document: {
-        schemaVersion: 1,
+        schemaVersion: 2,
         settings: { seo: { title: 'Lama' } },
         sections: [{ id: 's1', blocks: [{ id: 'b1', type: 'hero', props: { headline: 'Halo' } }] }],
       },
@@ -30,7 +30,7 @@ describe('loadVersionDocument', () => {
     const invalid = await loadVersionDocument(
       client({
         document: {
-          schemaVersion: 1,
+          schemaVersion: 2,
           sections: [{ id: 's1', blocks: [{ id: 'b1', type: 'hero', props: {} }] }],
         },
       }),

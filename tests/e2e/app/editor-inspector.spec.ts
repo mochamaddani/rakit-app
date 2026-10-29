@@ -187,7 +187,7 @@ test('a button whose section was deleted says so instead of showing another sect
 }) => {
   const link = { kind: 'section', sectionId: 'deleted' };
   const document = {
-    schemaVersion: 1,
+    schemaVersion: 2,
     sections: [
       {
         id: 'sHero',

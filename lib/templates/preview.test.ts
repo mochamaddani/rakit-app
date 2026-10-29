@@ -13,7 +13,7 @@ describe('templatePreviewHtml', () => {
 
   it('leaves out tracking and form embeds, and keeps owner code inside its nested frame', () => {
     const html = templatePreviewHtml({
-      schemaVersion: 1,
+      schemaVersion: 2,
       settings: {
         tracking: {
           metaPixelId: '123456789012345',

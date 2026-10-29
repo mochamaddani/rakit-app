@@ -39,7 +39,7 @@ function productItems(prefix = 'p') {
 }
 
 export const exampleDocument = {
-  schemaVersion: 1,
+  schemaVersion: 2,
   settings: {
     lang: 'id',
     seo: {
@@ -344,16 +344,6 @@ export const exampleDocument = {
       ],
     },
     {
-      id: 'sCookie',
-      blocks: [
-        {
-          id: 'bCookie',
-          type: 'cookie-banner',
-          props: { privacyLink: { kind: 'url', url: 'https://botolku.example/privasi' } },
-        },
-      ],
-    },
-    {
       id: 'sFooter',
       style: { padY: 'sm' },
       blocks: [
@@ -390,7 +380,7 @@ export const exampleDocument = {
 
 /** Two independent carousels on one page (browser test: controls never leak between them). */
 export const twoCarouselsDocument = {
-  schemaVersion: 1,
+  schemaVersion: 2,
   settings: { lang: 'id' },
   sections: [
     {
@@ -420,7 +410,7 @@ const longUrl = `https://botolku.example/${'promo'.repeat(30)}`;
  * long URL in rich text, and 1e12 prices. A 360px phone must still show no horizontal scroll.
  */
 export const stressDocument = {
-  schemaVersion: 1,
+  schemaVersion: 2,
   settings: { lang: 'id', seo: { title: word(120) } },
   sections: [
     {
@@ -553,7 +543,7 @@ export const stressDocument = {
 
 /** Every tracking id and both custom code fields, a CTA with an event and a web link (M3). */
 export const trackingDocument = {
-  schemaVersion: 1,
+  schemaVersion: 2,
   settings: {
     lang: 'id',
     seo: {

@@ -18,7 +18,7 @@ export function editorDoc(): PageDocument {
     props: definition.defaultProps(itemIds),
   });
   return parseDocument({
-    schemaVersion: 1,
+    schemaVersion: 2,
     sections: [
       { id: 's1', blocks: [block('b1', hero)] },
       { id: 's2', style: { tone: 'muted' }, blocks: [block('b2', benefits), block('b3', faq)] },
@@ -37,7 +37,7 @@ export const order = (doc: PageDocument) =>
 /** An older version of the page, as Versions → Restore brings it back. */
 export const restoredDoc = (): PageDocument =>
   parseDocument({
-    schemaVersion: 1,
+    schemaVersion: 2,
     sections: [
       { id: 'r1', blocks: [{ id: 'rb1', type: 'hero', props: { headline: 'Versi lama' } }] },
     ],

@@ -58,7 +58,7 @@ describe('addBlock', () => {
   });
   it('refuses a 61st section', () => {
     const many = parseDocument({
-      schemaVersion: 1,
+      schemaVersion: 2,
       sections: Array.from({ length: 60 }, (_, i) => ({ id: `x${i}`, blocks: [] })),
     });
     expect(run({ type: 'addBlock', blockType: 'faq' }, many)).toMatchObject({
@@ -373,7 +373,7 @@ describe('lists', () => {
       { ok: false, code: 'invalid' },
     );
     const full = parseDocument({
-      schemaVersion: 1,
+      schemaVersion: 2,
       sections: [
         {
           id: 's1',
