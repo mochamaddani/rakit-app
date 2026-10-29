@@ -4,6 +4,7 @@ import { html, type SafeHtml } from './html';
 import { t, type MessageKey } from './i18n';
 import { renderInline, renderText } from './inline';
 import { sanitizeUrl } from './url';
+import { whatsAppUrl } from './whatsapp';
 
 export type RenderMode = 'preview' | 'export';
 
@@ -62,6 +63,8 @@ export function createRenderContext(env: RenderEnv, block: BlockPosition): Rende
       }
       case 'default':
         return env.settings.defaultCta ? resolveLink(env.settings.defaultCta) : '#';
+      case 'whatsapp':
+        return whatsAppUrl(link.phone, link.message) ?? '#';
     }
   };
 

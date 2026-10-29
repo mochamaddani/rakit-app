@@ -344,6 +344,7 @@ Consequences:
 - Versions, the export history and the status aren't copied: the copy is a draft that was never exported. Assets are shared (same workspace).
 - The editor opens on the copy. Blank pages, template pages and duplicates share one insert path (`lib/pages/insert.ts`) with the unique-slug retry.
 
-## D-057 No cookie banner, Checkout Form — Accepted
+## D-057 No cookie banner, Checkout Form, WhatsApp buttons — Accepted
 - **Cookie banner removed.** Schema version 2; the 1 → 2 migration drops `cookie-banner` blocks and any section they leave empty, so stored drafts and versions still open. Pages that need a consent notice use a consent manager in the custom head code.
 - **Form Embed is labelled Checkout Form** in the palette and outline. The stored type stays `form-embed`, so no migration.
+- **WhatsApp link** (`kind: 'whatsapp'`, `{ phone, message }`) on every button: `CtaSchema` (Hero, Image + text, Pricing, Sticky CTA bar) and the Product Carousel's card buttons link through `ButtonLinkSchema`. Footer links and the page default button target keep the plain link kinds. The owner types only the number. The inspector corrects it as it is typed (`normalizeWhatsAppNumber`): digits only, a leading `0` becomes `62`, `620…` becomes `62…`, a `00` prefix is dropped, at most 15 digits (E.164). It renders as `https://wa.me/<digits>` with `?text=` for a message, in a new tab; fewer than 8 digits renders `#`, and the pre-export checklist names the block.

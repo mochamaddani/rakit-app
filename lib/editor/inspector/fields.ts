@@ -57,7 +57,7 @@ export interface ColorSpec extends BaseSpec {
 }
 export interface LinkSpec extends BaseSpec {
   kind: 'link';
-  kinds: ('url' | 'section' | 'default')[];
+  kinds: ('url' | 'section' | 'default' | 'whatsapp')[];
 }
 export interface ImageSpec extends BaseSpec {
   kind: 'image';
@@ -85,7 +85,7 @@ export type FieldSpec =
   | GroupSpec
   | ListSpec;
 
-const LINK_KINDS = new Set(['url', 'section', 'default']);
+const LINK_KINDS = new Set(['url', 'section', 'default', 'whatsapp']);
 const MULTILINE_AFTER = 160;
 
 const controlOf = (schema: z.ZodType) =>

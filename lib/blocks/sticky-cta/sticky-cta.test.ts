@@ -30,6 +30,18 @@ describe('sticky-cta block', () => {
     expect(out).toContain('data-lp-field="text"');
     expect(out).toContain('data-lp-field="cta.label"');
   });
+  it('links to a WhatsApp chat in a new tab', () => {
+    const chat = (phone: string, message = '') =>
+      renderBlock(stickyCta, {
+        ...props,
+        cta: { label: 'Chat', link: { kind: 'whatsapp', phone, message } },
+      });
+    expect(chat('0812-3456-7890', 'Halo kak')).toContain(
+      'href="https://wa.me/6281234567890?text=Halo%20kak" target="_blank" rel="noopener"',
+    );
+    expect(chat('')).toContain('href="#"');
+    expect(chat('6281234567890', '"><script>alert(1)</script>')).not.toContain('<script>');
+  });
   it('requires a button', () => {
     expect(stickyCta.schema.safeParse({}).success).toBe(false);
   });

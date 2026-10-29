@@ -52,7 +52,8 @@ const DATA_KEY = /^[a-z][a-z0-9-]*$/;
 
 export function renderCta(cta: Cta, ctx: RenderContext, extras: CtaExtras = {}): SafeHtml {
   const classes = ['lp-btn', `lp-btn--${cta.variant}`, extras.className].filter(Boolean).join(' ');
-  const newTab = cta.link.kind === 'url' && cta.link.newTab;
+  // A WhatsApp chat opens in a new tab, so desktop visitors keep the page (D-057).
+  const newTab = (cta.link.kind === 'url' && cta.link.newTab) || cta.link.kind === 'whatsapp';
   const attrs = { ...extras.dataAttrs, ...(cta.event !== 'none' && { 'lp-event': cta.event }) };
   const data = Object.entries(attrs)
     .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))

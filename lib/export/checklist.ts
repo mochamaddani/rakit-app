@@ -4,6 +4,7 @@ import { detectFormProvider, formIsMissing } from '@/lib/blocks/form-embed/provi
 import type { FormEmbedProps } from '@/lib/blocks/form-embed/schema';
 import type { FooterProps } from '@/lib/blocks/footer/schema';
 import type { BlockInstance, PageDocument } from '@/lib/schema/document';
+import { isWhatsAppNumber } from '@/lib/renderer/whatsapp';
 import { hasTrackingIds } from '@/lib/schema/settings';
 import { sanitizeHtml } from '@/lib/sanitize/html';
 import { collectImages } from './images';
@@ -48,6 +49,16 @@ function hasDefaultLink(value: unknown): boolean {
   if (!value || typeof value !== 'object') return false;
   if ((value as { kind?: unknown }).kind === 'default') return true;
   return Object.values(value).some(hasDefaultLink);
+}
+
+/** True when some WhatsApp link in the value has no usable number. */
+function hasBrokenWhatsApp(value: unknown): boolean {
+  if (Array.isArray(value)) return value.some(hasBrokenWhatsApp);
+  if (!value || typeof value !== 'object') return false;
+  const link = value as { kind?: unknown; phone?: unknown };
+  if (link.kind === 'whatsapp')
+    return typeof link.phone !== 'string' || !isWhatsAppNumber(link.phone);
+  return Object.values(value).some(hasBrokenWhatsApp);
 }
 
 export function preExportChecklist(input: ChecklistInput): ChecklistItem[] {
@@ -113,6 +124,14 @@ export function preExportChecklist(input: ChecklistInput): ChecklistItem[] {
   if (input.tracking && !hasTrackingIds(tracking)) warn('tracking', 'No tracking IDs are set.');
   if (!doc.settings.defaultCta && blocks.some((block) => hasDefaultLink(block.props))) {
     warn('defaultCta', 'Buttons set to the page default go nowhere. Set a default button target.');
+  }
+  const noNumber = blocks.filter((block) => hasBrokenWhatsApp(block.props));
+  if (noNumber.length > 0) {
+    warn(
+      'whatsapp',
+      'A WhatsApp button has no phone number, so it goes nowhere.',
+      noNumber.map((block) => block.id),
+    );
   }
 
   const noAlt = collectImages(doc).filter(

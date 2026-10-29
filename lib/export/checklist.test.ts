@@ -124,6 +124,29 @@ describe('pre-export checklist', () => {
     );
   });
 
+  it('WhatsApp button without a number', () => {
+    const withSticky = (phone: string) =>
+      variant((raw) => {
+        raw.sections.push({
+          id: 'sSticky',
+          blocks: [
+            {
+              id: 'bSticky',
+              type: 'sticky-cta',
+              props: { cta: { label: 'Chat', link: { kind: 'whatsapp', phone } } },
+            },
+          ],
+        } as never);
+      });
+    expect(item(input(withSticky('0812')), 'whatsapp')).toEqual({
+      id: 'whatsapp',
+      level: 'warn',
+      message: 'A WhatsApp button has no phone number, so it goes nowhere.',
+      blockIds: ['bSticky'],
+    });
+    expect(ids(input(withSticky('6281234567890')))).not.toContain('whatsapp');
+  });
+
   it('alt text and placeholders', () => {
     const doc = variant((raw) => {
       const hero = blocks(raw).find((b) => b.type === 'hero')!;

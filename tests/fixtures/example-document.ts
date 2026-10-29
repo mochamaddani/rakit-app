@@ -338,7 +338,10 @@ export const exampleDocument = {
           type: 'sticky-cta',
           props: {
             text: 'Gratis ongkir hari ini',
-            cta: { label: 'Pesan', link: { kind: 'default' } },
+            cta: {
+              label: 'Chat',
+              link: { kind: 'whatsapp', phone: '6281234567890', message: 'Halo kak, mau pesan.' },
+            },
           },
         },
       ],
