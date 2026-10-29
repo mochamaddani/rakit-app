@@ -99,7 +99,7 @@ export function perfDocument(): unknown {
   CAROUSEL_POSITIONS.forEach((position, i) => blocks.splice(position, 0, carousel(i + 1)));
   blocks.push(footer());
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     settings: { lang: 'id' },
     sections: blocks.map((block, i) => ({
       id: `s${i + 1}`,

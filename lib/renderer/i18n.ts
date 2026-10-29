@@ -22,10 +22,6 @@ export type MessageKey =
   | 'video'
   | 'playVideo'
   | 'videoMissing'
-  | 'cookieNotice'
-  | 'cookieOk'
-  | 'cookieRegion'
-  | 'privacy'
   | 'customHtml'
   | 'pauseSlides'
   | 'playSlides';
@@ -53,10 +49,6 @@ const MESSAGES: Record<Lang, Record<MessageKey, string>> = {
     video: 'Video',
     playVideo: 'Putar: {title}',
     videoMissing: 'Alamat video belum diisi.',
-    cookieNotice: 'Situs ini memakai cookie untuk mengukur iklan dan memperbaiki halaman.',
-    cookieOk: 'Oke',
-    cookieRegion: 'Pemberitahuan cookie',
-    privacy: 'Kebijakan privasi',
     customHtml: 'HTML khusus',
     pauseSlides: 'Jeda',
     playSlides: 'Putar',
@@ -83,10 +75,6 @@ const MESSAGES: Record<Lang, Record<MessageKey, string>> = {
     video: 'Video',
     playVideo: 'Play: {title}',
     videoMissing: 'Video address missing.',
-    cookieNotice: 'This site uses cookies to measure ads and improve the page.',
-    cookieOk: 'OK',
-    cookieRegion: 'Cookie notice',
-    privacy: 'Privacy policy',
     customHtml: 'Custom HTML',
     pauseSlides: 'Pause',
     playSlides: 'Play',

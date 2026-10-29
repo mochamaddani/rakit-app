@@ -33,7 +33,6 @@ describe('example document', () => {
       'data-lp-countdown',
       'data-lp-video',
       'data-lp-sticky',
-      'data-lp-cookie',
       'lp:track',
     ]) {
       expect(html, marker).toContain(marker);

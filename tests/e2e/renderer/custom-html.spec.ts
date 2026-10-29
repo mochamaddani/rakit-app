@@ -3,7 +3,7 @@ import { renderToFile } from './render-to-file';
 
 const page = (runScripts: boolean) =>
   renderToFile(`test-results/custom-html/${runScripts ? 'on' : 'off'}.html`, {
-    schemaVersion: 1,
+    schemaVersion: 2,
     sections: [
       {
         id: 's1',

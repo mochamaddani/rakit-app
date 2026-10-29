@@ -190,3 +190,19 @@ test('a sticky CTA can be added, selected and edited in the canvas', async ({ pa
   await expect(label).toHaveText('Beli sekarang');
   await expect(page.getByLabel('Label', { exact: true })).toHaveValue('Beli sekarang');
 });
+
+test('a sticky CTA can open WhatsApp from just a phone number', async ({ page }) => {
+  const frame = await fresh(page);
+  await addBlock(page, 'Sticky CTA bar');
+  const button = page.getByRole('group', { name: 'Button' });
+  await button.getByLabel('Link type').selectOption('whatsapp');
+  const phone = button.getByLabel('WhatsApp number');
+  await phone.pressSequentially('0812 3456 7890');
+  await expect(phone).toHaveValue('6281234567890');
+  await expect(button.getByText('Opens https://wa.me/6281234567890')).toBeVisible();
+  await button.getByLabel('Message (optional)').fill('Halo kak');
+  await expect(frame.locator('.lp-sticky .lp-btn')).toHaveAttribute(
+    'href',
+    'https://wa.me/6281234567890?text=Halo%20kak',
+  );
+});

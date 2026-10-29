@@ -121,7 +121,7 @@ describe('product carousel: markup', () => {
 
 const carouselDoc = (blocks: { id: string; navigation?: string }[]) =>
   parseDocument({
-    schemaVersion: 1,
+    schemaVersion: 2,
     sections: [
       {
         id: 's1',

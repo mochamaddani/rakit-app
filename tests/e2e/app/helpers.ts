@@ -11,7 +11,7 @@ export const OWNER = {
   password: process.env.E2E_OWNER_PASSWORD ?? 'correct-horse-battery-1',
 };
 
-export const EMPTY_DOC = { schemaVersion: 1, sections: [] };
+export const EMPTY_DOC = { schemaVersion: 2, sections: [] };
 
 let admin: SupabaseClient<Database> | undefined;
 
@@ -154,7 +154,7 @@ export function saveStatus(page: Page) {
 /** A raw document with one section per block type (s1…, b1…), each holding that block's defaults. */
 export function docWith(types: string[]) {
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     sections: types.map((type, i) => ({
       id: `s${i + 1}`,
       blocks: [

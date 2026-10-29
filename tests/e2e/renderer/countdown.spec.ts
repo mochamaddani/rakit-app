@@ -6,7 +6,7 @@ const END = Date.parse('2026-11-01T00:00:00+07:00');
 
 const page = (props: Record<string, unknown>, name: string) =>
   renderToFile(`test-results/countdown/${name}.html`, {
-    schemaVersion: 1,
+    schemaVersion: 2,
     settings: { lang: 'id' },
     sections: [
       {

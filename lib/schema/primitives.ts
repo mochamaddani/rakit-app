@@ -100,7 +100,19 @@ export const LinkSchema = z.discriminatedUnion('kind', [
   SectionLinkSchema,
   DefaultLinkSchema,
 ]);
-export type Link = z.output<typeof LinkSchema>;
+/** A WhatsApp chat: the number as typed (normalized to digits), and an optional prefilled message (D-057). */
+export const WhatsAppLinkSchema = z.object({
+  kind: z.literal('whatsapp'),
+  phone: z.string().max(32).default(''),
+  message: text(500).default(''),
+});
+/** What a button links to: the page links, or a WhatsApp chat (D-057). Footer links stay `LinkSchema`. */
+export const ButtonLinkSchema = z.discriminatedUnion('kind', [
+  ...LinkSchema.options,
+  WhatsAppLinkSchema,
+]);
+/** Any link a block may hold; `LinkSchema` values are a subset. */
+export type Link = z.output<typeof ButtonLinkSchema>;
 
 /** An empty src renders a placeholder. */
 export const ImageSchema = z
@@ -131,7 +143,7 @@ export type CtaEvent = (typeof CTA_EVENTS)[number];
 
 export const CtaSchema = z.object({
   label: text(80, 1),
-  link: LinkSchema,
+  link: ButtonLinkSchema,
   variant: z.enum(['primary', 'secondary']).default('primary'),
   event: z.enum(CTA_EVENTS).default('none'),
 });

@@ -96,13 +96,13 @@ describe('record', () => {
 
 describe('undo and redo', () => {
   const doc = parseDocument({
-    schemaVersion: 1,
+    schemaVersion: 2,
     sections: [],
     settings: { seo: { title: 'old' } },
   });
   it('apply inverse patches, then patches, and return null at the ends', () => {
     const edited = parseDocument({
-      schemaVersion: 1,
+      schemaVersion: 2,
       sections: [],
       settings: { seo: { title: 'new' } },
     });

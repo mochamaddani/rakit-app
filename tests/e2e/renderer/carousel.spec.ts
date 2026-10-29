@@ -171,7 +171,7 @@ test.describe('M4: fast clicks and dots (desktop)', () => {
 // Autoplay (D-054): 3 cards on a phone, 5 s per card. The page clock drives the interval and the
 // animation frames; the smooth scroll itself runs in real time.
 const autoplayDoc = {
-  schemaVersion: 1,
+  schemaVersion: 2,
   settings: { lang: 'id' },
   sections: [
     {

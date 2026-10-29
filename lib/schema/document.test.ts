@@ -9,7 +9,7 @@ import {
 } from '@/lib/schema/document';
 
 const minimal = () => ({
-  schemaVersion: 1,
+  schemaVersion: 2,
   sections: [
     {
       id: 'sHero',
@@ -61,7 +61,7 @@ describe('PageDocument', () => {
   });
   it('rejects ids whose DOM ids could collide (block "carousel" item "2" vs block "carousel-2")', () => {
     const raw = {
-      schemaVersion: 1,
+      schemaVersion: 2,
       sections: [
         {
           id: 's1',

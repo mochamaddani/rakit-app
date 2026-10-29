@@ -20,7 +20,7 @@ export const tehHerbal: BuiltinTemplate = {
   description:
     'Teh atau minuman herbal dengan bayar di tempat: hero, keunggulan, cara seduh, paket hemat, FAQ dan formulir pesanan.',
   document: () => ({
-    schemaVersion: 1,
+    schemaVersion: 2,
     settings: settings(
       {
         title: '[REPLACE: Nama Teh] — Teh Herbal Alami',

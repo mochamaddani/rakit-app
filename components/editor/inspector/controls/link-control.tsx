@@ -1,10 +1,12 @@
 'use client';
 
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import type { LinkSpec } from '@/lib/editor/inspector/fields';
 import { blockTypeLabel } from '@/lib/editor/structure';
 import { readUtm, UTM_KEYS, writeUtm, type UtmKey } from '@/lib/editor/utm';
 import { sanitizeUrl } from '@/lib/renderer/url';
+import { normalizeWhatsAppNumber, whatsAppUrl } from '@/lib/renderer/whatsapp';
 import { fieldId, type ControlProps } from '../types';
 import { useFieldDraft } from '../use-field-draft';
 import { selectClass } from './choice-control';
@@ -14,6 +16,7 @@ const KIND_LABELS: Record<LinkSpec['kinds'][number], string> = {
   url: 'Web address',
   section: 'Section on this page',
   default: 'Page default button target',
+  whatsapp: 'WhatsApp chat',
 };
 const UTM_LABELS: Record<UtmKey, string> = {
   utm_source: 'Source',
@@ -23,11 +26,13 @@ const UTM_LABELS: Record<UtmKey, string> = {
   utm_term: 'Term',
 };
 const MAX_URL = 2048;
+const MAX_MESSAGE = 500;
 
 type LinkValue =
   | { kind: 'url'; url: string; newTab: boolean }
   | { kind: 'section'; sectionId: string }
-  | { kind: 'default' };
+  | { kind: 'default' }
+  | { kind: 'whatsapp'; phone: string; message: string };
 
 export function LinkControl({ spec, value, path, actions, context }: ControlProps<LinkSpec>) {
   const id = fieldId(context, path);
@@ -43,6 +48,7 @@ export function LinkControl({ spec, value, path, actions, context }: ControlProp
     else if (kind === 'section' && sections[0])
       actions.set(path, { kind: 'section', sectionId: sections[0].id });
     else if (kind === 'default') actions.set(path, { kind: 'default' });
+    else if (kind === 'whatsapp') actions.set(path, { kind: 'whatsapp', phone: '', message: '' });
   };
 
   return (
@@ -64,6 +70,15 @@ export function LinkControl({ spec, value, path, actions, context }: ControlProp
       </FieldShell>
       {link?.kind === 'url' ? (
         <UrlFields id={id} url={link.url} newTab={link.newTab} path={path} actions={actions} />
+      ) : null}
+      {link?.kind === 'whatsapp' ? (
+        <WhatsAppFields
+          id={id}
+          phone={link.phone}
+          message={link.message}
+          path={path}
+          actions={actions}
+        />
       ) : null}
       {link?.kind === 'section' ? (
         <FieldShell
@@ -177,6 +192,74 @@ function UrlFields({
           ))}
         </div>
       </details>
+    </>
+  );
+}
+
+/**
+ * A WhatsApp number, corrected as it is typed: digits only, and a leading 0 becomes 62 (D-057).
+ * The help line shows the address the button opens.
+ */
+function WhatsAppFields({
+  id,
+  phone,
+  message,
+  path,
+  actions,
+}: {
+  id: string;
+  phone: string;
+  message: string;
+  path: ControlProps['path'];
+  actions: ControlProps['actions'];
+}) {
+  const number = useFieldDraft(phone, () => null);
+  const text = useFieldDraft(message, (v) =>
+    v.length > MAX_MESSAGE ? `At most ${MAX_MESSAGE} characters` : null,
+  );
+  const url = whatsAppUrl(number.draft);
+
+  return (
+    <>
+      <FieldShell
+        id={`${id}-phone`}
+        label="WhatsApp number"
+        help={
+          url
+            ? `Opens ${url}`
+            : 'Type the number; 0812… becomes 62812…. Other countries: start with their code.'
+        }
+      >
+        <Input
+          id={`${id}-phone`}
+          type="tel"
+          inputMode="tel"
+          autoComplete="off"
+          placeholder="6281234567890"
+          value={number.draft}
+          onChange={(event) =>
+            number.change(normalizeWhatsAppNumber(event.target.value), (v) =>
+              actions.set([...path, 'phone'], v),
+            )
+          }
+          onBlur={() => actions.endEdit()}
+        />
+      </FieldShell>
+      <FieldShell id={`${id}-message`} label="Message (optional)" error={text.error}>
+        <Textarea
+          id={`${id}-message`}
+          rows={2}
+          placeholder="Halo kak, saya mau pesan…"
+          value={text.draft}
+          onChange={(event) =>
+            text.change(event.target.value, (v) => actions.set([...path, 'message'], v))
+          }
+          onBlur={() => {
+            text.blur();
+            actions.endEdit();
+          }}
+        />
+      </FieldShell>
     </>
   );
 }

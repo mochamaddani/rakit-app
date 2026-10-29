@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { HeroPropsSchema } from '@/lib/blocks/hero/schema';
 import { listBlockDefinitions } from '@/lib/blocks/registry';
+import { FooterPropsSchema } from '@/lib/blocks/footer/schema';
 import { formEmbed } from '@/lib/blocks/form-embed';
 import { productCarousel } from '@/lib/blocks/special/product-carousel';
 import { ProductItemSchema } from '@/lib/blocks/special/product-carousel/schema';
@@ -36,6 +37,30 @@ const shape = (fields: FieldSpec[]): unknown[] =>
   );
 
 describe('describeFields', () => {
+  it('offers WhatsApp on every button link, and not on footer links', () => {
+    const linkKinds = (schema: z.ZodType, path: (string | number)[]) => {
+      const spec = fieldSpecAt(describeFields(schema), path);
+      return spec?.kind === 'link' ? spec.kinds : null;
+    };
+    const all = ['url', 'section', 'default', 'whatsapp'];
+    for (const definition of listBlockDefinitions()) {
+      const schema = definition.schema as z.ZodType;
+      for (const path of [
+        ['cta', 'link'],
+        ['primaryCta', 'link'],
+        ['secondaryCta', 'link'],
+      ]) {
+        const kinds = linkKinds(schema, path);
+        if (kinds) expect(kinds, `${definition.type} ${path.join('.')}`).toEqual(all);
+      }
+    }
+    expect(linkKinds(ProductItemSchema, ['cta', 'link'])).toEqual(all);
+    expect(linkKinds(FooterPropsSchema, ['links', 0, 'link'])).toEqual([
+      'url',
+      'section',
+      'default',
+    ]);
+  });
   it('describes the hero', () => {
     expect(shape(describeFields(HeroPropsSchema))).toEqual([
       ['eyebrow', 'text', false],

@@ -13,7 +13,7 @@ import { exampleDocument, trackingDocument } from '@/tests/fixtures/example-docu
 import { validateHtml } from '@/tests/helpers/validate-html';
 
 const doc = parseDocument({
-  schemaVersion: 1,
+  schemaVersion: 2,
   settings: { seo: { title: 'Botol <Anti> Bocor', description: 'Desc "x"' } },
   sections: [
     {
@@ -116,14 +116,14 @@ describe('footer landmark placement', () => {
     { id: 'sFoot', blocks: [{ id: 'bFoot', type: 'footer', props: {} }] },
   ];
   it('renders trailing footer sections after </main>', () => {
-    const { html } = renderPage(parseDocument({ schemaVersion: 1, sections }), { mode: 'export' });
+    const { html } = renderPage(parseDocument({ schemaVersion: 2, sections }), { mode: 'export' });
     expect(html).toContain(
       '</main><div id="s-sFoot" class="lp-s lp-tone-base lp-pad-md"><div class="lp-c lp-w-normal"><div class="lp-b" id="b-bFoot"><footer class="lp-footer">',
     );
   });
   it('keeps a footer section that is followed by other content inside <main>', () => {
     const { html } = renderPage(
-      parseDocument({ schemaVersion: 1, sections: [sections[1], sections[0]] }),
+      parseDocument({ schemaVersion: 2, sections: [sections[1], sections[0]] }),
       { mode: 'export' },
     );
     expect(html).toContain('<main><section id="s-sFoot"');
@@ -167,7 +167,7 @@ describe('block-level API', () => {
       blocks: [{ id: `b${id}`, type, props }],
     });
     const hero = { headline: 'Hi' };
-    const sections = (...list: unknown[]) => parseDocument({ schemaVersion: 1, sections: list });
+    const sections = (...list: unknown[]) => parseDocument({ schemaVersion: 2, sections: list });
     expect(footerStart(sections(s('1', 'hero', hero), s('2', 'footer')))).toBe(1);
     expect(footerStart(sections(s('1', 'footer'), s('2', 'hero', hero)))).toBe(2);
     expect(footerStart(sections())).toBe(0);
@@ -186,7 +186,7 @@ describe('tracking and social tags', () => {
       'googletagmanager',
       'lp-head-code',
       'lp-body-code',
-      // The page runtime (the Form Embed's own snippet may ship; it has no form to act on here).
+      // The page runtime (the Checkout Form's own snippet may ship; it has no form to act on here).
       'lp-params',
       'og:',
       '<iframe',
@@ -254,7 +254,7 @@ describe('tracking and social tags', () => {
 
   it('pages whose CTAs only jump within the page ship no runtime', () => {
     const anchorOnly = parseDocument({
-      schemaVersion: 1,
+      schemaVersion: 2,
       sections: [
         {
           id: 'sHero',
@@ -292,7 +292,7 @@ describe('image priority (D-016)', () => {
     },
   });
   const firstSection = (blocks: unknown[]) =>
-    parseDocument({ schemaVersion: 1, sections: [{ id: 's1', blocks }] });
+    parseDocument({ schemaVersion: 2, sections: [{ id: 's1', blocks }] });
   const priorities = (html: string) => html.match(/<img[^>]*fetchpriority="high"[^>]*>/g) ?? [];
 
   it('only one image is high priority when the first section has a hero and a carousel', () => {

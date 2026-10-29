@@ -3,7 +3,7 @@ import { parseDocument } from '@/lib/schema/document';
 import { collectImages, inlineImages, portableVariant, type FetchedImage } from './images';
 
 const doc = parseDocument({
-  schemaVersion: 1,
+  schemaVersion: 2,
   settings: {
     seo: {
       ogImage: { src: 'https://cdn.example/og.webp' },
@@ -67,7 +67,7 @@ describe('inlineImages', () => {
   });
   const withImages = (srcs: string[]) =>
     parseDocument({
-      schemaVersion: 1,
+      schemaVersion: 2,
       sections: [
         {
           id: 's1',

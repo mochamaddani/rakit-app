@@ -18,7 +18,7 @@ export const produkUmum: BuiltinTemplate = {
   description:
     'Untuk produk apa saja: hero, keunggulan, ulasan, FAQ dan formulir pesanan. Titik awal paling ringkas.',
   document: () => ({
-    schemaVersion: 1,
+    schemaVersion: 2,
     settings: settings(
       {
         title: '[REPLACE: Nama Produk]',

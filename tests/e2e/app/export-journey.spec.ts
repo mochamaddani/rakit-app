@@ -50,7 +50,7 @@ test('M3 exit: build → export → open from file:// → PageView, CTA event, S
   await expect(page.locator('iframe[title="Page preview"][data-ready="true"]')).toBeAttached({
     timeout: 20_000,
   });
-  for (const block of ['Hero', 'Form Embed', 'Footer']) await addBlock(page, block);
+  for (const block of ['Hero', 'Checkout Form', 'Footer']) await addBlock(page, block);
   await expect(frame.locator('[data-lp-block]')).toHaveCount(3);
 
   // The order form: Storelink's code, shown as a placeholder in the canvas.
@@ -76,7 +76,7 @@ test('M3 exit: build → export → open from file:// → PageView, CTA event, S
   await page.getByLabel('Description', { exact: true }).fill('Teh herbal.');
   const target = page.getByRole('group', { name: 'Default button target' });
   await target.getByLabel('Link type').selectOption('section');
-  await target.getByLabel('Section').selectOption({ label: 'Section 2 · Form Embed (#pesan)' });
+  await target.getByLabel('Section').selectOption({ label: 'Section 2 · Checkout Form (#pesan)' });
   await page.getByLabel('Meta Pixel ID').fill('1234567890');
   await page.getByLabel('GA4 measurement ID').fill('G-TEST1234');
   await page.getByLabel('Google Ads ID').fill('AW-123456789');

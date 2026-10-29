@@ -1,7 +1,7 @@
 import { sanitizeUrl } from '@/lib/renderer/url';
 import type { FormEmbedProps } from './schema';
 
-// Form providers the Form Embed knows (docs/DECISIONS.md D-048). The owner's order form is
+// Form providers the Checkout Form knows (docs/DECISIONS.md D-048). The owner's order form is
 // Storelink: its widget runs in the page and sends its own pixel and server-side events.
 
 export type FormProviderId = 'storelink' | 'tally' | 'google-forms';

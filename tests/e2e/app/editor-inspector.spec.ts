@@ -187,7 +187,7 @@ test('a button whose section was deleted says so instead of showing another sect
 }) => {
   const link = { kind: 'section', sectionId: 'deleted' };
   const document = {
-    schemaVersion: 1,
+    schemaVersion: 2,
     sections: [
       {
         id: 'sHero',
@@ -233,9 +233,9 @@ test('an item image from a URL appears in the canvas and asks for alt text', asy
   await expect(saveStatus(page)).toHaveText('Saved');
 });
 
-test('form embed shows only the fields of its mode', async ({ page }) => {
+test('checkout form shows only the fields of its mode', async ({ page }) => {
   await openEditor(page, await seedPage({ name: 'Form fields', document: EMPTY_DOC }));
-  await addBlock(page, 'Form Embed');
+  await addBlock(page, 'Checkout Form');
   await selectBlock(page, 'form-embed');
   const code = page.getByRole('textbox', { name: 'Embed code' });
   const address = page.getByRole('textbox', { name: 'Form address' });

@@ -1,5 +1,4 @@
 import { benefits } from './benefits';
-import { cookieBanner } from './cookie-banner';
 import { countdown } from './countdown';
 import { customHtml } from './custom-html';
 import { faq } from './faq';
@@ -34,7 +33,6 @@ export const BLOCKS = [
   countdown,
   video,
   stickyCta,
-  cookieBanner,
   customHtml,
 ] as const;
 

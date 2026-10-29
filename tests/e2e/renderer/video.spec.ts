@@ -3,7 +3,7 @@ import { renderToFile } from './render-to-file';
 
 const YT = 'dQw4w9WgXcQ';
 const url = renderToFile('test-results/video/video.html', {
-  schemaVersion: 1,
+  schemaVersion: 2,
   settings: { lang: 'en' },
   sections: [
     { id: 's1', blocks: [{ id: 'h1', type: 'hero', props: { headline: 'Watch' } }] },

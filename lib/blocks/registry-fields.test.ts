@@ -13,7 +13,7 @@ import { getBlockDefinition, listBlockDefinitions } from './registry';
 
 const example = parseDocument(exampleDocument);
 const defaults = parseDocument({
-  schemaVersion: 1,
+  schemaVersion: 2,
   sections: listBlockDefinitions().map((definition, i) => ({
     id: `s${i}`,
     blocks: [

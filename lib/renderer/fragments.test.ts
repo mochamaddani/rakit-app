@@ -50,6 +50,23 @@ describe('fragments', () => {
       '<div class="c lp-img-ph" aria-hidden="true"></div>',
     );
   });
+  it('a WhatsApp button opens wa.me in a new tab', () => {
+    expect(
+      String(
+        renderCta(
+          {
+            label: 'Chat',
+            link: { kind: 'whatsapp', phone: '0812 3456 7890', message: '' },
+            variant: 'primary',
+            event: 'Contact',
+          },
+          ctx,
+        ),
+      ),
+    ).toBe(
+      '<a class="lp-btn lp-btn--primary" href="https://wa.me/6281234567890" target="_blank" rel="noopener" data-lp-cta data-lp-event="Contact">Chat</a>',
+    );
+  });
   it('renders CTAs with tracking hooks and safe new-tab links', () => {
     expect(
       String(

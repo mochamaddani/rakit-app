@@ -18,7 +18,7 @@ export const kelasOnline: BuiltinTemplate = {
   description:
     'Kelas, e-book atau produk digital: hero, materi, profil mentor, harga, FAQ dan formulir pendaftaran.',
   document: () => ({
-    schemaVersion: 1,
+    schemaVersion: 2,
     settings: settings(
       {
         title: '[REPLACE: Nama Kelas] — Daftar Sekarang',

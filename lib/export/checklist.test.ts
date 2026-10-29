@@ -42,7 +42,7 @@ describe('pre-export checklist', () => {
       "Storelink sends its own conversion events: check that its Meta Pixel ID matches this page's.",
     );
     expect(item(input(doc), 'customCode')?.message).toBe(
-      'Custom code runs on this page: form embed code.',
+      'Custom code runs on this page: checkout form code.',
     );
   });
 
@@ -122,6 +122,29 @@ describe('pre-export checklist', () => {
     expect(item(input(doc), 'defaultCta')?.message).toBe(
       'Buttons set to the page default go nowhere. Set a default button target.',
     );
+  });
+
+  it('WhatsApp button without a number', () => {
+    const withSticky = (phone: string) =>
+      variant((raw) => {
+        raw.sections.push({
+          id: 'sSticky',
+          blocks: [
+            {
+              id: 'bSticky',
+              type: 'sticky-cta',
+              props: { cta: { label: 'Chat', link: { kind: 'whatsapp', phone } } },
+            },
+          ],
+        } as never);
+      });
+    expect(item(input(withSticky('0812')), 'whatsapp')).toEqual({
+      id: 'whatsapp',
+      level: 'warn',
+      message: 'A WhatsApp button has no phone number, so it goes nowhere.',
+      blockIds: ['bSticky'],
+    });
+    expect(ids(input(withSticky('6281234567890')))).not.toContain('whatsapp');
   });
 
   it('alt text and placeholders', () => {

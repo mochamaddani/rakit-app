@@ -45,7 +45,7 @@ test('rejects invalid documents, wrong content types, foreign origins and oversi
   const id = await seedPage({ name: 'Api', document: EMPTY_DOC });
   const url = `/api/pages/${id}/draft`;
   const invalid = await page.request.put(url, {
-    data: { document: { schemaVersion: 1, sections: 'x' }, baseRevision: 0 },
+    data: { document: { schemaVersion: 2, sections: 'x' }, baseRevision: 0 },
   });
   expect(invalid.status()).toBe(422);
   expect((await invalid.json()).issues[0].path).toBe('sections');

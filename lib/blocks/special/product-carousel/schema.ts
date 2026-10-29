@@ -2,8 +2,8 @@ import { z } from 'zod';
 import { IdSchema } from '@/lib/schema/ids';
 import {
   AspectRatioSchema,
+  ButtonLinkSchema,
   ImageSchema,
-  LinkSchema,
   rich,
   text,
   when,
@@ -24,7 +24,7 @@ export const ProductItemSchema = z.object({
   cta: z
     .object({
       label: text(40).default(''),
-      link: LinkSchema.prefault({ kind: 'default' }),
+      link: ButtonLinkSchema.prefault({ kind: 'default' }),
     })
     .prefault({}),
 });

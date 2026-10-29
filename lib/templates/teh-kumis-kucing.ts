@@ -42,7 +42,7 @@ const image = (img: TemplateImage, alt: string) => ({ ...img, alt });
 /** A raw PageDocument (validated by the caller) using the given uploaded images. */
 export function tehKumisKucingDocument(images: Record<TehKumisKucingImage, TemplateImage>) {
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     settings: {
       lang: 'id',
       seo: {

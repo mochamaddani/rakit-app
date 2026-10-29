@@ -68,7 +68,7 @@ test("a Storelink snippet runs once and its widget shares the page's pixel", asy
     if (request.url().includes('fbevents.js')) fbevents.push(request.url());
   });
   const doc = {
-    schemaVersion: 1,
+    schemaVersion: 2,
     settings: { tracking: { metaPixelId: '1234567890' } },
     sections: [
       {

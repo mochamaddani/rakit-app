@@ -17,7 +17,7 @@ export const aksesoriGadget: BuiltinTemplate = {
   description:
     'Gadget atau aksesori elektronik: hero, spesifikasi, carousel varian, paket, FAQ garansi dan formulir pesanan.',
   document: () => ({
-    schemaVersion: 1,
+    schemaVersion: 2,
     settings: settings(
       {
         title: '[REPLACE: Nama Produk] — Spesifikasi dan Harga',

@@ -19,7 +19,7 @@ test.beforeEach(async ({ page }) => {
 });
 
 const HERO = {
-  schemaVersion: 1,
+  schemaVersion: 2,
   sections: [{ id: 's1', blocks: [{ id: 'b1', type: 'hero', props: { headline: 'Teh' } }] }],
 };
 
