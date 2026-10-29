@@ -205,7 +205,7 @@ export function preExportChecklist(input: ChecklistInput): ChecklistItem[] {
         (block.props as FormEmbedProps).mode === 'snippet' &&
         (block.props as FormEmbedProps).code.trim(),
     )
-      ? 'form embed code'
+      ? 'checkout form code'
       : '',
   ].filter(Boolean);
   if (code.length > 0) warn('customCode', `Custom code runs on this page: ${code.join(', ')}.`);

@@ -1,4 +1,4 @@
-// Form embed code as providers hand it out, for Form Embed tests (docs/DECISIONS.md D-048).
+// Form embed code as providers hand it out, for Checkout Form tests (docs/DECISIONS.md D-048).
 
 /** The owner's Storelink order form, verbatim. Tests route these hosts to stubs; never fetched. */
 export const STORELINK_SNIPPET =

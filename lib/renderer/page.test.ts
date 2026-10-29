@@ -186,7 +186,7 @@ describe('tracking and social tags', () => {
       'googletagmanager',
       'lp-head-code',
       'lp-body-code',
-      // The page runtime (the Form Embed's own snippet may ship; it has no form to act on here).
+      // The page runtime (the Checkout Form's own snippet may ship; it has no form to act on here).
       'lp-params',
       'og:',
       '<iframe',

@@ -42,7 +42,7 @@ describe('pre-export checklist', () => {
       "Storelink sends its own conversion events: check that its Meta Pixel ID matches this page's.",
     );
     expect(item(input(doc), 'customCode')?.message).toBe(
-      'Custom code runs on this page: form embed code.',
+      'Custom code runs on this page: checkout form code.',
     );
   });
 

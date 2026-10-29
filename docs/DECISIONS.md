@@ -272,6 +272,7 @@ Consequences:
 - **When it ships:** with vendor ids (and tracking on), a CTA to a web URL, a CTA event or a passthrough iframe. A page whose CTAs only jump within the page still ships no JavaScript.
 
 ## D-048 Form Embed — Accepted (M3)
+- Shown as **Checkout Form** since D-057; the block type stays `form-embed`.
 - **Modes:** pasted embed code (`mode: 'snippet'`, the default, up to 20,000 characters, emitted verbatim in export only) or an iframe (`mode: 'iframe'`: an absolute http(s) URL, a height of 200–4000 px, lazy below the fold, `data-lp-pass` so UTM and click ids reach it). An empty or unsafe form address renders "Form address missing" in the page language.
 - **Preview** shows a placeholder ("Form · <provider>", "Shows in the exported page") and never the iframe or the code; the Form Embed snippet is `exportOnly`. Plan §2.10 mentioned a "preview form" toggle; it is dropped. Nested iframes inherit the canvas sandbox (no `allow-same-origin`, `allow-forms` or `allow-popups`), so a provider form there can't keep state or submit and would look broken. The form is tested in the exported file.
 - **Providers** (`lib/blocks/form-embed/providers.ts`), detected from the iframe URL's host or a URL in the code:
@@ -343,5 +344,6 @@ Consequences:
 - Versions, the export history and the status aren't copied: the copy is a draft that was never exported. Assets are shared (same workspace).
 - The editor opens on the copy. Blank pages, template pages and duplicates share one insert path (`lib/pages/insert.ts`) with the unique-slug retry.
 
-## D-057 No cookie banner — Accepted
+## D-057 No cookie banner, Checkout Form — Accepted
 - **Cookie banner removed.** Schema version 2; the 1 → 2 migration drops `cookie-banner` blocks and any section they leave empty, so stored drafts and versions still open. Pages that need a consent notice use a consent manager in the custom head code.
+- **Form Embed is labelled Checkout Form** in the palette and outline. The stored type stays `form-embed`, so no migration.
